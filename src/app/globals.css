@@ -1,0 +1,514 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+
+
+/* PROFESSIONAL DESIGN TOKENS ARCHITECTURE */
+
+@theme inline {
+  /* Font Family */
+  --font-heading: var(--font-montserrat);
+  --font-sans: var(--font-nunito);
+
+  /* Mapping Primitive Scales to Tailwind Classes */
+  --color-primary-50: var(--primitive-primary-50);
+  --color-primary-100: var(--primitive-primary-100);
+  --color-primary-200: var(--primitive-primary-200);
+  --color-primary-300: var(--primitive-primary-300);
+  --color-primary-400: var(--primitive-primary-400);
+  --color-primary-500: var(--primitive-primary-500);
+  --color-primary-600: var(--primitive-primary-600);
+  --color-primary-700: var(--primitive-primary-700);
+  --color-primary-800: var(--primitive-primary-800);
+  --color-primary-900: var(--primitive-primary-900);
+
+  --color-secondary-50: var(--primitive-secondary-50);
+  --color-secondary-100: var(--primitive-secondary-100);
+  --color-secondary-200: var(--primitive-secondary-200);
+  --color-secondary-300: var(--primitive-secondary-300);
+  --color-secondary-400: var(--primitive-secondary-400);
+  --color-secondary-500: var(--primitive-secondary-500);
+  --color-secondary-600: var(--primitive-secondary-600);
+  --color-secondary-700: var(--primitive-secondary-700);
+  --color-secondary-800: var(--primitive-secondary-800);
+  --color-secondary-900: var(--primitive-secondary-900);
+
+  --color-success-50: var(--primitive-success-50);
+  --color-success-100: var(--primitive-success-100);
+  --color-success-200: var(--primitive-success-200);
+  --color-success-300: var(--primitive-success-300);
+  --color-success-400: var(--primitive-success-400);
+  --color-success-500: var(--primitive-success-500);
+  --color-success-600: var(--primitive-success-600);
+  --color-success-700: var(--primitive-success-700);
+  --color-success-800: var(--primitive-success-800);
+  --color-success-900: var(--primitive-success-900);
+
+  --color-warning-50: var(--primitive-warning-50);
+  --color-warning-100: var(--primitive-warning-100);
+  --color-warning-200: var(--primitive-warning-200);
+  --color-warning-300: var(--primitive-warning-300);
+  --color-warning-400: var(--primitive-warning-400);
+  --color-warning-500: var(--primitive-warning-500);
+  --color-warning-600: var(--primitive-warning-600);
+  --color-warning-700: var(--primitive-warning-700);
+  --color-warning-800: var(--primitive-warning-800);
+  --color-warning-900: var(--primitive-warning-900);
+
+  --color-danger-50: var(--primitive-danger-50);
+  --color-danger-100: var(--primitive-danger-100);
+  --color-danger-200: var(--primitive-danger-200);
+  --color-danger-300: var(--primitive-danger-300);
+  --color-danger-400: var(--primitive-danger-400);
+  --color-danger-500: var(--primitive-danger-500);
+  --color-danger-600: var(--primitive-danger-600);
+  --color-danger-700: var(--primitive-danger-700);
+  --color-danger-800: var(--primitive-danger-800);
+  --color-danger-900: var(--primitive-danger-900);
+
+  --color-info-50: var(--primitive-info-50);
+  --color-info-100: var(--primitive-info-100);
+  --color-info-200: var(--primitive-info-200);
+  --color-info-300: var(--primitive-info-300);
+  --color-info-400: var(--primitive-info-400);
+  --color-info-500: var(--primitive-info-500);
+  --color-info-600: var(--primitive-info-600);
+  --color-info-700: var(--primitive-info-700);
+  --color-info-800: var(--primitive-info-800);
+  --color-info-900: var(--primitive-info-900);
+
+  --color-neutral-50: var(--primitive-neutral-50);
+  --color-neutral-100: var(--primitive-neutral-100);
+  --color-neutral-200: var(--primitive-neutral-200);
+  --color-neutral-300: var(--primitive-neutral-300);
+  --color-neutral-400: var(--primitive-neutral-400);
+  --color-neutral-500: var(--primitive-neutral-500);
+  --color-neutral-600: var(--primitive-neutral-600);
+  --color-neutral-700: var(--primitive-neutral-700);
+  --color-neutral-800: var(--primitive-neutral-800);
+  --color-neutral-900: var(--primitive-neutral-900);
+
+  --color-footer-bg: var(--footer-bg);
+  --color-footer-foreground: var(--footer-foreground);
+  --color-footer-heading: var(--footer-heading);
+  --color-footer-border: var(--footer-border);
+  --color-footer-icon-bg: var(--footer-icon-bg);
+
+  /* Mapping Semantic Tokens to Tailwind */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--danger-foreground);
+
+  --color-border: var(--border);
+
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sidebar Tokens (Shadcn Sidebar Component) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Typography Scale from DESIGN.md */
+  --text-display: 3rem;
+  /* 48px */
+  --text-h1: 2rem;
+  /* 32px */
+  --text-h2: 1.5rem;
+  /* 24px */
+  --text-h3: 1.25rem;
+  /* 20px */
+  --text-body-lg: 1.125rem;
+  /* 18px */
+  --text-body: 1rem;
+  /* 16px */
+  --text-body-sm: 0.875rem;
+  /* 14px */
+  --text-caption: 0.75rem;
+  /* 12px */
+
+  /* Radius */
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* Custom dark variant for data-theme="dark" */
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+:root {
+  /* PRIMITIVE TOKENS - LIGHT */
+  --primitive-primary-50: #f3eff6;
+  --primitive-primary-100: #e6e0ed;
+  --primitive-primary-200: #cdc1dc;
+  --primitive-primary-300: #b4a1ca;
+  --primitive-primary-400: #9b82b9;
+  --primitive-primary-500: #8263a7;
+  --primitive-primary-600: #684f86;
+  --primitive-primary-700: #4e3b64;
+  --primitive-primary-800: #342843;
+  --primitive-primary-900: #1a1421;
+
+  --primitive-secondary-50: #f1f5f9;
+  --primitive-secondary-100: #e2e8f0;
+  --primitive-secondary-200: #cbd5e1;
+  --primitive-secondary-300: #94a3b8;
+  --primitive-secondary-400: #64748b;
+  --primitive-secondary-500: #475569;
+  --primitive-secondary-600: #334155;
+  --primitive-secondary-700: #1e293b;
+  --primitive-secondary-800: #0f172a;
+  --primitive-secondary-900: #020617;
+
+  --primitive-success-50: #e6f0f0;
+  --primitive-success-100: #cce2e1;
+  --primitive-success-200: #99c5c3;
+  --primitive-success-300: #66a7a4;
+  --primitive-success-400: #338a86;
+  --primitive-success-500: #006d68;
+  --primitive-success-600: #005753;
+  --primitive-success-700: #00413e;
+  --primitive-success-800: #002c2a;
+  --primitive-success-900: #001615;
+
+
+
+  --primitive-warning-50: #fff6eb;
+  --primitive-warning-100: #ffedd6;
+  --primitive-warning-200: #ffdaad;
+  --primitive-warning-300: #ffc885;
+  --primitive-warning-400: #ffb55c;
+  --primitive-warning-500: #ffa333;
+  --primitive-warning-600: #cc8229;
+  --primitive-warning-700: #99621f;
+  --primitive-warning-800: #664114;
+  --primitive-warning-900: #33210a;
+
+  --primitive-danger-50: #fef2f2;
+  --primitive-danger-100: #fee2e2;
+  --primitive-danger-200: #fecaca;
+  --primitive-danger-300: #fca5a5;
+  --primitive-danger-400: #f87171;
+  --primitive-danger-500: #E43241;
+  --primitive-danger-600: #dc2626;
+  --primitive-danger-700: #b91c1c;
+  --primitive-danger-800: #991b1b;
+  --primitive-danger-900: #7f1d1d;
+
+  --primitive-info-50: #f0f9ff;
+  --primitive-info-100: #e0f2fe;
+  --primitive-info-200: #bae6fd;
+  --primitive-info-300: #7dd3fc;
+  --primitive-info-400: #38bdf8;
+  --primitive-info-500: #0ea5e9;
+  --primitive-info-600: #0284c7;
+  --primitive-info-700: #0369a1;
+  --primitive-info-800: #075985;
+  --primitive-info-900: #0c4a6e;
+
+
+
+  --primitive-neutral-50: #ffffff;
+  --primitive-neutral-100: #e8ebec;
+  --primitive-neutral-200: #d1d9da;
+  --primitive-neutral-300: #b9c6c8;
+  --primitive-neutral-400: #a1b3b5;
+  --primitive-neutral-500: #728588;
+  --primitive-neutral-600: #5b6a6d;
+  --primitive-neutral-700: #444f51;
+  --primitive-neutral-800: #2d3536;
+  --primitive-neutral-900: #171a1b;
+  --primitive-neutral-950: #111213;
+
+
+
+  /* SEMANTIC TOKENS - LIGHT MODE */
+  --background: var(--primitive-neutral-50);
+  --foreground: var(--primitive-neutral-900);
+
+  --surface: var(--primitive-neutral-100);
+  --surface-foreground: var(--primitive-neutral-900);
+
+  --primary: var(--primitive-primary-500);
+  --primary-foreground: var(--primitive-neutral-50);
+
+  --secondary: var(--primitive-secondary-400);
+  --secondary-foreground: var(--primitive-neutral-50);
+
+  --muted: var(--primitive-neutral-100);
+  --muted-foreground: var(--primitive-neutral-500);
+
+  --accent: var(--primitive-primary-100);
+  --accent-foreground: var(--primitive-primary-700);
+
+  --success: var(--primitive-success-500);
+  --success-foreground: var(--primitive-neutral-50);
+
+  --info: var(--primitive-info-500);
+  --info-foreground: var(--primitive-neutral-50);
+
+  --warning: var(--primitive-warning-500);
+  --warning-foreground: var(--primitive-neutral-50);
+
+  --danger: var(--primitive-danger-500);
+  --danger-foreground: var(--primitive-neutral-50);
+
+  --destructive: var(--primitive-danger-500);
+  --destructive-foreground: var(--primitive-neutral-50);
+
+  --popover: var(--primitive-neutral-50);
+  --popover-foreground: var(--primitive-neutral-900);
+
+
+  --border: var(--primitive-neutral-200);
+
+  --input: var(--primitive-neutral-200);
+  --ring: var(--primitive-primary-500);
+
+  /* Sidebar Semantic Tokens - Light (Glassmorphism) */
+  --sidebar: rgba(255, 255, 255, 0.7);
+  --sidebar-foreground: var(--primitive-neutral-800);
+  --sidebar-primary: var(--primitive-primary-600);
+  --sidebar-primary-foreground: var(--primitive-neutral-50);
+  --sidebar-accent: rgba(77, 46, 245, 0.08);
+  --sidebar-accent-foreground: var(--primitive-primary-600);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: var(--primitive-primary-500);
+
+  --radius: 1rem;
+
+  /* Footer Design Tokens (Always Dark for contrast) */
+  --footer-bg: #06070b;
+  --footer-foreground: var(--primitive-neutral-400);
+  --footer-heading: var(--primitive-primary-400);
+  --footer-border: rgba(255, 255, 255, 0.08);
+  --footer-icon-bg: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] {
+  /* SEMANTIC TOKENS - DARK MODE (Remapped to primitives) */
+  --background: var(--primitive-neutral-900);
+  --foreground: var(--primitive-neutral-50);
+
+  --surface: var(--primitive-neutral-900);
+  --surface-foreground: var(--primitive-neutral-100);
+
+  --primary: var(--primitive-primary-400);
+  --primary-foreground: var(--primitive-neutral-900);
+
+  --secondary: var(--primitive-secondary-400);
+  --secondary-foreground: var(--primitive-neutral-50);
+
+  --muted: var(--primitive-neutral-800);
+  --muted-foreground: var(--primitive-neutral-400);
+
+  --accent: var(--primitive-primary-900);
+  --accent-foreground: var(--primitive-primary-200);
+
+  --success: var(--primitive-success-400);
+  --success-foreground: var(--primitive-neutral-900);
+
+  --info: var(--primitive-info-400);
+  --info-foreground: var(--primitive-neutral-900);
+
+  --warning: var(--primitive-warning-400);
+  --warning-foreground: var(--primitive-neutral-900);
+
+  --danger: var(--primitive-danger-600);
+  --danger-foreground: var(--primitive-neutral-50);
+
+  --popover: var(--primitive-neutral-900);
+  --popover-foreground: var(--primitive-neutral-50);
+
+  --border: var(--primitive-neutral-800);
+
+  --input: var(--primitive-neutral-800);
+  --ring: var(--primitive-primary-500);
+
+  /* Sidebar Semantic Tokens - Dark (Glassmorphism) */
+  --sidebar: rgba(15, 15, 20, 0.6);
+  --sidebar-foreground: var(--primitive-neutral-200);
+  --sidebar-primary: var(--primitive-primary-500);
+  --sidebar-primary-foreground: var(--primitive-neutral-50);
+  --sidebar-accent: var(--primitive-primary-500);
+  --sidebar-accent-foreground: var(--primitive-primary-200);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: var(--primitive-primary-500);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    @apply font-sans antialiased;
+    height: 100%;
+    scroll-behavior: smooth;
+  }
+
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* --- Custom Sleek Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted-foreground);
+}
+
+/* ------------------------------ */
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes border-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+@keyframes wave {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  20%,
+  60% {
+    transform: rotate(14deg);
+  }
+
+  40%,
+  80% {
+    transform: rotate(-8deg);
+  }
+}
+
+@keyframes swipe {
+  0% {
+    transform: skewX(-12deg) translateX(-100%);
+  }
+
+  100% {
+    transform: skewX(-12deg) translateX(300%);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 15s linear infinite;
+}
+
+
+/* WebKit Autofill override — transparent background so the browser autofill tint is invisible */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Dark mode override — transparent background, text uses semantic foreground token */
+[data-theme="dark"] input:-webkit-autofill,
+[data-theme="dark"] input:-webkit-autofill:hover,
+[data-theme="dark"] input:-webkit-autofill:focus,
+[data-theme="dark"] input:-webkit-autofill:active,
+[data-theme="dark"] textarea:-webkit-autofill,
+[data-theme="dark"] textarea:-webkit-autofill:hover,
+[data-theme="dark"] textarea:-webkit-autofill:focus,
+[data-theme="dark"] select:-webkit-autofill,
+[data-theme="dark"] select:-webkit-autofill:hover,
+[data-theme="dark"] select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}

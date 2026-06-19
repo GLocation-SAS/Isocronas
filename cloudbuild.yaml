@@ -1,0 +1,52 @@
+steps:
+  # 1. Instalar dependencias de Node
+  - name: 'node:24-slim'
+    id: '1. Instalar dependencias de Node'
+    entrypoint: npm
+    args: ['ci']
+
+  # 2. Lint
+  - name: 'node:24-slim'
+    id: '2. Lint'
+    entrypoint: npm
+    args: ['run', 'lint']
+
+  # 3. Compilar la aplicación Next.js
+  - name: 'node:24-slim'
+    id: '3. Compilar la aplicación Next.js'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        node scripts/generate-env.js ${_ENVIRONMENT}
+        npm run build
+
+  # 4. Preparar archivos para el despliegue (standalone)
+  - name: 'node:24-slim'
+    id: '4. Preparar archivos para el despliegue'
+    entrypoint: bash
+    args:
+      - '-c'
+      - |
+        cp -r public .next/standalone/ 2>/dev/null || true
+        cp -r .next/static .next/standalone/.next/ 2>/dev/null || true
+        cp ${_ENVIRONMENT}.yaml .next/standalone/
+        # Editamos el package.json generado para quitar el script de build y evitar que App Engine intente compilar
+        node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync('.next/standalone/package.json', 'utf8')); delete pkg.scripts.build; delete pkg.scripts.dev; fs.writeFileSync('.next/standalone/package.json', JSON.stringify(pkg, null, 2))"
+
+  # 5. Desplegar la aplicación en App Engine
+  - name: 'gcr.io/cloud-builders/gcloud'
+    dir: '.next/standalone'
+    id: '5. Desplegar la aplicación en App Engine'
+    entrypoint: gcloud
+    args: [
+      'app',
+      'deploy',
+      '${_ENVIRONMENT}.yaml',
+      '--quiet'
+    ]
+
+timeout: '600s'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,38 @@
+
+> glocationweb-frontend@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.2 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.5:3000
+✓ Ready in 723ms
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\Paula\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\Paula\Downloads\Diseño Antigravity\Glocation Web\glocationweb-frontend\package-lock.json
+   * C:\Users\Paula\Downloads\package-lock.json
+
+
+ GET / 200 in 514ms (next.js: 179ms, application-code: 335ms)
+ GET /intranet/home 200 in 390ms (next.js: 39ms, application-code: 351ms)
+ GET /placeholder-avatar.jpg 404 in 92ms (next.js: 32ms, application-code: 60ms)
+✓ Compiled in 911ms
+ GET /intranet/home 200 in 305ms (next.js: 81ms, application-code: 224ms)
+ GET /intranet/home 200 in 81ms (next.js: 10ms, application-code: 71ms)
+ GET /intranet 404 in 146ms (next.js: 31ms, application-code: 114ms)
+✓ Compiled in 225ms
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+ GET /intranet/home 200 in 424ms (next.js: 67ms, application-code: 357ms)
+ GET /placeholder-avatar.jpg 404 in 87ms (next.js: 22ms, application-code: 66ms)
+✓ Compiled in 210ms
+ GET /intranet/home 200 in 209ms (next.js: 53ms, application-code: 155ms)
+ GET /intranet/home 200 in 52ms (next.js: 3ms, application-code: 49ms)
+✓ Compiled in 222ms
+ GET /intranet/home 200 in 167ms (next.js: 42ms, application-code: 125ms)
+ GET /intranet/home 200 in 65ms (next.js: 4ms, application-code: 61ms)
+✓ Compiled in 223ms
+✓ Compiled in 202ms
