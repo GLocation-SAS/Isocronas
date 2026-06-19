@@ -11,8 +11,8 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
 export const metadata = {
-  title: "GLocation | Design System",
-  description: "Base frontend y sistema de diseño de GLocation.",
+  title: "Lumen360 | Design System",
+  description: "Base frontend y sistema de diseño de Lumen360.",
 };
 
 interface RootLayoutProps {
@@ -28,9 +28,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="es" data-theme={theme} className={cn(montserrat.variable, nunito.variable, "font-sans")} suppressHydrationWarning>
       <head>
-        <Script
-          id="theme-script"
-          strategy="beforeInteractive"
+        <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

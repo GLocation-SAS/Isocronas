@@ -1,8 +1,23 @@
 @import "tailwindcss";
+@source "../";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-
+/* Fix for Radix UI visually hidden inputs appearing in some Tailwind v4 environments */
+[data-slot="switch"] + input[type="checkbox"],
+[data-slot="checkbox"] + input[type="checkbox"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
 /* PROFESSIONAL DESIGN TOKENS ARCHITECTURE */
 
@@ -177,62 +192,62 @@
 
 :root {
   /* PRIMITIVE TOKENS - LIGHT */
-  --primitive-primary-50: #f3eff6;
-  --primitive-primary-100: #e6e0ed;
-  --primitive-primary-200: #cdc1dc;
-  --primitive-primary-300: #b4a1ca;
-  --primitive-primary-400: #9b82b9;
-  --primitive-primary-500: #8263a7;
-  --primitive-primary-600: #684f86;
-  --primitive-primary-700: #4e3b64;
-  --primitive-primary-800: #342843;
-  --primitive-primary-900: #1a1421;
+  --primitive-primary-50: #e8ecf0;
+  --primitive-primary-100: #d1d9e1;
+  --primitive-primary-200: #a3b3c3;
+  --primitive-primary-300: #758da5;
+  --primitive-primary-400: #476787;
+  --primitive-primary-500: #162f43;
+  --primitive-primary-600: #122636;
+  --primitive-primary-700: #0e1c28;
+  --primitive-primary-800: #0a131b;
+  --primitive-primary-900: #05090d;
 
-  --primitive-secondary-50: #f1f5f9;
-  --primitive-secondary-100: #e2e8f0;
-  --primitive-secondary-200: #cbd5e1;
-  --primitive-secondary-300: #94a3b8;
-  --primitive-secondary-400: #64748b;
-  --primitive-secondary-500: #475569;
-  --primitive-secondary-600: #334155;
-  --primitive-secondary-700: #1e293b;
-  --primitive-secondary-800: #0f172a;
-  --primitive-secondary-900: #020617;
+  --primitive-secondary-50: #e6f1f2;
+  --primitive-secondary-100: #cce3e6;
+  --primitive-secondary-200: #99c7cd;
+  --primitive-secondary-300: #66abb3;
+  --primitive-secondary-400: #338f9a;
+  --primitive-secondary-500: #026f80;
+  --primitive-secondary-600: #025966;
+  --primitive-secondary-700: #01434d;
+  --primitive-secondary-800: #012c33;
+  --primitive-secondary-900: #00161a;
 
-  --primitive-success-50: #e6f0f0;
-  --primitive-success-100: #cce2e1;
-  --primitive-success-200: #99c5c3;
-  --primitive-success-300: #66a7a4;
-  --primitive-success-400: #338a86;
-  --primitive-success-500: #006d68;
-  --primitive-success-600: #005753;
-  --primitive-success-700: #00413e;
-  --primitive-success-800: #002c2a;
-  --primitive-success-900: #001615;
+  --primitive-success-50: #e8f3ee;
+  --primitive-success-100: #d1e7dd;
+  --primitive-success-200: #a3cebc;
+  --primitive-success-300: #75b69a;
+  --primitive-success-400: #479e78;
+  --primitive-success-500: #198754;
+  --primitive-success-600: #146c43;
+  --primitive-success-700: #0f5132;
+  --primitive-success-800: #0a3622;
+  --primitive-success-900: #051b11;
 
 
 
-  --primitive-warning-50: #fff6eb;
-  --primitive-warning-100: #ffedd6;
-  --primitive-warning-200: #ffdaad;
-  --primitive-warning-300: #ffc885;
-  --primitive-warning-400: #ffb55c;
-  --primitive-warning-500: #ffa333;
-  --primitive-warning-600: #cc8229;
-  --primitive-warning-700: #99621f;
-  --primitive-warning-800: #664114;
-  --primitive-warning-900: #33210a;
+  --primitive-warning-50: #fff0e6;
+  --primitive-warning-100: #ffe0cc;
+  --primitive-warning-200: #ffc299;
+  --primitive-warning-300: #ffa366;
+  --primitive-warning-400: #ff8533;
+  --primitive-warning-500: #ff6600;
+  --primitive-warning-600: #cc5200;
+  --primitive-warning-700: #993d00;
+  --primitive-warning-800: #662900;
+  --primitive-warning-900: #331400;
 
-  --primitive-danger-50: #fef2f2;
-  --primitive-danger-100: #fee2e2;
-  --primitive-danger-200: #fecaca;
-  --primitive-danger-300: #fca5a5;
-  --primitive-danger-400: #f87171;
-  --primitive-danger-500: #E43241;
-  --primitive-danger-600: #dc2626;
-  --primitive-danger-700: #b91c1c;
-  --primitive-danger-800: #991b1b;
-  --primitive-danger-900: #7f1d1d;
+  --primitive-danger-50: #ffe5ec;
+  --primitive-danger-100: #ffccd8;
+  --primitive-danger-200: #fe99b2;
+  --primitive-danger-300: #fd668c;
+  --primitive-danger-400: #fc3365;
+  --primitive-danger-500: #fa003f;
+  --primitive-danger-600: #c80032;
+  --primitive-danger-700: #960026;
+  --primitive-danger-800: #640019;
+  --primitive-danger-900: #32000d;
 
   --primitive-info-50: #f0f9ff;
   --primitive-info-100: #e0f2fe;

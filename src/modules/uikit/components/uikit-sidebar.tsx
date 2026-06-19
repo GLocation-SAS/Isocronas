@@ -41,6 +41,8 @@ import {
   Palette,
   Sun,
   Moon,
+  Image as ImageIcon,
+  ChevronDown,
 } from "lucide-react";
 
 /** Section definition for UIKit navigation */
@@ -55,6 +57,7 @@ export interface UIKitSection {
 export const UIKIT_SECTIONS: UIKitSection[] = [
   // Brand & Tokens
   { id: "colors", label: "Colors", icon: Palette, group: "brand" },
+  { id: "logos", label: "Logos", icon: ImageIcon, group: "brand" },
 
   // Actions
   { id: "buttons", label: "Buttons", icon: MousePointerClick, group: "actions" },
@@ -80,10 +83,9 @@ export const UIKIT_SECTIONS: UIKitSection[] = [
 
   // Overlay / Feedback
   { id: "dialog", label: "Dialog", icon: Layers, group: "overlay" },
-  { id: "toast", label: "Toast", icon: Bell, group: "overlay" },
+  { id: "dropdown", label: "Dropdown", icon: ChevronDown, group: "overlay" },
   { id: "tooltip", label: "Tooltip", icon: MessageSquare, group: "overlay" },
   { id: "chat-assistant", label: "Chat Assistant", icon: MessageSquare, group: "overlay" },
-  { id: "chat-intranet", label: "Chat Intranet", icon: MessageSquare, group: "overlay" },
   { id: "folders", label: "Folders", icon: FolderIcon, group: "data" },
   { id: "cards", label: "Cards", icon: Layout, group: "data" },
 ];
@@ -146,34 +148,38 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
           <div className="flex items-center shrink-0">
             {/* Expanded Logos */}
             <Image
-              src="/Logotipo.svg"
-              alt="GLocation Logo"
+              src="/Logo%20horizontal.svg"
+              alt="RF Planner Logo"
               width={150}
               height={35}
               className="h-[35px] w-auto dark:hidden group-data-[state=collapsed]:hidden animate-in fade-in duration-300"
+              priority
             />
             <Image
-              src="/LogotipoVersionNegativo.svg"
-              alt="GLocation Logo"
+              src="/Logo%20horizontal%20blanco.svg"
+              alt="RF Planner Logo"
               width={150}
               height={35}
               className="h-[35px] w-auto hidden dark:group-data-[state=expanded]:block group-data-[state=collapsed]:hidden animate-in fade-in duration-300"
+              priority
             />
 
             {/* Collapsed Icons */}
             <Image
-              src="/icon.svg"
-              alt="GLocation Icon"
+              src="/Icon.svg"
+              alt="RF Planner Icon"
               width={27}
               height={27}
               className="h-[27px] w-auto dark:hidden group-data-[state=expanded]:hidden animate-in zoom-in-75 duration-300"
+              priority
             />
             <Image
-              src="/iconBlanco.svg"
-              alt="GLocation Icon"
+              src="/Icon%20Blanco.svg"
+              alt="RF Planner Icon"
               width={27}
               height={27}
               className="h-[27px] w-auto hidden dark:group-data-[state=collapsed]:block group-data-[state=expanded]:hidden animate-in zoom-in-75 duration-300"
+              priority
             />
           </div>
         </div>

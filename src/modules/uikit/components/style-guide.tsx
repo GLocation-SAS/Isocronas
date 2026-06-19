@@ -173,23 +173,24 @@ export function StyleGuide() {
 
       {/* Section 2: Primitive Scales */}
       <section className="mb-16">
-        <div className="mb-8">
-          <h2 className="text-h2 font-heading font-bold text-foreground">SISTEMA DE COLOR (PRIMITIVOS)</h2>
-          <p className="text-muted-foreground">Escalas cromáticas completas definidas en globals.css.</p>
+        <div className="mb-12 text-center flex flex-col items-center">
+          <h2 className="text-h2 font-heading font-bold uppercase tracking-wider text-foreground">SISTEMA DE COLOR (PRIMITIVOS)</h2>
+          <p className="text-muted-foreground mt-1">Escalas cromáticas completas definidas en globals.css.</p>
         </div>
 
-        <div className="space-y-10">
+        <div className="space-y-12">
           {FULL_SCALES.map((scale) => (
-            <div key={scale.name} className="space-y-4">
-              <h3 className="text-body-sm font-bold text-muted-foreground uppercase tracking-widest pl-2 border-l-4 border-primary/40">
-                {scale.name}
+            <div key={scale.name} className="flex flex-col items-center gap-6">
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] relative w-full text-center">
+                <span className="bg-card px-4 relative z-10">{scale.name}</span>
+                <div className="absolute top-1/2 left-0 w-full h-px bg-border/40 -z-0"></div>
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-4">
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6 w-full max-w-5xl">
                 {scale.colors.map((color) => (
-                  <div key={color.level} className="flex flex-col items-center gap-2 group">
+                  <div key={color.level} className="flex flex-col items-center gap-3 group">
                     <div
                       className={cn(
-                        "w-full aspect-square rounded-lg shadow-md border border-border/10 transition-transform group-hover:scale-105",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm border border-border/20 transition-transform group-hover:scale-110",
                         `bg-${scale.prefix}-${color.level}`
                       )}
                       style={{
@@ -198,7 +199,7 @@ export function StyleGuide() {
                       }}
                     />
                     <div className="flex flex-col items-center text-center">
-                      <span className="text-[11px] font-bold text-foreground">{color.level}</span>
+                      <span className="text-[12px] font-bold text-foreground">{color.level}</span>
                       <span className="text-[9px] text-muted-foreground uppercase font-mono">{color.hex}</span>
                     </div>
                   </div>

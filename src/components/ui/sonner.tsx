@@ -21,53 +21,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="bottom-right"
       offset={80}
       icons={{
-        success: (
-          <CircleCheckIcon className="size-5 text-success" />
-        ),
-        info: (
-          <InfoIcon className="size-5 text-info" />
-        ),
-        warning: (
-          <TriangleAlertIcon className="size-5 text-warning" />
-        ),
-        error: (
-          <OctagonXIcon className="size-5 text-danger" />
-        ),
-        loading: (
-          <Loader2Icon className="size-5 animate-spin text-primary" />
-        ),
+        success: <CircleCheckIcon />,
+        info: <InfoIcon />,
+        warning: <TriangleAlertIcon />,
+        error: <OctagonXIcon />,
+        loading: <Loader2Icon className="animate-spin" />,
       }}
-      style={
-        {
-          /* Default toast */
-          "--normal-bg": "color-mix(in srgb, var(--primary) 5%, var(--background))",
-          "--normal-border": "color-mix(in srgb, var(--primary) 40%, transparent)",
-          "--normal-text": "var(--foreground)",
-
-          /* Success */
-          "--success-bg": "color-mix(in srgb, var(--success) 10%, var(--background))",
-          "--success-border": "color-mix(in srgb, var(--success) 40%, transparent)",
-          "--success-text": "var(--foreground)",
-
-          /* Info */
-          "--info-bg": "color-mix(in srgb, var(--info) 10%, var(--background))",
-          "--info-border": "color-mix(in srgb, var(--info) 40%, transparent)",
-          "--info-text": "var(--foreground)",
-
-          /* Warning */
-          "--warning-bg": "color-mix(in srgb, var(--warning) 10%, var(--background))",
-          "--warning-border": "color-mix(in srgb, var(--warning) 40%, transparent)",
-          "--warning-text": "var(--foreground)",
-
-          /* Error */
-          "--error-bg": "color-mix(in srgb, var(--danger) 15%, var(--background))",
-          "--error-border": "color-mix(in srgb, var(--danger) 40%, transparent)",
-          "--error-text": "var(--foreground)",
-
-          "--border-radius": "1rem",
-        } as React.CSSProperties
-      }
-      richColors
+      style={{
+        "--border-radius": "1rem",
+      } as React.CSSProperties}
       toastOptions={{
         classNames: {
           toast: `
@@ -75,22 +37,80 @@ const Toaster = ({ ...props }: ToasterProps) => {
             rounded-2xl
             backdrop-blur-xl
             text-foreground
-            shadow-[0_8px_30px_rgba(0,0,0,0.12)]
+            shadow-sm
+            !border-transparent
+            !border-0
             transition-all duration-300
-            !gap-4
+            !gap-5
             !p-4
             !items-center
+            overflow-hidden
+            w-full
+
+            /* Background por defecto (aplica a todos, incluyendo normales) */
+            !bg-primary-50 dark:!bg-surface
+
+            /* Backgrounds específicos en modo claro, forzando bg-surface en modo oscuro */
+            data-[type=success]:!bg-success-50 dark:data-[type=success]:!bg-surface
+            data-[type=info]:!bg-info-50 dark:data-[type=info]:!bg-surface
+            data-[type=warning]:!bg-warning-50 dark:data-[type=warning]:!bg-surface
+            data-[type=error]:!bg-danger-50 dark:data-[type=error]:!bg-surface
+          `,
+
+          icon: `
+            !flex !size-12 !items-center !justify-center !rounded-[14px] !shrink-0 !m-0
+
+            /* Fondo y color por defecto para el icono */
+            !bg-primary-100 dark:!bg-primary-500/20
+            !text-primary-600 dark:!text-primary-300
+
+            /* Colores específicos de fondo */
+            group-data-[type=success]:!bg-success-100 dark:group-data-[type=success]:!bg-success-500/20
+            group-data-[type=info]:!bg-info-100 dark:group-data-[type=info]:!bg-info-500/20
+            group-data-[type=warning]:!bg-warning-100 dark:group-data-[type=warning]:!bg-warning-500/20
+            group-data-[type=error]:!bg-danger-100 dark:group-data-[type=error]:!bg-danger-500/20
+
+            /* Colores específicos de ícono (brillantes en dark mode) */
+            group-data-[type=success]:!text-success-600 dark:group-data-[type=success]:!text-success-300
+            group-data-[type=info]:!text-info-600 dark:group-data-[type=info]:!text-info-300
+            group-data-[type=warning]:!text-warning-600 dark:group-data-[type=warning]:!text-warning-300
+            group-data-[type=error]:!text-danger-600 dark:group-data-[type=error]:!text-danger-300
+
+            /* Forzar tamano del SVG interno */
+            [&>svg]:!size-6
+          `,
+
+          content: `
+            !flex-1
+            !w-full
           `,
 
           title: `
-            text-sm
+            text-base
             font-semibold
             tracking-tight
+            leading-tight
+            break-words
+            line-clamp-2
+            !text-foreground
           `,
 
           description: `
             text-sm
-            !text-muted-foreground
+            font-medium
+            leading-snug
+            !mt-1.5
+            break-words
+            line-clamp-3
+
+            /* Color de texto por defecto */
+            !text-primary-700 dark:!text-primary-400
+
+            /* Colores de texto específicos (más suaves que el ícono) */
+            group-data-[type=success]:!text-success-700 dark:group-data-[type=success]:!text-success-400
+            group-data-[type=info]:!text-info-700 dark:group-data-[type=info]:!text-info-400
+            group-data-[type=warning]:!text-warning-700 dark:group-data-[type=warning]:!text-warning-400
+            group-data-[type=error]:!text-danger-700 dark:group-data-[type=error]:!text-danger-400
           `,
 
           actionButton: `

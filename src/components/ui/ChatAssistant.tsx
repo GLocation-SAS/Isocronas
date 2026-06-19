@@ -40,22 +40,18 @@ const ChatAssistant = () => {
                     </div>
 
                     {/* Encabezado */}
-                    <div className="relative z-10 flex items-center bg-primary-400 justify-between px-6 py-6 text-secondary-foreground shadow-sm">
+                    <div className="relative z-10 flex items-center bg-surface justify-between px-6 py-6 text-foreground shadow-sm border-b border-border/10">
                         <div className="flex items-center gap-2">
-                            <Image
-                                src="/iconBlanco.svg"
-                                alt="GLocation Logo"
-                                width={35}
-                                height={35}
-                                className="h-[35px] w-auto animate-in fade-in duration-300"
-                            />
-                            <h3 className="text-lg font-semibold tracking-tight text-white">Preguntale a la IA</h3>
+                            <div className="flex items-center justify-center h-[35px] w-[35px] rounded-full overflow-hidden border border-primary/20 shadow-sm bg-background">
+                                <Image src="/bot.png" alt="Bot Avatar" width={35} height={35} className="w-full h-full object-cover" priority />
+                            </div>
+                            <h3 className="text-lg font-semibold tracking-tight text-foreground">Preguntale a la IA</h3>
                         </div>
                         <Button
                             variant="secondary"
                             size="icon-sm"
                             onClick={() => setIsOpen(false)}
-                            className="w-auto"
+                            className="rounded-full"
                         >
                             <X size={18} />
                         </Button>
@@ -66,8 +62,8 @@ const ChatAssistant = () => {
 
                         {/* Mensaje del Bot (Súper Transparente / Glass) */}
                         <div className="flex items-start gap-2.5">
-                            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface/40 text-secondary shadow-sm border border-border/60">
-                                <Bot />
+                            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden border border-border/60 shadow-sm bg-background">
+                                <Image src="/bot.png" alt="Bot Avatar" width={32} height={32} className="w-full h-full object-cover" />
                             </div>
                             <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-surface/50 border border-border/30 p-4 text-sm text-foreground shadow-sm backdrop-blur-md">
                                 Hola, en que te puedo ayudar hoy?
@@ -85,8 +81,8 @@ const ChatAssistant = () => {
 
                         {/* Segundo Mensaje Bot */}
                         <div className="flex items-start gap-2.5">
-                            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface/40 text-secondary shadow-sm border border-border/60">
-                                <Bot />
+                            <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full overflow-hidden border border-border/60 shadow-sm bg-background">
+                                <Image src="/bot.png" alt="Bot Avatar" width={32} height={32} className="w-full h-full object-cover" />
                             </div>
                             <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-surface/50 border border-border/30 p-4 text-sm text-foreground shadow-sm backdrop-blur-md">
                                 Mantenerse hidratado y escuchar música relajante también puede ayudar. ¿Quieres que te elabore un plan de concentración?

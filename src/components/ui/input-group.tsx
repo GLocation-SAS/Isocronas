@@ -36,7 +36,7 @@ const inputGroupVariants = cva(
           "border-primary/30 text-muted-foreground",
 
           "[--input-glow:var(--primitive-primary-400)]",
-          "[--input-radial:rgba(90,57,136,0.15)]",
+          "[--input-radial:rgba(53, 81, 160, 0.15)]",
           "[--input-state-color:var(--primary)]",
 
           "hover:border-primary/50",
@@ -180,8 +180,8 @@ function InputGroup({
               "z-[0]",
               "rounded-full",
 
-              variant === "animated" 
-                ? "opacity-0 group-hover/input-group:opacity-70 group-focus-within/input-group:opacity-100 transition-opacity duration-500" 
+              variant === "animated"
+                ? "opacity-0 group-hover/input-group:opacity-70 group-focus-within/input-group:opacity-100 transition-opacity duration-500"
                 : "opacity-70",
 
               "blur-md",
@@ -202,8 +202,8 @@ function InputGroup({
               "rounded-full",
               "p-[1.2px]",
 
-              variant === "animated" 
-                ? "opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100 transition-opacity duration-500" 
+              variant === "animated"
+                ? "opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100 transition-opacity duration-500"
                 : "",
 
               "[background:conic-gradient(from_var(--border-angle),transparent_0deg,transparent_120deg,var(--primitive-primary-400)_180deg,var(--primitive-info-300)_240deg,transparent_300deg)]",

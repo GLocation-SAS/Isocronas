@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UIKitSidebar, UIKIT_SECTIONS } from "../components/uikit-sidebar";
 import { RadialButtonShowcase } from "../components/radial-button-showcase";
@@ -26,8 +26,8 @@ import { FolderShowcase } from "../components/folder-showcase";
 import { CardShowcase } from "../components/card-showcase";
 import { ToggleShowcase } from "../components/toggle-showcase";
 import { ChatAssistantShowcase } from "../components/chat-assistant-showcase";
-import { ChatIntranetShowcase } from "../components/chat-intranet-showcase";
 import { StyleGuide } from "../components/style-guide";
+import { LogoShowcase } from "../components/logo-showcase";
 
 /**
  * Maps section IDs to their showcase components.
@@ -35,6 +35,7 @@ import { StyleGuide } from "../components/style-guide";
  */
 const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   colors: StyleGuide,
+  logos: LogoShowcase,
   buttons: RadialButtonShowcase,
   inputs: InputGroupShowcase,
   textarea: TextareaShowcase,
@@ -56,7 +57,6 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   cards: CardShowcase,
   toggle: ToggleShowcase,
   "chat-assistant": ChatAssistantShowcase,
-  "chat-intranet": ChatIntranetShowcase,
   pagination: PaginationShowcase,
 };
 
@@ -126,6 +126,11 @@ export function UIKitView() {
         <UIKitSidebar activeSection={activeSection} onNavigate={handleNavigate} />
 
         <SidebarInset>
+          {/* Mobile Header with Trigger */}
+          <header className="flex h-14 md:hidden items-center gap-4 border-b border-border bg-background px-6 sticky top-0 z-40 shadow-sm">
+            <SidebarTrigger />
+            <div className="font-heading font-bold text-foreground">Lumen360 UI Kit</div>
+          </header>
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto">
@@ -133,7 +138,7 @@ export function UIKitView() {
               {/* Hero section */}
               <section className="text-center p-8 rounded-xl border border-border shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-h1 font-heading font-bold text-primary mb-2">
-                  GLocation UI Kit
+                  Lumen360 UI Kit
                 </h2>
                 <p className="text-muted-foreground">
                   Explora los componentes   del sistema de diseño.
