@@ -19,9 +19,37 @@ const cloudRunUrls = environments
 // Puertos locales de desarrollo (8080–8092)
 const localPorts = Array.from({ length: 13 }, (_, i) => `http://localhost:${8080 + i}`).join(' ');
 
-const cspHeader = `
-  default-src 'self';
-`;
+// En desarrollo, Next.js necesita 'unsafe-inline' y 'unsafe-eval' para hot-reload e hidratación.
+// En producción, se debe refinar con nonces o hashes.
+const isDev = process.env.NODE_ENV === 'development';
+
+const cspHeader = [
+  // ── Fallback ────────────────────────────────────────────────────────────
+  `default-src 'self'`,
+
+  // ── Scripts ─────────────────────────────────────────────────────────────
+  // Next.js dev-server requiere 'unsafe-eval' y 'unsafe-inline' para HMR/Fast-Refresh
+  `script-src 'self'${isDev ? " 'unsafe-inline' 'unsafe-eval'" : " 'unsafe-inline'"}`,
+
+  // ── Estilos ─────────────────────────────────────────────────────────────
+  // TailwindCSS v4 y Radix UI inyectan estilos inline
+  `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
+
+  // ── Fuentes ─────────────────────────────────────────────────────────────
+  `font-src 'self' https://fonts.gstatic.com`,
+
+  // ── Imágenes ────────────────────────────────────────────────────────────
+  `img-src 'self' data: blob: https://i.pravatar.cc https://img.youtube.com https://i.ytimg.com https://storage.googleapis.com`,
+
+  // ── Conexiones (APIs, WebSockets para HMR) ─────────────────────────────
+  `connect-src 'self' ${cloudRunUrls} ${localPorts}${isDev ? ' ws://localhost:* wss://localhost:*' : ''}`,
+
+  // ── Frames ──────────────────────────────────────────────────────────────
+  `frame-src 'self' https://www.youtube.com`,
+
+  // ── Workers ─────────────────────────────────────────────────────────────
+  `worker-src 'self' blob:`,
+].join('; ');
 
 const nextConfig: NextConfig = {
   output: "standalone",
