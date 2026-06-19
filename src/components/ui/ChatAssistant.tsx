@@ -22,7 +22,13 @@ const ChatAssistant = () => {
                 className="group relative flex h-16 w-16 items-center justify-center rounded-full bg-primary-400 text-secondary-foreground shadow-lg transition-transform hover:scale-110 active:scale-95"
             >
                 <div className="absolute inset-0 rounded-full bg-secondary-foreground/20 blur-md group-hover:blur-lg transition-all"></div>
-                {isOpen ? <X size={28} /> : <Bot size={28} fill="currentColor" />}
+                {isOpen ? (
+                    <X size={28} />
+                ) : (
+                    <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                        <Image src="/bot.png" alt="Bot" fill className="object-cover" />
+                    </div>
+                )}
             </Button>
 
             {/* --- VENTANA DE CHAT --- */}
