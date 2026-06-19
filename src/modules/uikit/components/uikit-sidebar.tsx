@@ -83,6 +83,7 @@ export const UIKIT_SECTIONS: UIKitSection[] = [
 
   // Overlay / Feedback
   { id: "dialog", label: "Dialog", icon: Layers, group: "overlay" },
+  { id: "toast", label: "Toast", icon: Bell, group: "overlay" },
   { id: "dropdown", label: "Dropdown", icon: ChevronDown, group: "overlay" },
   { id: "tooltip", label: "Tooltip", icon: MessageSquare, group: "overlay" },
   { id: "chat-assistant", label: "Chat Assistant", icon: MessageSquare, group: "overlay" },
