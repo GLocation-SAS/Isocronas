@@ -192,16 +192,16 @@
 
 :root {
   /* PRIMITIVE TOKENS - LIGHT */
-  --primitive-primary-50: #e8ecf0;
-  --primitive-primary-100: #d1d9e1;
-  --primitive-primary-200: #a3b3c3;
-  --primitive-primary-300: #758da5;
-  --primitive-primary-400: #476787;
-  --primitive-primary-500: #162f43;
-  --primitive-primary-600: #122636;
-  --primitive-primary-700: #0e1c28;
-  --primitive-primary-800: #0a131b;
-  --primitive-primary-900: #05090d;
+  --primitive-primary-50: #f8f2ff;
+  --primitive-primary-100: #f0e6ff;
+  --primitive-primary-200: #e0ccff;
+  --primitive-primary-300: #d1b3ff;
+  --primitive-primary-400: #b080ff;
+  --primitive-primary-500: #9d00ff;
+  --primitive-primary-600: #8a00e0;
+  --primitive-primary-700: #7000b8;
+  --primitive-primary-800: #56008f;
+  --primitive-primary-900: #3b0061;
 
   --primitive-secondary-50: #e6f1f2;
   --primitive-secondary-100: #cce3e6;

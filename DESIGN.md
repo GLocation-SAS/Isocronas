@@ -10,7 +10,7 @@ GLocation operates with a professional, enterprise-focused aesthetic, balancing 
 ### Primitive Palette (Foundational)
 | Group | Base Hex | Token Range | Purpose |
 |-------|----------|-------------|---------|
-| **Primary** | `#5a3988` | `--primitive-primary-50-950` | Brand identity, main actions, and emphasis |
+| **Primary** | `#9d00ff` | `--primitive-primary-50-950` | Brand identity, main actions, and emphasis |
 | **Secondary** | `#2d5f7c` | `--primitive-secondary-50-950` | Complementary actions and UI depth |
 | **Success** | `#67DC67` | `--primitive-success-50-900` | Positive actions, completion, and health status |
 | **Warning** | `#FCCF2E` | `--primitive-warning-50-900` | Cautions, pending states, and alerts |
@@ -183,7 +183,7 @@ The application follows a structured grid system:
 ## Agent Prompt Guide
 
 ### Quick Color Reference:
-- **Brand Primary:** `#5a3988`
+- **Brand Primary:** `#9d00ff`
 - **Brand Secondary:** `#2d5f7c`
 - **Text:** `--foreground`
 - **Background:** `--background`
@@ -200,7 +200,7 @@ The application follows a structured grid system:
 ```css
 :root {
   /* Primitive Tokens (Sample) */
-  --primitive-primary-500: #5a3988;
+  --primitive-primary-500: #9d00ff;
   --primitive-secondary-500: #2d5f7c;
 
   /* Semantic Tokens */
