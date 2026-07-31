@@ -1,177 +1,279 @@
+"use client";
+
+import React, { useState } from "react";
 import {
   InputGroup,
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { Search, Send, Mail, Sparkles, CheckCircle2, AlertCircle, Eye, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Send, Mail, Sparkles, CheckCircle2, AlertCircle, Eye, Info, Sliders, Grid, Code2, Copy, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function InputGroupShowcase() {
-  const states = [
-    { id: "default", label: "Default", color: "text-primary" },
-    { id: "success", label: "Success", color: "text-success" },
-    { id: "error", label: "Error", color: "text-danger" },
-  ] as const;
+  const [stateId, setStateId] = useState<"default" | "success" | "error">("default");
+  const [size, setSize] = useState<"sm" | "default" | "lg">("default");
+  const [hasLeftIcon, setHasLeftIcon] = useState(true);
+  const [hasRightButton, setHasRightButton] = useState(true);
+  const [isDisabled, setIsDisabled] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [activeTab, setActiveTab] = useState<"playground" | "catalog">("playground");
 
-  const compositions = [
-    { id: "icon", label: "Con Icono", icon: Search },
-    { id: "mixed", label: "Mixto (Icon + Button)", isMixed: true },
-    { id: "button", label: "Con Botón", isButton: true },
-    { id: "disabled", label: "Deshabilitado", isDisabled: true },
-  ] as const;
+  const generatedCode = `<InputGroup state="${stateId}" size="${size}"${hasLeftIcon ? ' leftIcon={<Search />}' : ''}${isDisabled ? ' disabled' : ''}>
+  <InputGroupInput placeholder="Buscar..." />
+  ${hasRightButton ? `<InputGroupButton variant="ghost" size="icon-xs"><Send /></InputGroupButton>` : ''}
+</InputGroup>`;
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(generatedCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
 
   return (
-    <section className="grid gap-8 p-8 rounded-xl border border-border bg-background shadow-xs overflow-hidden">
-      <div className="space-y-2">
-        <h2 className="text-h3 font-bold flex items-center gap-2">
-          <Sparkles className="size-5 text-primary" />
-          Matriz de Estados: Input Group
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Explora la interacción dinámica y los efectos radiales de los nuevos estados de entrada.
-        </p>
-      </div>
-
-      <div className="overflow-x-auto pb-4">
-        <div className="min-w-[1000px]">
-          {/* HEADER ROW */}
-          <div className="grid grid-cols-[160px_repeat(3,1fr)] gap-6 items-end mb-6 border-b border-border pb-4">
-            <div className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-              Composición
-            </div>
-            {states.map((state) => (
-              <div key={state.id} className="text-center space-y-2">
-                <div className={`text-xs font-bold ${state.color}`}>{state.label}</div>
-                <div className={`text-[10px] ${state.color} bg-current/5 px-2 py-0.5 rounded-full border border-current/20 inline-block font-mono uppercase`}>
-                  state=&quot;{state.id}&quot;
-                </div>
-              </div>
-            ))}
+    <section className="grid gap-8 p-6 sm:p-8 rounded-3xl border border-border/80 bg-background shadow-xs overflow-hidden">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge variant="primary" appearance="soft">
+              Componentes de Entrada
+            </Badge>
+            <span className="text-xs font-mono text-muted-foreground">Radial Focus & Glow</span>
           </div>
-
-          {/* CONTENT ROWS */}
-          <div className="space-y-8">
-            {compositions.map((comp) => (
-              <div key={comp.id} className="grid grid-cols-[160px_repeat(3,1fr)] gap-6 items-center">
-                {/* COMP LABEL */}
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-semibold capitalize text-foreground">{comp.label}</span>
-                  <span className="text-[10px] text-muted-foreground font-mono">type=&quot;{comp.id}&quot;</span>
-                </div>
-
-                {/* STATE CELLS */}
-                {states.map((state) => (
-                  <div key={`${comp.id}-${state.id}`} className="flex justify-center w-full">
-                    <InputGroup
-                      state={state.id}
-                      className="w-full"
-                      disabled={comp.id === "disabled"}
-                      leftIcon={
-                        <>
-                          {comp.id === "icon" && <comp.icon className="size-4" />}
-                          {comp.id === "mixed" && <Mail className="size-4" />}
-                          {comp.id === "button" && <Search className="size-4" />}
-                          {comp.id === "disabled" && <Mail className="size-4" />}
-                        </>
-                      }
-                      rightIcon={
-                        <>
-                          {state.id === "success" && <CheckCircle2 className="size-4" />}
-                          {state.id === "error" && <AlertCircle className="size-4" />}
-
-                          {comp.id === "mixed" && (
-                            <InputGroupButton variant="ghost" size="icon-xs">
-                              <Eye className="size-3.5" />
-                            </InputGroupButton>
-                          )}
-                          {(comp.id === "button" || comp.id === "disabled") && (
-                            <InputGroupButton
-                              variant="ghost"
-                              size="icon-xs"
-                              disabled={comp.id === "disabled"}
-                            >
-                              {comp.id === "button" ? (
-                                <Send className="size-3.5" />
-                              ) : (
-                                <Eye className="size-3.5" />
-                              )}
-                            </InputGroupButton>
-                          )}
-                          {comp.id === "icon" && state.id === "default" && (
-                            <Info className="size-4 text-muted-foreground" />
-                          )}
-                        </>
-                      }
-                    >
-                      <InputGroupInput
-                        placeholder={`Entrada ${state.label}...`}
-                        disabled={comp.id === "disabled"}
-                      />
-                    </InputGroup>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* SIZES SECTION */}
-      <div className="space-y-4 pt-4 border-t border-border">
-        <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-          Tamaños Disponibles (Coherencia con Botones)
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">Pequeño</span>
-              <span className="text-[10px] text-muted-foreground font-mono">size=&quot;sm&quot; (h-9)</span>
-            </div>
-            <InputGroup size="sm" leftIcon={<Search className="size-3.5" />}>
-              <InputGroupInput placeholder="Búsqueda pequeña..." />
-            </InputGroup>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">Estándar</span>
-              <span className="text-[10px] text-muted-foreground font-mono">size=&quot;default&quot; (h-11)</span>
-            </div>
-            <InputGroup size="default" leftIcon={<Search className="size-4" />}>
-              <InputGroupInput placeholder="Búsqueda estándar..." />
-            </InputGroup>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold">Grande</span>
-              <span className="text-[10px] text-muted-foreground font-mono">size=&quot;lg&quot; (h-14)</span>
-            </div>
-            <InputGroup size="lg" leftIcon={<Search className="size-5" />}>
-              <InputGroupInput placeholder="Búsqueda grande..." />
-            </InputGroup>
-          </div>
-        </div>
-      </div>
-
-      {/* COMPONENT HIGHLIGHTS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4 border-t border-border pt-8">
-        <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-            Interacción Dinámica
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            Haz clic o pasa el mouse sobre cualquier input arriba para ver el efecto de **Soft Radial** y el **Glow** perimetral que se adapta cromáticamente a cada estado.
+          <h2 className="text-h3 font-heading font-bold text-foreground flex items-center gap-2">
+            <Sparkles className="size-5 text-primary" />
+            Input Group
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Entradas de texto dinámicas con iconos integrados, botones adosados y efectos cromáticos radiales.
           </p>
         </div>
-        <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-            Notas de Estilo
-          </h3>
-          <ul className="text-xs space-y-2 text-muted-foreground list-disc pl-4">
-            <li>Soporte de tamaños <code className="text-foreground">sm</code>, <code className="text-foreground">default</code> y <code className="text-foreground">lg</code> alineados con el sistema de botones.</li>
-            <li>Borde de <code className="text-foreground">2px</code> para mayor definición en estados de validación.</li>
-            <li>Aislamiento de capas (<code className="text-foreground">isolate</code>) para efectos visuales sin sangrado de color.</li>
-          </ul>
+
+        {/* View Mode Selector */}
+        <div className="flex p-1 rounded-2xl bg-surface border border-border w-fit shrink-0">
+          <button
+            onClick={() => setActiveTab("playground")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+              activeTab === "playground"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Sliders className="size-3.5" />
+            Playground Interactivo
+          </button>
+          <button
+            onClick={() => setActiveTab("catalog")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+              activeTab === "catalog"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Grid className="size-3.5" />
+            Catálogo Compacto
+          </button>
         </div>
       </div>
+
+      {/* PLAYGROUND INTERACTIVO */}
+      {activeTab === "playground" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in duration-300">
+          {/* Canvas Preview */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <div className="relative min-h-[300px] rounded-3xl border border-border/80 bg-surface/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 overflow-hidden shadow-inner">
+              <div className="w-full max-w-sm space-y-2 relative z-10">
+                <label className="text-xs font-bold text-foreground block">
+                  Campo de Entrada:
+                </label>
+                <InputGroup
+                  state={stateId}
+                  size={size}
+                  disabled={isDisabled}
+                  className="w-full"
+                  leftIcon={hasLeftIcon ? <Search className="size-4 text-muted-foreground" /> : undefined}
+                  rightIcon={
+                    hasRightButton ? (
+                      <InputGroupButton variant="ghost" size="icon-xs" disabled={isDisabled}>
+                        <Send className="size-3.5" />
+                      </InputGroupButton>
+                    ) : undefined
+                  }
+                >
+                  <InputGroupInput placeholder="Escribe tu consulta..." disabled={isDisabled} />
+                </InputGroup>
+              </div>
+
+              <div className="absolute bottom-4 left-4 flex items-center gap-2 z-10">
+                <Badge variant="neutral" appearance="soft" className="font-mono text-[10px]">
+                  state=&quot;{stateId}&quot;
+                </Badge>
+                <Badge variant="neutral" appearance="soft" className="font-mono text-[10px]">
+                  size=&quot;{size}&quot;
+                </Badge>
+              </div>
+            </div>
+
+            {/* Code Snippet Box */}
+            <div className="flex items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/80 shadow-xs">
+              <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+                <Code2 className="size-4 text-primary shrink-0 ml-1" />
+                <code className="text-xs font-mono text-foreground font-semibold truncate">
+                  {generatedCode}
+                </code>
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary/20 transition-all shrink-0"
+              >
+                {copiedCode ? (
+                  <>
+                    <Check className="size-3.5 text-success" />
+                    <span className="text-success font-bold">¡Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5" />
+                    <span>Copiar JSX</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Inspector Panel */}
+          <div className="lg:col-span-5 p-6 rounded-3xl border border-border/80 bg-card space-y-6 shadow-xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 border-b border-border/50 pb-3">
+              <Sliders className="size-4 text-primary" />
+              Inspector de Propiedades
+            </h3>
+
+            {/* Estado */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Estado de Validación:</label>
+              <div className="flex gap-2">
+                {(["default", "success", "error"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setStateId(s)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border flex-1",
+                      stateId === s
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-surface text-muted-foreground border-border/60 hover:text-foreground"
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tamaño */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Tamaño:</label>
+              <div className="flex gap-2">
+                {(["sm", "default", "lg"] as const).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => setSize(s)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border flex-1",
+                      size === s
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-surface text-muted-foreground border-border/60 hover:text-foreground"
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modificadores */}
+            <div className="space-y-3 pt-3 border-t border-border/50">
+              <label className="text-xs font-bold text-foreground block">Modificadores:</label>
+              <div className="flex flex-col gap-2.5">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground font-medium select-none">
+                  <Checkbox
+                    checked={hasLeftIcon}
+                    onCheckedChange={(c) => setHasLeftIcon(!!c)}
+                  />
+                  <span>Icono Izquierdo (<Search className="size-3 inline" />)</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground font-medium select-none">
+                  <Checkbox
+                    checked={hasRightButton}
+                    onCheckedChange={(c) => setHasRightButton(!!c)}
+                  />
+                  <span>Botón Adosado (<Send className="size-3 inline" />)</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground font-medium select-none">
+                  <Checkbox
+                    checked={isDisabled}
+                    onCheckedChange={(c) => setIsDisabled(!!c)}
+                  />
+                  <span>Deshabilitado (disabled)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CATÁLOGO COMPACTO */}
+      {activeTab === "catalog" && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in duration-300">
+          <div className="p-5 rounded-2xl border border-border/80 bg-card space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <span className="text-sm font-bold text-foreground">Con Icono</span>
+              <Badge variant="primary" appearance="soft" className="text-[10px]">
+                Search
+              </Badge>
+            </div>
+            <InputGroup leftIcon={<Search className="size-4" />}>
+              <InputGroupInput placeholder="Búsqueda rápida..." />
+            </InputGroup>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-border/80 bg-card space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <span className="text-sm font-bold text-foreground">Con Botón de Envío</span>
+              <Badge variant="secondary" appearance="soft" className="text-[10px]">
+                Send
+              </Badge>
+            </div>
+            <InputGroup
+              leftIcon={<Mail className="size-4" />}
+              rightIcon={
+                <InputGroupButton variant="ghost" size="icon-xs">
+                  <Send className="size-3.5" />
+                </InputGroupButton>
+              }
+            >
+              <InputGroupInput placeholder="Introduce tu email..." />
+            </InputGroup>
+          </div>
+
+          <div className="p-5 rounded-2xl border border-border/80 bg-card space-y-4 shadow-xs">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <span className="text-sm font-bold text-foreground">Estado Validado</span>
+              <Badge variant="success" appearance="soft" className="text-[10px]">
+                Success
+              </Badge>
+            </div>
+            <InputGroup state="success" rightIcon={<CheckCircle2 className="size-4 text-success" />}>
+              <InputGroupInput defaultValue="usuario_verificado@isocronas.com" />
+            </InputGroup>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

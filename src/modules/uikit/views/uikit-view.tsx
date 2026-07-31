@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { cn } from "@/lib/utils";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UIKitSidebar, UIKIT_SECTIONS } from "../components/uikit-sidebar";
@@ -22,10 +23,8 @@ import { TableShowcase } from "../components/table-showcase";
 import { CalendarShowcase } from "../components/calendar-showcase";
 import { PaginationShowcase } from "../components/pagination-showcase";
 import { AvatarShowcase } from "../components/avatar-showcase";
-import { FolderShowcase } from "../components/folder-showcase";
 import { CardShowcase } from "../components/card-showcase";
 import { ToggleShowcase } from "../components/toggle-showcase";
-import { ChatAssistantShowcase } from "../components/chat-assistant-showcase";
 import { StyleGuide } from "../components/style-guide";
 import { LogoShowcase } from "../components/logo-showcase";
 
@@ -53,10 +52,8 @@ const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   table: TableShowcase,
   calendar: CalendarShowcase,
   avatar: AvatarShowcase,
-  folders: FolderShowcase,
   cards: CardShowcase,
   toggle: ToggleShowcase,
-  "chat-assistant": ChatAssistantShowcase,
   pagination: PaginationShowcase,
 };
 
@@ -125,26 +122,34 @@ export function UIKitView() {
       <SidebarProvider defaultOpen={true}>
         <UIKitSidebar activeSection={activeSection} onNavigate={handleNavigate} />
 
-        <SidebarInset>
+        <SidebarInset className="h-screen overflow-hidden flex flex-col">
           {/* Mobile Header with Trigger */}
           <header className="flex h-14 md:hidden items-center gap-4 border-b border-border bg-background px-6 sticky top-0 z-40 shadow-sm">
             <SidebarTrigger />
-            <div className="font-heading font-bold text-foreground">Lumen360 UI Kit</div>
+            <div className="font-heading font-bold text-foreground">Isocronas UI KIT</div>
           </header>
+
+          {/* Mobile Quick Horizontal Navigation Strip */}
+          <div className="flex md:hidden overflow-x-auto gap-2 p-3 bg-surface/90 backdrop-blur-md border-b border-border/80 sticky top-14 z-30 scrollbar-none">
+            {UIKIT_SECTIONS.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => handleNavigate(section.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border shrink-0",
+                  activeSection === section.id
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                    : "bg-background text-muted-foreground border-border/60 hover:text-foreground"
+                )}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
 
           {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-6xl mx-auto p-6 space-y-10">
-              {/* Hero section */}
-              <section className="text-center p-8 rounded-xl border border-border shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-h1 font-heading font-bold text-primary mb-2">
-                  Lumen360 UI Kit
-                </h2>
-                <p className="text-muted-foreground">
-                  Explora los componentes   del sistema de diseño.
-                </p>
-              </section>
-
               {/* Style Guide (Visual Guide) */}
               <div id="colors" ref={(el) => setSectionRef("colors", el)} className="scroll-mt-20">
                 <StyleGuide />

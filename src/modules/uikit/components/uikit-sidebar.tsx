@@ -14,9 +14,11 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
 import {
@@ -43,6 +45,7 @@ import {
   Moon,
   Image as ImageIcon,
   ChevronDown,
+  HelpCircle,
 } from "lucide-react";
 
 /** Section definition for UIKit navigation */
@@ -86,8 +89,6 @@ export const UIKIT_SECTIONS: UIKitSection[] = [
   { id: "toast", label: "Toast", icon: Bell, group: "overlay" },
   { id: "dropdown", label: "Dropdown", icon: ChevronDown, group: "overlay" },
   { id: "tooltip", label: "Tooltip", icon: MessageSquare, group: "overlay" },
-  { id: "chat-assistant", label: "Chat Assistant", icon: MessageSquare, group: "overlay" },
-  { id: "folders", label: "Folders", icon: FolderIcon, group: "data" },
   { id: "cards", label: "Cards", icon: Layout, group: "data" },
 ];
 
@@ -142,8 +143,12 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
 
   return (
     <Sidebar variant="floating" collapsible="icon">
+      {/* Resplandor ambiental de degradado como las tarjetas featured */}
+      <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 size-64 rounded-full bg-primary/20 blur-3xl pointer-events-none z-0" />
+      <div className="absolute -top-20 left-1/2 -translate-x-1/2 size-64 rounded-full bg-secondary/20 blur-3xl pointer-events-none z-0" />
+
       {/* ── Header: Logo + Trigger toggle ── */}
-      <SidebarHeader className="relative px-3 pt-4 pb-3">
+      <SidebarHeader className="relative px-3 pt-4 pb-3 z-10">
         <div className="flex items-center justify-between gap-2 overflow-hidden">
           {/* Logo */}
           <div className="flex items-center shrink-0">
@@ -165,31 +170,48 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
               priority
             />
 
-            {/* Collapsed Icons */}
+            {/* Collapsed Icon Logos */}
             <Image
-              src="/Icon.svg"
+              src="/Iso.svg"
               alt="RF Planner Icon"
-              width={27}
-              height={27}
-              className="h-[27px] w-auto dark:hidden group-data-[state=expanded]:hidden animate-in zoom-in-75 duration-300"
+              width={28}
+              height={28}
+              className="h-7 w-7 dark:hidden group-data-[state=expanded]:hidden animate-in fade-in duration-300"
               priority
             />
             <Image
-              src="/Icon%20Blanco.svg"
+              src="/Iso%20blanco.svg"
               alt="RF Planner Icon"
-              width={27}
-              height={27}
-              className="h-[27px] w-auto hidden dark:group-data-[state=collapsed]:block group-data-[state=expanded]:hidden animate-in zoom-in-75 duration-300"
+              width={28}
+              height={28}
+              className="h-7 w-7 hidden dark:group-data-[state=collapsed]:block animate-in fade-in duration-300"
               priority
             />
+          </div>
+
+          {/* Controls: Info (?) + SidebarTrigger */}
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent border-0 p-0 flex items-center justify-center rounded-lg"
+              title="Información"
+              onClick={() => {
+                const el = document.getElementById("colors");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
+              <HelpCircle className="size-[18px]" />
+            </Button>
+            <SidebarTrigger className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent border-0" />
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarSeparator />
 
-      {/* ── Navigation ── */}
-      <SidebarContent>
+      {/* ── Content: Section links ── */}
+      <SidebarContent className="relative z-10">
         {Array.from(groupedSections.entries()).map(([group, sections]) => (
           <SidebarGroup key={group}>
             <SidebarGroupLabel className="text-caption uppercase tracking-widest font-bold text-sidebar-foreground/90">
@@ -221,58 +243,41 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
       </SidebarContent>
 
       {/* ── Footer: User info + Theme toggle + Logout ── */}
-      <SidebarFooter className="px-3 py-3">
+      <SidebarFooter className="px-3 py-3 relative z-10">
         <SidebarSeparator className="mb-3" />
 
-        {/* Bottom controls: Theme toggle first */}
+        {/* Bottom controls: Dark Mode Switch toggle */}
         <div className="flex flex-col gap-1 px-1 mb-3">
-          {/* Expanded: full pill Light / Dark */}
           {mounted && (
             <>
-              {/* Expanded pill */}
+              {/* Expanded: Row with icon, label "Modo Oscuro", and Switch toggle */}
               <div className="group-data-[collapsible=icon]:hidden">
-                <div className="flex items-center rounded-lg border border-sidebar-border bg-sidebar-accent/30 p-0.5 gap-0.5">
-                  <Button
-                    onClick={() => handleTheme("light")}
-                    variant="ghost"
-                    className={cn(
-                      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-caption font-medium transition-all duration-200 border-0 shadow-none h-auto",
-                      theme === "light"
-                        ? "bg-sidebar text-sidebar-foreground shadow-sm hover:bg-sidebar hover:text-sidebar-foreground"
-                        : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80"
-                    )}
-                  >
-                    <Sun className="h-3 w-3" />
-                    <span>Claro</span>
-                  </Button>
-                  <Button
-                    onClick={() => handleTheme("dark")}
-                    variant="ghost"
-                    className={cn(
-                      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-caption font-medium transition-all duration-200 border-0 shadow-none h-auto",
-                      theme === "dark"
-                        ? "bg-sidebar text-sidebar-foreground shadow-sm hover:bg-sidebar hover:text-sidebar-foreground"
-                        : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80"
-                    )}
-                  >
-                    <Moon className="h-3 w-3" />
-                    <span>Oscuro</span>
-                  </Button>
+                <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-sidebar-border/60 bg-sidebar-accent/30 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-sidebar-foreground">
+                    <Moon className="h-4 w-4 text-primary shrink-0" />
+                    <span>Modo Oscuro</span>
+                  </div>
+                  <Switch
+                    checked={theme === "dark"}
+                    onCheckedChange={(checked) => handleTheme(checked ? "dark" : "light")}
+                    variant="primary"
+                    size="sm"
+                  />
                 </div>
               </div>
 
-              {/* Collapsed: single icon button */}
+              {/* Collapsed: single icon button toggles mode */}
               <div className="hidden group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
                 <Button
                   onClick={() => handleTheme(theme === "light" ? "dark" : "light")}
-                  aria-label="Toggle Theme"
                   variant="ghost"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-sidebar-border bg-sidebar-accent/30 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 hover:border-sidebar-border transition-colors duration-200 p-0 shrink-0"
+                  aria-label="Cambiar tema"
+                  className="size-8 rounded-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent p-0 border-0"
                 >
                   {theme === "dark" ? (
-                    <Moon className="h-3.5 w-3.5" />
+                    <Moon className="h-4 w-4 text-primary" />
                   ) : (
-                    <Sun className="h-3.5 w-3.5" />
+                    <Sun className="h-4 w-4" />
                   )}
                 </Button>
               </div>
@@ -285,7 +290,7 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
           {/* Avatar */}
           <div className="relative shrink-0">
             <div className="size-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-heading font-bold text-caption group-data-[collapsible=icon]:size-8 transition-all duration-200">
-              JM
+              PR
             </div>
             {/* Online indicator */}
             <div className="absolute bottom-0 right-0 size-2.5 rounded-full bg-success border-2 border-background group-data-[collapsible=icon]:size-2" />
@@ -295,16 +300,16 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
           <div className="flex flex-1 items-center justify-between gap-2 min-w-0 group-data-[collapsible=icon]:hidden animate-in fade-in slide-in-from-bottom-1 duration-300">
             <div className="flex flex-col min-w-0">
               <span className="text-body-sm font-heading font-semibold text-sidebar-foreground truncate">
-                Jeimy Mateus
+                Paula Rozo
               </span>
               <span className="text-caption text-sidebar-foreground/60 truncate">
-                jeimy@glocation.co
+                paula@glocation.co
               </span>
             </div>
             <Button
               aria-label="Cerrar sesión"
               variant="ghost"
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-danger hover:bg-danger/10 hover:border-transparent transition-colors duration-200 border-0 p-0"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-warning hover:bg-warning/10 hover:border-transparent transition-colors duration-200 border-0 p-0"
             >
               <LogOut className="h-4 w-4" />
             </Button>

@@ -1,242 +1,294 @@
-import { Card, CardHeader, CardTitle, CardDescription, CardIcon, CardDecorativeIcon, CardBadge } from "@/components/ui/card";
+"use client";
+
+import React, { useState } from "react";
 import {
-    BarChart3,
-    Users,
-    MapPin,
-    Settings,
-    Zap,
-    Activity,
-    ShieldAlert,
-    Clock,
-    Globe,
-    PenTool,
-    Languages,
-    Layers,
-    BookOpen,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardIcon,
+  CardDecorativeIcon,
+  CardBadge,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Sparkles,
+  Zap,
+  Sliders,
+  Grid,
+  Code2,
+  Copy,
+  Check,
+  User,
+  Shield,
+  PenTool,
+  Languages,
+  Layers,
+  BookOpen,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function CardShowcase() {
-    return (
-        <section className="grid gap-8 p-8 rounded-xl border border-border bg-background shadow-xs overflow-hidden">
+  const [variant, setVariant] = useState<"default" | "featured">("featured");
+  const [glow, setGlow] = useState<"none" | "primary-info" | "success-warning" | "danger-secondary">("none");
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [activeTab, setActiveTab] = useState<"playground" | "catalog">("catalog");
+
+  const generatedCode = `<Card variant="${variant}" glow="${glow}">
+  <CardBadge>Design</CardBadge>
+  <CardTitle>Product Design</CardTitle>
+  <CardDescription>320 lecciones interactivas</CardDescription>
+</Card>`;
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(generatedCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  return (
+    <section className="grid gap-8 p-6 sm:p-8 rounded-3xl border border-border/80 bg-background shadow-xs overflow-hidden">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge variant="primary" appearance="soft">
+              Componentes de Contención
+            </Badge>
+            <span className="text-xs font-mono text-muted-foreground">Ambient Bottom Glow</span>
+          </div>
+          <h2 className="text-h3 font-heading font-bold text-foreground flex items-center gap-2">
+            <Zap className="size-5 text-primary" />
+            Cards & Contenedores
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Paneles modulares para agrupar información con resplandor ambiental inferior pastel e iconos decorativos.
+          </p>
+        </div>
+
+        {/* View Mode Selector */}
+        <div className="flex p-1 rounded-2xl bg-surface border border-border w-fit shrink-0">
+          <button
+            onClick={() => setActiveTab("catalog")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+              activeTab === "catalog"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Grid className="size-3.5" />
+            Catálogo & Muestras
+          </button>
+          <button
+            onClick={() => setActiveTab("playground")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+              activeTab === "playground"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Sliders className="size-3.5" />
+            Playground Interactivo
+          </button>
+        </div>
+      </div>
+
+      {/* CATÁLOGO DE CARDS — VARIANTES FEATURED CON ILUMINACIÓN INFERIOR COMO LA FOTO */}
+      {activeTab === "catalog" && (
+        <div className="space-y-8 animate-in fade-in duration-300">
+          {/* FEATURED VARIANT — Exact to reference photo with soft bottom glow */}
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
+                Variante Featured (Iluminación Ambiental Inferior)
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Cards suaves con resplandor pastel en la parte inferior e icono representativo.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Card 1: Product Design (Yellow Glow) */}
+              <Card variant="featured" className="border-border/80">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-full bg-warning/15 flex items-center justify-center text-warning shrink-0">
+                    <PenTool className="size-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Victoria P.</h4>
+                    <p className="text-[11px] text-muted-foreground">Team Lead</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                    &quot;We prioritized a structured approach to enhance credit management features efficiently.&quot;
+                  </p>
+                </div>
+
+                <CardDecorativeIcon className="opacity-15 text-warning">
+                  <PenTool className="size-32" />
+                </CardDecorativeIcon>
+
+                <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 size-56 rounded-full bg-warning/35 blur-3xl pointer-events-none" />
+              </Card>
+
+              {/* Card 2: Iterative Design (Blue Glow) */}
+              <Card variant="featured" className="border-border/80">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-full bg-info/15 flex items-center justify-center text-info shrink-0">
+                    <Layers className="size-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Dmitry K.</h4>
+                    <p className="text-[11px] text-muted-foreground">UX/UI Designer</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                    &quot;Iterative design sprints helped refine user experience based on continuous feedback.&quot;
+                  </p>
+                </div>
+
+                <CardDecorativeIcon className="opacity-15 text-info">
+                  <Layers className="size-32" />
+                </CardDecorativeIcon>
+
+                <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 size-56 rounded-full bg-info/35 blur-3xl pointer-events-none" />
+              </Card>
+
+              {/* Card 3: Interface Adaptation (Pink Glow) */}
+              <Card variant="featured" className="border-border/80">
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-full bg-danger/15 flex items-center justify-center text-danger shrink-0">
+                    <Languages className="size-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Stan D.</h4>
+                    <p className="text-[11px] text-muted-foreground">CIO</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                    &quot;We adapted the interface to ensure seamless navigation across all devices.&quot;
+                  </p>
+                </div>
+
+                <CardDecorativeIcon className="opacity-15 text-danger">
+                  <Languages className="size-32" />
+                </CardDecorativeIcon>
+
+                <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 size-56 rounded-full bg-danger/35 blur-3xl pointer-events-none" />
+              </Card>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PLAYGROUND INTERACTIVO */}
+      {activeTab === "playground" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in duration-300">
+          {/* Canvas Preview */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <div className="relative min-h-[300px] rounded-3xl border border-border/80 bg-surface/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 overflow-hidden shadow-inner">
+              <div className="w-full max-w-sm relative z-10">
+                <Card variant={variant} glow={glow}>
+                  <CardHeader>
+                    <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                      <Zap className="size-6 text-primary" />
+                    </div>
+                    <CardTitle>Card Interactivo</CardTitle>
+                    <CardDescription>
+                      Previsualización en tiempo real con configuración de iluminación ambiental.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </div>
+            </div>
+
+            {/* Code Snippet Box */}
+            <div className="flex items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/80 shadow-xs">
+              <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+                <Code2 className="size-4 text-primary shrink-0 ml-1" />
+                <code className="text-xs font-mono text-foreground font-semibold truncate">
+                  {generatedCode}
+                </code>
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary/20 transition-all shrink-0"
+              >
+                {copiedCode ? (
+                  <>
+                    <Check className="size-3.5 text-success" />
+                    <span className="text-success font-bold">¡Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5" />
+                    <span>Copiar JSX</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Inspector Panel */}
+          <div className="lg:col-span-5 p-6 rounded-3xl border border-border/80 bg-card space-y-6 shadow-xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 border-b border-border/50 pb-3">
+              <Sliders className="size-4 text-primary" />
+              Inspector de Propiedades
+            </h3>
+
+            {/* Variante */}
             <div className="space-y-2">
-                <h2 className="text-h3 font-bold flex items-center gap-2">
-                    <Zap className="size-5 text-primary" />
-                    Contenedores: Cards
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    Paneles modulares para agrupar información con soporte para efectos de glassmorphism y jerarquía visual mediante tamaños e iconos.
-                </p>
+              <label className="text-xs font-bold text-foreground">Variante:</label>
+              <div className="flex gap-2">
+                {(["default", "featured"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setVariant(v)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border flex-1",
+                      variant === v
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-surface text-muted-foreground border-border/60 hover:text-foreground"
+                    )}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-12">
-                {/* GRID DE TAMAÑOS */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Matriz de Tamaños y Jerarquía
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-                        {/* Default Card */}
-                        <Card glow="primary-info">
-                            <CardIcon className="bg-primary/10 text-primary">
-                                <BarChart3 />
-                            </CardIcon>
-                            <CardHeader>
-                                <CardTitle>Dashboard Principal</CardTitle>
-                                <CardDescription>Visualización de métricas críticas en tiempo real.</CardDescription>
-                            </CardHeader>
-                        </Card>
-
-                        {/* Small Card */}
-                        <Card size="sm" glow="success-warning">
-                            <CardIcon className="bg-secondary/10 text-secondary">
-                                <Users />
-                            </CardIcon>
-                            <CardHeader>
-                                <CardTitle>Usuarios Activos</CardTitle>
-                                <CardDescription>Gestión de sesión y actividad.</CardDescription>
-                            </CardHeader>
-                        </Card>
-                    </div>
-                </div>
-
-                {/* BORDES NEON GRADIENT */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Efectos de Borde Neon (Gradient)
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* Primary-Info Combination */}
-                        <Card glow="primary-info">
-                            <CardHeader>
-                                <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
-                                    <Activity className="size-6 text-primary" />
-                                </div>
-                                <CardTitle>Gestión de Actividad</CardTitle>
-                                <CardDescription>Combinación Primary e Info para monitoreo en tiempo real.</CardDescription>
-                            </CardHeader>
-                        </Card>
-
-                        {/* Success-Warning Combination */}
-                        <Card glow="success-warning">
-                            <CardHeader>
-                                <div className="size-12 rounded-xl bg-success/10 flex items-center justify-center mb-2">
-                                    <Zap className="size-6 text-success" />
-                                </div>
-                                <CardTitle>Rendimiento Óptimo</CardTitle>
-                                <CardDescription>Success y Warning para indicadores de estado y alertas.</CardDescription>
-                            </CardHeader>
-                        </Card>
-
-                        {/* Danger-Secondary Combination */}
-                        <Card glow="danger-secondary">
-                            <CardHeader>
-                                <div className="size-12 rounded-xl bg-error/10 flex items-center justify-center mb-2">
-                                    <ShieldAlert className="size-6 text-error" />
-                                </div>
-                                <CardTitle>Seguridad Crítica</CardTitle>
-                                <CardDescription>Danger y Secondary para sistemas de protección y fallos.</CardDescription>
-                            </CardHeader>
-                        </Card>
-                    </div>
-                </div>
-
-                {/* MATRIZ DE ESTADOS E ICONOS CON GRADIENTE */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Matriz de Estados (Conceptuales)
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {/* Success State */}
-                        <Card size="sm" glow="success-warning">
-                            <CardIcon className="bg-gradient-to-br from-success/20 to-success/5 text-success">
-                                <Globe />
-                            </CardIcon>
-                            <CardTitle className="text-base">Global</CardTitle>
-                        </Card>
-
-                        {/* Warning State */}
-                        <Card size="sm" glow="success-warning">
-                            <CardIcon className="bg-gradient-to-br from-warning/20 to-warning/5 text-warning">
-                                <Clock />
-                            </CardIcon>
-                            <CardTitle className="text-base">Historial</CardTitle>
-                        </Card>
-
-                        {/* Info State */}
-                        <Card size="sm" glow="primary-info">
-                            <CardIcon className="bg-gradient-to-br from-info/20 to-info/5 text-info">
-                                <MapPin />
-                            </CardIcon>
-                            <CardTitle className="text-base">Zonas</CardTitle>
-                        </Card>
-
-                        {/* Danger State */}
-                        <Card size="sm" glow="danger-secondary">
-                            <CardIcon className="bg-gradient-to-br from-danger/20 to-danger/5 text-danger">
-                                <Settings />
-                            </CardIcon>
-                            <CardTitle className="text-base">Ajustes</CardTitle>
-                        </Card>
-                    </div>
-                </div>
-
-                {/* FEATURED VARIANT — Colorful cards with decorative icon */}
-                <div className="space-y-4 pt-4 border-t border-border">
-                    <div className="space-y-1">
-                        <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                            Variante Featured (Ícono Decorativo)
-                        </h3>
-                        <p className="text-xs text-muted-foreground">
-                            Cards horizontales con fondo de color semántico, badge de categoría y un ícono decorativo en la esquina inferior derecha.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* Primary / Design */}
-                        <Card variant="featured" className="bg-primary/10 hover:bg-primary/15 border border-primary/20 min-h-[160px]">
-                            <CardBadge className="bg-primary/20 text-primary text-[10px] px-2 py-0.5 mb-2">
-                                Design
-                            </CardBadge>
-                            <CardTitle className="text-sm font-bold text-foreground">Product Design</CardTitle>
-                            <CardDescription className="text-xs">320 lecciones</CardDescription>
-                            <CardDecorativeIcon className="opacity-30">
-                                <PenTool className="size-32 text-primary" />
-                            </CardDecorativeIcon>
-                        </Card>
-
-                        {/* Secondary / Languages */}
-                        <Card variant="featured" className="bg-secondary/10 hover:bg-secondary/15 border border-secondary/20 min-h-[160px]">
-                            <CardBadge className="bg-secondary/20 text-secondary text-[10px] px-2 py-0.5 mb-2">
-                                Languages
-                            </CardBadge>
-                            <CardTitle className="text-sm font-bold text-foreground">English for IT</CardTitle>
-                            <CardDescription className="text-xs">PSTC lessons</CardDescription>
-                            <CardDecorativeIcon className="opacity-30">
-                                <Languages className="size-32 text-secondary" />
-                            </CardDecorativeIcon>
-                        </Card>
-
-                        {/* Info / App Design */}
-                        <Card variant="featured" className="bg-info/10 hover:bg-info/15 border border-info/20 min-h-[160px]">
-                            <CardBadge className="bg-info/20 text-info text-[10px] px-2 py-0.5 mb-2">
-                                Design
-                            </CardBadge>
-                            <CardTitle className="text-sm font-bold text-foreground">App Design</CardTitle>
-                            <CardDescription className="text-xs">250 lecciones</CardDescription>
-                            <CardDecorativeIcon className="opacity-30">
-                                <Layers className="size-32 text-info" />
-                            </CardDecorativeIcon>
-                        </Card>
-
-                        {/* Warning / Management */}
-                        <Card variant="featured" className="bg-warning/10 hover:bg-warning/15 border border-warning/20 min-h-[160px]">
-                            <CardBadge className="bg-warning/20 text-warning text-[10px] px-2 py-0.5 mb-2">
-                                Design
-                            </CardBadge>
-                            <CardTitle className="text-sm font-bold text-foreground">Design Management</CardTitle>
-                            <CardDescription className="text-xs">220 lecciones</CardDescription>
-                            <CardDecorativeIcon className="opacity-30">
-                                <BookOpen className="size-32 text-warning" />
-                            </CardDecorativeIcon>
-                        </Card>
-                    </div>
-
-                    {/* Code hint */}
-                    <div className="rounded-lg border border-border px-4 py-3">
-                        <p className="text-xs text-muted-foreground font-mono">
-                            <span className="text-primary">&lt;Card</span> <span className="text-info">variant</span>=<span className="text-success">&quot;featured&quot;</span> <span className="text-info">className</span>=<span className="text-success">&quot;bg-primary/10 border-primary/20&quot;</span><span className="text-primary">&gt;</span>
-                            <br />
-                            &nbsp;&nbsp;<span className="text-primary">&lt;CardBadge&gt;</span>Categoría<span className="text-primary">&lt;/CardBadge&gt;</span>
-                            <br />
-                            &nbsp;&nbsp;<span className="text-primary">&lt;CardTitle&gt;</span>Título<span className="text-primary">&lt;/CardTitle&gt;</span>
-                            <br />
-                            &nbsp;&nbsp;<span className="text-primary">&lt;CardDecorativeIcon&gt;</span>&lt;Icon /&gt;<span className="text-primary">&lt;/CardDecorativeIcon&gt;</span>
-                            <br />
-                            <span className="text-primary">&lt;/Card&gt;</span>
-                        </p>
-                    </div>
-                </div>
-
+            {/* Resplandor (Glow) */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Aura / Resplandor Ambient:</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(["none", "primary-info", "success-warning", "danger-secondary"] as const).map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => setGlow(g)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border text-center truncate",
+                      glow === g
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-surface text-muted-foreground border-border/60 hover:text-foreground"
+                    )}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
             </div>
-
-            {/* DESIGN NOTES */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4 border-t border-border pt-8">
-                <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Glassmorphism Core
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                        Las cards utilizan <code className="text-foreground">backdrop-blur-sm</code> y fondos semitransparentes para integrarse suavemente con los gradientes del fondo de la aplicación, manteniendo la legibilidad.
-                    </p>
-                </div>
-                <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Jerarquía Visual
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                        El tamaño <code className="text-foreground">sm</code> reduce el espaciado y tamaño de fuente para dashboards de alta densidad, mientras que el tamaño <code className="text-foreground">default</code> es ideal para secciones principales.
-                    </p>
-                </div>
-            </div>
-        </section>
-    );
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }

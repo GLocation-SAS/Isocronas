@@ -114,12 +114,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
           `,
 
           actionButton: `
-            rounded-xl
-            bg-primary
-            text-primary-foreground
-
-            hover:bg-primary/90
-
+            !rounded-full
+            !bg-primary/20
+            !text-primary
+            !border-0
+            !px-3.5
+            !py-1.5
+            !text-xs
+            !font-bold
+            hover:!bg-primary/30
             transition-all
           `,
 

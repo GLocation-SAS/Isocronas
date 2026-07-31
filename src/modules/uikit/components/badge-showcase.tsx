@@ -1,230 +1,283 @@
+"use client";
+
+import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Sparkles,
+  CheckCircle2,
+  Clock,
+  PieChart,
+  CircleDashed,
+  Sliders,
+  Grid,
+  Code2,
+  Copy,
+  Check,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Sparkles, Check, AlertCircle, Info, Zap, Star, ShieldCheck } from "lucide-react";
+
+type BadgeVariant = "primary" | "secondary" | "success" | "warning" | "error" | "info" | "neutral";
+type BadgeAppearance = "default" | "outline" | "soft";
 
 export function BadgeShowcase() {
-    const semanticVariants = [
-        { id: "primary", label: "Primary" },
-        { id: "secondary", label: "Secondary" },
-        { id: "success", label: "Success" },
-        { id: "warning", label: "Warning" },
-        { id: "error", label: "Error" },
-        { id: "info", label: "Info" },
-    ] as const;
+  const [variant, setVariant] = useState<BadgeVariant>("success");
+  const [appearance, setAppearance] = useState<BadgeAppearance>("soft");
+  const [showIcon, setShowIcon] = useState(true);
+  const [iconOnly, setIconOnly] = useState(false);
+  const [text, setText] = useState("Completed");
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [activeTab, setActiveTab] = useState<"playground" | "catalog">("playground");
 
-    const specialVariants = [
-        { id: "ghost", label: "Ghost" },
-        { id: "link", label: "Link" },
-    ] as const;
+  const generatedCode = `<Badge variant="${variant}" appearance="${appearance}">${
+    showIcon ? '<CheckCircle2 /> ' : ''
+  }${iconOnly ? '' : text}</Badge>`;
 
-    return (
-        <section className="grid gap-8 p-8 rounded-xl border border-border bg-background shadow-xs overflow-hidden">
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(generatedCode);
+    setCopiedCode(true);
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  return (
+    <section className="grid gap-8 p-6 sm:p-8 rounded-3xl border border-border/80 bg-background shadow-xs overflow-hidden">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Badge variant="primary" appearance="soft">
+              Componentes de Estado
+            </Badge>
+            <span className="text-xs font-mono text-muted-foreground">Pill & Icon Centered</span>
+          </div>
+          <h2 className="text-h3 font-heading font-bold text-foreground flex items-center gap-2">
+            <Sparkles className="size-5 text-primary" />
+            Badges & Status Tags
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Indicadores visuales compactos para estados, categorías y etiquetas con soporte para icono e icono solo.
+          </p>
+        </div>
+
+        {/* View Mode Selector */}
+        <div className="flex p-1 rounded-2xl bg-surface border border-border w-fit shrink-0">
+          <button
+            onClick={() => setActiveTab("playground")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+              activeTab === "playground"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Sliders className="size-3.5" />
+            Playground Interactivo
+          </button>
+          <button
+            onClick={() => setActiveTab("catalog")}
+            className={cn(
+              "px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 flex items-center gap-2",
+              activeTab === "catalog"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Grid className="size-3.5" />
+            Catálogo Compacto
+          </button>
+        </div>
+      </div>
+
+      {/* PLAYGROUND INTERACTIVO */}
+      {activeTab === "playground" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-in fade-in duration-300">
+          {/* Canvas Preview */}
+          <div className="lg:col-span-7 flex flex-col gap-4">
+            <div className="relative min-h-[260px] rounded-3xl border border-border/80 bg-surface/40 backdrop-blur-xl flex flex-col items-center justify-center p-8 overflow-hidden shadow-inner">
+              <div className="relative z-10 flex items-center justify-center">
+                <Badge
+                  variant={variant}
+                  appearance={appearance}
+                  className={cn(iconOnly && "size-8 p-0 flex items-center justify-center rounded-full")}
+                >
+                  {showIcon && <CheckCircle2 />}
+                  {!iconOnly && text}
+                </Badge>
+              </div>
+
+              <div className="absolute bottom-4 left-4 flex items-center gap-2 z-10">
+                <Badge variant="neutral" appearance="soft" className="font-mono text-[10px]">
+                  variant=&quot;{variant}&quot;
+                </Badge>
+                <Badge variant="neutral" appearance="soft" className="font-mono text-[10px]">
+                  appearance=&quot;{appearance}&quot;
+                </Badge>
+              </div>
+            </div>
+
+            {/* Code Snippet Box */}
+            <div className="flex items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border/80 shadow-xs">
+              <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+                <Code2 className="size-4 text-primary shrink-0 ml-1" />
+                <code className="text-xs font-mono text-foreground font-semibold truncate">
+                  {generatedCode}
+                </code>
+              </div>
+              <button
+                onClick={handleCopyCode}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary/20 transition-all shrink-0"
+              >
+                {copiedCode ? (
+                  <>
+                    <Check className="size-3.5 text-success" />
+                    <span className="text-success font-bold">¡Copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5" />
+                    <span>Copiar JSX</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Inspector Panel */}
+          <div className="lg:col-span-5 p-6 rounded-3xl border border-border/80 bg-card space-y-6 shadow-xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 border-b border-border/50 pb-3">
+              <Sliders className="size-4 text-primary" />
+              Inspector de Propiedades
+            </h3>
+
+            {/* Variante */}
             <div className="space-y-2">
-                <h2 className="text-h3 font-bold flex items-center gap-2">
-                    <Zap className="size-5 text-primary" />
-                    Componentes de Estado: Badges
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    Indicadores visuales compactos para estados, categorías y etiquetas con soporte para variantes semánticas y estilos de contorno.
-                </p>
+              <label className="text-xs font-bold text-foreground">Variante Semántica:</label>
+              <div className="grid grid-cols-4 gap-2">
+                {(["primary", "secondary", "success", "warning", "error", "info", "neutral"] as const).map((v) => (
+                  <button
+                    key={v}
+                    onClick={() => setVariant(v)}
+                    className={cn(
+                      "px-2.5 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border text-center truncate",
+                      variant === v
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-surface text-muted-foreground border-border/60 hover:text-foreground"
+                    )}
+                  >
+                    {v}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-8">
-                {/* DEFAULT APPEARANCE */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Estado: Default (Relleno)
-                    </h3>
-                    <div className="flex flex-wrap gap-4 items-center">
-                        {semanticVariants.map((v) => (
-                            <div key={`default-${v.id}`} className="flex flex-col items-center gap-2">
-                                <Badge variant={v.id as React.ComponentProps<typeof Badge>["variant"]} appearance="default">{v.label}</Badge>
-                                <span className="text-[10px] font-mono text-muted-foreground">{v.id}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* OUTLINE APPEARANCE */}
-                <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Estado: Outline (Contorno)
-                    </h3>
-                    <div className="flex flex-wrap gap-4 items-center">
-                        {semanticVariants.map((v) => (
-                            <div key={`outline-${v.id}`} className="flex flex-col items-center gap-2">
-                                <Badge variant={v.id as React.ComponentProps<typeof Badge>["variant"]} appearance="outline">{v.label}</Badge>
-                                <span className="text-[10px] font-mono text-muted-foreground">{v.id}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* OPACITY VARIANTS */}
-                <div className="space-y-6 pt-4 border-t border-border">
-                    <div className="space-y-1">
-                        <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                            Variantes de Opacidad (Glassmorphism)
-                        </h3>
-                        <p className="text-[10px] text-muted-foreground italic">
-                            Visualización de escalas desde 10% hasta 90% para jerarquías sutiles.
-                        </p>
-                    </div>
-
-                    <div className="grid gap-6">
-                        {semanticVariants.map((v) => (
-                            <div key={`opacity-group-${v.id}`} className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground/60 w-20">{v.label}</span>
-                                    <div className="flex flex-wrap gap-2">
-                                        {[10, 20, 30, 40, 50].map((opacity) => {
-                                            const bgClasses: Record<string, Record<number, string>> = {
-                                                primary: {
-                                                    10: "bg-primary/10", 20: "bg-primary/20", 30: "bg-primary/30", 40: "bg-primary/40", 50: "bg-primary/50"
-                                                },
-                                                secondary: {
-                                                    10: "bg-secondary/10", 20: "bg-secondary/20", 30: "bg-secondary/30", 40: "bg-secondary/40", 50: "bg-secondary/50"
-                                                },
-                                                success: {
-                                                    10: "bg-success/10", 20: "bg-success/20", 30: "bg-success/30", 40: "bg-success/40", 50: "bg-success/50"
-                                                },
-                                                warning: {
-                                                    10: "bg-warning/10", 20: "bg-warning/20", 30: "bg-warning/30", 40: "bg-warning/40", 50: "bg-warning/50"
-                                                },
-                                                error: {
-                                                    10: "bg-danger/10", 20: "bg-danger/20", 30: "bg-danger/30", 40: "bg-danger/40", 50: "bg-danger/50"
-                                                },
-                                                info: {
-                                                    10: "bg-info/10", 20: "bg-info/20", 30: "bg-info/30", 40: "bg-info/40", 50: "bg-info/50"
-                                                }
-                                            };
-
-                                            return (
-                                                <Badge 
-                                                    key={`${v.id}-${opacity}`}
-                                                    variant={v.id as React.ComponentProps<typeof Badge>["variant"]} 
-                                                    appearance="outline" 
-                                                    className={cn(
-                                                        "border-transparent h-7 px-3",
-                                                        bgClasses[v.id]?.[opacity],
-                                                        "dark:text-white"
-                                                    )}
-                                                >
-                                                    {opacity}%
-                                                </Badge>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* SPECIAL VARIANTS */}
-                <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Variantes Especiales
-                    </h3>
-                    <div className="flex flex-wrap gap-4 items-center">
-                        {specialVariants.map((v) => (
-                            <div key={v.id} className="flex flex-col items-center gap-2">
-                                <Badge variant={v.id as React.ComponentProps<typeof Badge>["variant"]}>{v.label}</Badge>
-                                <span className="text-[10px] font-mono text-muted-foreground">{v.id}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* CON ICONOS */}
-                <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Composiciones con Iconos
-                    </h3>
-                    <div className="flex flex-wrap gap-6">
-                        <div className="space-y-2">
-                            <span className="text-[10px] text-muted-foreground block font-medium">Icono Start</span>
-                            <div className="flex gap-2">
-                                <Badge variant="success" data-icon="inline-start">
-                                    <Check />
-                                    Completado
-                                </Badge>
-                                <Badge variant="info" appearance="outline" data-icon="inline-start">
-                                    <Info />
-                                    Detalles
-                                </Badge>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <span className="text-[10px] text-muted-foreground block font-medium">Icono End</span>
-                            <div className="flex gap-2">
-                                <Badge variant="error" data-icon="inline-end">
-                                    Falla
-                                    <AlertCircle />
-                                </Badge>
-                                <Badge variant="warning" appearance="outline" data-icon="inline-end">
-                                    Alerta
-                                    <Sparkles />
-                                </Badge>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <span className="text-[10px] text-muted-foreground block font-medium">Casos de Uso</span>
-                            <div className="flex gap-2">
-                                <Badge variant="primary" data-icon="inline-start">
-                                    <ShieldCheck className="size-3" />
-                                    Verificado
-                                </Badge>
-                                <Badge variant="secondary" appearance="outline">
-                                    <Star className="size-3" />
-                                    Info
-                                </Badge>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* INTERACTIVOS */}
-                <div className="space-y-4 pt-4 border-t border-border">
-                    <h3 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Badges Interactivos (asChild)
-                    </h3>
-                    <div className="flex flex-wrap gap-4">
-                        <Badge variant="primary" appearance="outline" asChild className="cursor-pointer hover:bg-primary/5 transition-colors">
-                            <a href="#">Ver Documentación</a>
-                        </Badge>
-                        <Badge variant="link" asChild>
-                            <a href="#">Leer términos y condiciones</a>
-                        </Badge>
-                        <Badge variant="secondary" appearance="outline" className="cursor-help" title="Ayuda adicional">
-                            <Info className="size-3" />
-                            Help Center
-                        </Badge>
-                    </div>
-                </div>
+            {/* Apariencia */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-foreground">Apariencia:</label>
+              <div className="flex gap-2">
+                {(["soft", "default", "outline"] as const).map((app) => (
+                  <button
+                    key={app}
+                    onClick={() => setAppearance(app)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all border flex-1",
+                      appearance === app
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-surface text-muted-foreground border-border/60 hover:text-foreground"
+                    )}
+                  >
+                    {app}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* DESIGN NOTES */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4 border-t border-border pt-8">
-                <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Arquitectura de Tokens
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                        Los badges utilizan la escala semántica de <code className="text-foreground">globals.css</code>. La variante <code className="text-foreground">error</code> mapea automáticamente al token <code className="text-foreground">danger</code> para consistencia con el sistema de diseño.
-                    </p>
-                </div>
-                <div className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-widest">
-                        Modos de Visualización
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                        Soportan dos estados principales: <code className="text-foreground">default</code> (relleno sólido) y <code className="text-foreground">outline</code> (borde y texto coloreado), permitiendo jerarquizar la información visualmente.
-                    </p>
-                </div>
+            {/* Texto */}
+            {!iconOnly && (
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-foreground">Texto del Badge:</label>
+                <input
+                  type="text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-surface border border-border text-foreground text-xs focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+            )}
+
+            {/* Modificadores */}
+            <div className="space-y-3 pt-3 border-t border-border/50">
+              <label className="text-xs font-bold text-foreground block">Modificadores:</label>
+              <div className="flex flex-col gap-2.5">
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground font-medium select-none">
+                  <Checkbox
+                    checked={showIcon}
+                    onCheckedChange={(c) => setShowIcon(!!c)}
+                  />
+                  <span>Mostrar Icono</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs text-foreground font-medium select-none">
+                  <Checkbox
+                    checked={iconOnly}
+                    onCheckedChange={(c) => setIconOnly(!!c)}
+                  />
+                  <span>Solo Icono (Modo Circular)</span>
+                </label>
+              </div>
             </div>
-        </section>
-    );
+          </div>
+        </div>
+      )}
+
+      {/* CATÁLOGO COMPACTO — INSPIRADO EN LA FOTO */}
+      {activeTab === "catalog" && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <div className="p-6 sm:p-8 rounded-3xl border border-border/80 bg-card space-y-6 shadow-xs flex flex-col items-center">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+              Badges de Estado (Como la Referencia Visual)
+            </h3>
+
+            {/* Stack de Badges de la Foto */}
+            <div className="grid grid-cols-2 gap-8 items-center justify-items-center">
+              {/* Draft */}
+              <Badge variant="neutral" appearance="soft" className="size-8 p-0 flex items-center justify-center rounded-full">
+                <CircleDashed className="size-4" />
+              </Badge>
+              <Badge variant="neutral" appearance="soft">
+                <CircleDashed className="size-3.5" />
+                Draft
+              </Badge>
+
+              {/* In-progress */}
+              <Badge variant="warning" appearance="soft" className="size-8 p-0 flex items-center justify-center rounded-full">
+                <PieChart className="size-4" />
+              </Badge>
+              <Badge variant="warning" appearance="soft">
+                <PieChart className="size-3.5" />
+                In-progress
+              </Badge>
+
+              {/* In-review */}
+              <Badge variant="info" appearance="soft" className="size-8 p-0 flex items-center justify-center rounded-full">
+                <Clock className="size-4" />
+              </Badge>
+              <Badge variant="info" appearance="soft">
+                <Clock className="size-3.5" />
+                In-review
+              </Badge>
+
+              {/* Completed */}
+              <Badge variant="success" appearance="soft" className="size-8 p-0 flex items-center justify-center rounded-full">
+                <CheckCircle2 className="size-4" />
+              </Badge>
+              <Badge variant="success" appearance="soft">
+                <CheckCircle2 className="size-3.5" />
+                Completed
+              </Badge>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }

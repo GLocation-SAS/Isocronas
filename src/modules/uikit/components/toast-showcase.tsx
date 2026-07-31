@@ -16,7 +16,7 @@ import {
 export function ToastShowcase() {
   const showDefault = () => toast("Proceso en segundo plano", {
     description: "La sincronización se está llevando a cabo.",
-    icon: <BellIcon className="size-5 fill-primary text-primary-foreground" />
+    icon: <BellIcon className="size-5 text-primary" />
   })
 
   const showSuccess = () => toast.success("Operación exitosa", {

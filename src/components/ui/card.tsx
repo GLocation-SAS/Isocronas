@@ -51,14 +51,14 @@ function Card({ className, innerClassName, size = "default", variant = "default"
             !disableHover && "hover:animate-[border-spin_4s_linear_infinite]"
           ]
         ],
-        // --- Featured variant (colorful + decorative icon) ---
+        // --- Featured variant (soft card with bottom gradient aura glow like reference photo) ---
         variant === "featured" && [
-          "shadow-lg",
-          !disableHover && "hover:shadow-xl hover:-translate-y-0.5",
+          "bg-card/90 border border-border/80 shadow-md relative overflow-hidden backdrop-blur-xl",
+          !disableHover && "hover:shadow-xl hover:-translate-y-1 hover:border-border",
         ],
         className
       )}
-      style={glow !== "none" ? {
+      style={isDefault && glow !== "none" ? {
         backgroundImage: `conic-gradient(from var(--border-angle), transparent 20%, ${glowColors[glow]}, transparent 80%)`,
       } as React.CSSProperties : undefined}
       {...props}
@@ -66,6 +66,19 @@ function Card({ className, innerClassName, size = "default", variant = "default"
       {/* ═══ INNER SURFACE (for gradient border effect) ═══ */}
       {isDefault && glow !== "none" && (
         <div className="absolute inset-[1px] rounded-[inherit] bg-background/95 backdrop-blur-xl z-0" />
+      )}
+
+      {/* ═══ FEATURED BOTTOM AMBIENT GLOW (COMO LA FOTO DE REFERENCIA) ═══ */}
+      {variant === "featured" && (
+        <div 
+          className={cn(
+            "absolute -bottom-20 left-1/2 -translate-x-1/2 size-72 rounded-full blur-3xl opacity-30 pointer-events-none transition-all duration-500 group-hover/card:opacity-55 group-hover/card:scale-110",
+            glow === "primary-info" && "bg-gradient-to-t from-info via-primary/50 to-transparent",
+            glow === "success-warning" && "bg-gradient-to-t from-warning via-success/50 to-transparent",
+            glow === "danger-secondary" && "bg-gradient-to-t from-danger via-secondary/50 to-transparent",
+            glow === "none" && "bg-gradient-to-t from-warning/40 via-amber-300/20 to-transparent"
+          )}
+        />
       )}
 
       {/* Content above blobs */}
@@ -78,7 +91,7 @@ function Card({ className, innerClassName, size = "default", variant = "default"
         ],
         // --- Featured Layout ---
         variant === "featured" && [
-          "items-start text-left gap-3 p-8"
+          "items-start text-left gap-4 p-8 min-h-[220px]"
         ],
         innerClassName
       )}>
@@ -114,8 +127,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "font-heading text-lg font-bold tracking-tight text-foreground",
         "group-data-[size=sm]/card:text-base",
-        // Featured: slightly smaller title, allow wrapping
-        "group-data-[variant=featured]/card:text-base group-data-[variant=featured]/card:leading-snug",
+        "group-data-[variant=featured]/card:text-xl group-data-[variant=featured]/card:leading-tight group-data-[variant=featured]/card:text-foreground group-data-[variant=featured]/card:font-bold",
         className
       )}
       {...props}
@@ -131,6 +143,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card-description"
       className={cn(
         "text-sm leading-relaxed text-muted-foreground font-medium",
+        "group-data-[variant=featured]/card:text-muted-foreground group-data-[variant=featured]/card:text-sm",
         className
       )}
       {...props}
@@ -146,9 +159,9 @@ function CardIcon({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="card-icon"
       className={cn(
         "flex items-center justify-center size-16 rounded-full mb-2",
-        "bg-white/5 border border-white/10 backdrop-blur-sm",
-        "shadow-inner drop-shadow-[0_0_15px_rgba(255,255,255,0.05)]",
-        "[&_svg]:size-8 [&_svg]:text-foreground/90",
+        "bg-primary/10 border border-primary/20 backdrop-blur-sm",
+        "shadow-xs",
+        "[&_svg]:size-8 [&_svg]:text-primary",
         className
       )}
       {...props}
@@ -224,8 +237,9 @@ function CardBadge({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-badge"
       className={cn(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold",
-        "bg-background/40 text-foreground backdrop-blur-sm",
+        "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest border",
+        "bg-primary/10 text-primary border-primary/20 backdrop-blur-sm",
+        "group-data-[variant=featured]/card:bg-primary/15 group-data-[variant=featured]/card:text-primary group-data-[variant=featured]/card:border-primary/30",
         className
       )}
       {...props}

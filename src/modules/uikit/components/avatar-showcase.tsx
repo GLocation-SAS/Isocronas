@@ -5,7 +5,6 @@ import {
   Avatar,
   AvatarImage,
   AvatarFallback,
-
   AvatarBadge,
 } from "@/components/ui/avatar";
 import { User } from "lucide-react";
@@ -55,7 +54,7 @@ export function AvatarShowcase() {
           <div className="flex flex-wrap gap-8">
             <div className="flex flex-col items-center gap-2">
               <Avatar>
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>PR</AvatarFallback>
               </Avatar>
               <span className="text-caption text-muted-foreground">Iniciales</span>
             </div>
@@ -79,9 +78,9 @@ export function AvatarShowcase() {
               <Avatar size="lg" className="relative">
                 <AvatarImage src="https://github.com/shadcn.png" />
                 <AvatarFallback>CN</AvatarFallback>
-                <AvatarBadge className="bg-danger" />
+                <AvatarBadge className="bg-warning" />
               </Avatar>
-              <span className="text-caption text-muted-foreground">Busy</span>
+              <span className="text-caption text-muted-foreground">Ocupado</span>
             </div>
           </div>
         </div>

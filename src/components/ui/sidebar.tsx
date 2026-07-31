@@ -26,8 +26,8 @@ import { PanelLeftIcon, ChevronLeft, ChevronRight } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH = "19.5rem"
+const SIDEBAR_WIDTH_MOBILE = "20rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -245,27 +245,6 @@ function Sidebar({
         >
           {children}
         </div>
-
-        {/* Global Floating Pill chevron trigger — floats on the absolute edge to prevent graphics backdrop clipping */}
-        {collapsible === "icon" && (
-          <Button
-            onClick={toggleSidebar}
-            aria-label="Toggle Sidebar"
-            variant="ghost"
-            className={cn(
-              "absolute top-8 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-sidebar border border-sidebar-border shadow-md text-sidebar-foreground/70 hover:text-sidebar-foreground hover:shadow-lg transition-all duration-200 hover:scale-110 p-0 border",
-              variant === "floating" || variant === "inset"
-                ? "right-[-4px]"
-                : "right-[-12px]"
-            )}
-          >
-            {state === "expanded" ? (
-              <ChevronLeft className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )}
-          </Button>
-        )}
       </div>
     </div>
   )
@@ -284,14 +263,14 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       variant="ghost"
       size="icon-sm"
-      className={cn(className)}
+      className={cn("h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent border-0 p-0 flex items-center justify-center rounded-lg [&_svg]:size-[18px]", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <PanelLeftIcon className="size-[18px]" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -535,9 +514,9 @@ function SidebarMenuButton({
       className={cn(
         sidebarMenuButtonVariants({ variant, size }),
         isActive && [
-          "bg-primary/8 text-primary font-medium",
-          "shadow-[inset_3px_0_0_0_var(--color-primary)]",
-          "rounded-l-none",
+          "bg-primary/15 text-primary font-bold border border-primary/30 shadow-sm rounded-xl",
+          "dark:bg-primary/25 dark:text-white dark:border-primary/50",
+          "[&_svg]:text-primary dark:[&_svg]:text-primary-400 [&_svg]:scale-110",
         ],
         className
       )}

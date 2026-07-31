@@ -1,4 +1,4 @@
-# Glocationweb Frontend
+# Visor Isocronas
 
 Página web construida con [Next.js](https://nextjs.org).
 
@@ -61,4 +61,5 @@ npm run build
 | `npm run build` | Compilar para producción             |
 | `npm run start` | Iniciar servidor de producción       |
 | `npm run lint`  | Ejecutar el linter                   |
-# lumen360
+# Isocronas
+onas

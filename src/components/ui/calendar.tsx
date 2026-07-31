@@ -167,7 +167,7 @@ function CalendarDayButton({
         "relative isolate z-10 flex size-10 items-center justify-center rounded-full border-0 leading-none font-medium transition-all duration-300",
         "hover:bg-primary/50 hover:text-foreground",
         isSelected && [
-          "bg-primary-500 dark:bg-primary-600 text-white shadow-[0_0_20px_rgba(77,46,245,0.4)]",
+          "bg-primary-500 dark:bg-primary-600 text-white shadow-[0_0_20px_rgba(35,94,127,0.45)]",
           "after:absolute after:inset-0 after:rounded-full after:bg-primary/30 after:blur-md after:-z-10",
           "scale-110 font-bold"
         ],

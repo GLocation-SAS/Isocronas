@@ -36,7 +36,7 @@ const inputGroupVariants = cva(
           "border-primary/30 text-muted-foreground",
 
           "[--input-glow:var(--primitive-primary-400)]",
-          "[--input-radial:rgba(53, 81, 160, 0.15)]",
+          "[--input-radial:rgba(35, 94, 127, 0.15)]",
           "[--input-state-color:var(--primary)]",
 
           "hover:border-primary/50",

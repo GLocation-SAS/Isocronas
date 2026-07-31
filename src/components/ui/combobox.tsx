@@ -10,7 +10,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
-import { ChevronDownIcon, XIcon, CheckIcon, AlertCircle } from "lucide-react"
+import { ChevronDownIcon, XIcon, CheckIcon, AlertCircle, Search } from "lucide-react"
 
 const Combobox = ComboboxPrimitive.Root
 
@@ -54,15 +54,21 @@ function ComboboxInput({
   disabled,
   showTrigger = true,
   showClear = false,
+  showSearchIcon = true,
   state,
   ...props
 }: ComboboxPrimitive.Input.Props & {
   showTrigger?: boolean
   showClear?: boolean
+  showSearchIcon?: boolean
   state?: "default" | "success" | "error"
 }) {
   return (
-    <InputGroup state={state} className={cn("w-auto", className)}>
+    <InputGroup
+      state={state}
+      className={cn("w-auto", className)}
+      leftIcon={showSearchIcon ? <Search className="size-4 text-muted-foreground" /> : undefined}
+    >
       <ComboboxPrimitive.Input
         render={<InputGroupInput />}
         disabled={disabled}

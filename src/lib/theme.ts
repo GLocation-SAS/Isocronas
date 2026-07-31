@@ -19,6 +19,11 @@ export const setStoredTheme = (theme: Theme) => {
 export const applyTheme = (theme: Theme) => {
   if (typeof window === "undefined") return;
   document.documentElement.setAttribute("data-theme", theme);
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
   setStoredTheme(theme);
 };
 

@@ -11,8 +11,8 @@ const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
 export const metadata = {
-  title: "Lumen360 | Design System",
-  description: "Base frontend y sistema de diseño de Lumen360.",
+  title: "Isocronas | Design System",
+  description: "Base frontend y sistema de diseño de Isocronas.",
 };
 
 interface RootLayoutProps {
@@ -28,8 +28,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="es" data-theme={theme} className={cn(montserrat.variable, nunito.variable, "font-sans")} suppressHydrationWarning>
       <head>
-        <script
-          suppressHydrationWarning
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

@@ -98,44 +98,14 @@ function DialogContent({
         className={cn(dialogVariants({ variant, size }), "overflow-hidden", className)}
         {...props}
       >
-        {/* ═══ AMBIENT GLOWS — Top-Left ═══ */}
-        {/* Halo exterior — color primario del variant */}
+        {/* ═══ TOP SOFT AURA GLOW (COMO LA FOTO) ═══ */}
         <div className={cn(
-          "absolute -top-40 -left-40 size-80 rounded-full blur-[100px] opacity-[0.18] pointer-events-none transition-all duration-700",
-          variant === "success" && "bg-success-400",
-          variant === "danger" && "bg-danger-400",
-          variant === "warning" && "bg-warning-400",
-          variant === "info" && "bg-info-400",
-          (variant === "default" || !variant) && "bg-primary-400"
-        )} />
-        {/* Orb medio — tono complementario */}
-        <div className={cn(
-          "absolute -top-16 -left-16 size-40 rounded-full blur-[60px] opacity-[0.22] pointer-events-none transition-all duration-700",
-          variant === "success" && "bg-success-500",
-          variant === "danger" && "bg-danger-500",
-          variant === "warning" && "bg-warning-500",
-          variant === "info" && "bg-info-500",
-          (variant === "default" || !variant) && "bg-secondary-400"
-        )} />
-
-        {/* ═══ AMBIENT GLOWS — Bottom-Right ═══ */}
-        {/* Halo exterior — color complementario */}
-        <div className={cn(
-          "absolute -bottom-40 -right-40 size-80 rounded-full blur-[100px] opacity-[0.18] pointer-events-none transition-all duration-700",
-          variant === "success" && "bg-success-500",
-          variant === "danger" && "bg-danger-500",
-          variant === "warning" && "bg-warning-400",
-          variant === "info" && "bg-info-500",
-          (variant === "default" || !variant) && "bg-secondary-400"
-        )} />
-        {/* Orb medio */}
-        <div className={cn(
-          "absolute -bottom-16 -right-16 size-40 rounded-full blur-[60px] opacity-[0.22] pointer-events-none transition-all duration-700",
-          variant === "success" && "bg-success-400",
-          variant === "danger" && "bg-danger-400",
-          variant === "warning" && "bg-warning-500",
-          variant === "info" && "bg-info-400",
-          (variant === "default" || !variant) && "bg-primary-500"
+          "absolute -top-32 left-1/2 -translate-x-1/2 size-80 rounded-full blur-3xl opacity-30 pointer-events-none transition-all duration-700",
+          variant === "success" && "bg-success",
+          variant === "danger" && "bg-danger",
+          variant === "warning" && "bg-warning",
+          variant === "info" && "bg-info",
+          (variant === "default" || !variant) && "bg-primary"
         )} />
 
         <div className="relative z-10 grid gap-6">
@@ -171,11 +141,43 @@ function DialogContent({
   )
 }
 
+function DialogIcon({
+  className,
+  icon: Icon,
+  variant = "default",
+  ...props
+}: React.ComponentProps<"div"> & {
+  icon: React.ComponentType<{ className?: string }>;
+  variant?: "default" | "success" | "danger" | "warning" | "info";
+}) {
+  return (
+    <div
+      data-slot="dialog-icon"
+      className={cn(
+        "mx-auto size-14 rounded-full bg-card border border-border/80 shadow-md flex items-center justify-center relative z-10 transition-transform duration-300 hover:scale-105 mb-1",
+        className
+      )}
+      {...props}
+    >
+      <Icon
+        className={cn(
+          "size-6",
+          variant === "success" && "text-success",
+          variant === "danger" && "text-danger",
+          variant === "warning" && "text-warning",
+          variant === "info" && "text-info",
+          (variant === "default" || !variant) && "text-primary"
+        )}
+      />
+    </div>
+  )
+}
+
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-5 text-center", className)}
+      className={cn("flex flex-col gap-3 text-center items-center justify-center", className)}
       {...props}
     />
   )
@@ -193,17 +195,17 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col sm:flex-row sm:justify-center gap-3",
+        "flex flex-col gap-2.5 w-full justify-center items-stretch",
         className
       )}
       {...props}
     >
+      {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="neutral" className="sm:order-first">Cerrar</Button>
+          <Button variant="secondary" className="rounded-full w-full">Cancelar</Button>
         </DialogPrimitive.Close>
       )}
-      {children}
     </div>
   )
 }
