@@ -52,28 +52,12 @@ const cspHeader = [
 ].join('; ');
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  output: "export",
+  basePath: "/Isocronas",
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "i.pravatar.cc",
-      },
-      {
-        protocol: "https",
-        hostname: "img.youtube.com",
-      },
-      {
-        protocol: "https",
-        hostname: "i.ytimg.com",
-      },
-      {
-        // Firebase Storage / Google Cloud Storage — fotos de perfil de usuarios
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-      },
-    ],
+    unoptimized: true,
   },
+
   async headers() {
     return [
       {
