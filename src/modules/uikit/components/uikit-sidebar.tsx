@@ -149,7 +149,7 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
 
       {/* ── Header: Logo + Trigger toggle ── */}
       <SidebarHeader className="relative px-3 pt-4 pb-3 z-10">
-        <div className="flex items-center justify-between gap-2 overflow-hidden">
+        <div className="flex items-center justify-between gap-2 overflow-hidden group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center group-data-[state=collapsed]:gap-3 group-data-[state=collapsed]:px-0">
           {/* Logo */}
           <div className="flex items-center shrink-0">
             {/* Expanded Logos */}
@@ -190,7 +190,7 @@ export function UIKitSidebar({ activeSection, onNavigate }: UIKitSidebarProps) {
           </div>
 
           {/* Controls: Info (?) + SidebarTrigger */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-2">
             <Button
               variant="ghost"
               size="icon-sm"

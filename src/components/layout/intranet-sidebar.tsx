@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarFooter,
   SidebarSeparator,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
@@ -32,6 +33,7 @@ import {
   Inbox,
   IdCard,
   Users,
+  Info,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter, Link } from "@/routing";
@@ -128,9 +130,9 @@ export function IntranetSidebar({ activeItem = "home" }: IntranetSidebarProps) {
 
   return (
     <Sidebar variant="floating" collapsible="icon">
-      {/* ── Header: Logo ── */}
+      {/* ── Header: Logo + Controls ── */}
       <SidebarHeader className="relative px-3 pt-4 pb-3">
-        <div className="flex items-center justify-between gap-2 overflow-hidden">
+        <div className="flex items-center justify-between gap-2 overflow-hidden group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:items-center group-data-[state=collapsed]:gap-3 group-data-[state=collapsed]:px-0">
           <div className="flex items-center shrink-0">
             {/* Expanded Logos */}
             <Image
@@ -163,6 +165,19 @@ export function IntranetSidebar({ activeItem = "home" }: IntranetSidebarProps) {
               height={27}
               className="h-[27px] w-auto hidden dark:group-data-[state=collapsed]:block group-data-[state=expanded]:hidden animate-in zoom-in-75 duration-300"
             />
+          </div>
+
+          {/* Controls: Info + SidebarTrigger */}
+          <div className="flex items-center gap-1 shrink-0 group-data-[state=collapsed]:flex-col group-data-[state=collapsed]:gap-2">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent border-0 p-0 flex items-center justify-center rounded-lg"
+              title="Información"
+            >
+              <Info className="size-[18px]" />
+            </Button>
+            <SidebarTrigger className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent border-0" />
           </div>
         </div>
       </SidebarHeader>

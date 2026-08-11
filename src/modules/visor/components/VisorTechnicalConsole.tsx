@@ -5,7 +5,7 @@ import { Terminal, Copy, TerminalIcon } from "lucide-react";
 export function VisorTechnicalConsole() {
   return (
     <Card 
-      className="absolute bottom-6 left-[280px] w-[500px] shadow-2xl border-border/50 bg-[#0d0f14]/95 text-neutral-400 font-mono hidden xl:block animate-in fade-in slide-in-from-bottom-4 duration-700"
+      className="absolute bottom-6 left-6 md:left-[440px] z-30 w-[calc(100%-2rem)] max-w-[500px] shadow-2xl border-border/80 bg-[#0d0f14]/95 text-neutral-400 font-mono animate-in fade-in slide-in-from-bottom-4 duration-500 pointer-events-auto"
     >
       <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-white/5">
         <div className="flex items-center gap-2">

@@ -30,6 +30,8 @@ const dialogVariants = cva(
         default: "max-w-md",
         lg: "max-w-lg",
         xl: "max-w-xl",
+        "2xl": "max-w-2xl",
+        "3xl": "max-w-3xl",
       },
     },
     defaultVariants: {
@@ -130,7 +132,7 @@ function DialogContent({
                   </Button>
                 </DialogPrimitive.Close>
               </TooltipTrigger>
-              <TooltipContent side="left" className="z-[60]">
+              <TooltipContent side="top" className="z-[60]">
                 Cerrar
               </TooltipContent>
             </Tooltip>

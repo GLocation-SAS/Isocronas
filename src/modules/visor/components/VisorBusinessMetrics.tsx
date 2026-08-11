@@ -6,7 +6,7 @@ export function VisorBusinessMetrics() {
     <Card 
       variant="featured" 
       glow="success-warning" 
-      className="absolute top-6 right-6 w-72 shadow-2xl border-success/20 bg-background/90 backdrop-blur-md animate-in fade-in slide-in-from-right-4 duration-500"
+      className="absolute top-6 right-20 w-72 shadow-2xl border-success/20 bg-background/95 backdrop-blur-xl z-20 animate-in fade-in slide-in-from-right-4 duration-500"
     >
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">

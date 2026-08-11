@@ -7,9 +7,11 @@ import {
   VisorMap, 
   VisorLegend, 
   VisorQuickGuide,
+  VisorQuickStepsCard,
   VisorBusinessMetrics,
   VisorTechnicalConsole,
-  VisorLocationPermissionModal
+  VisorLocationPermissionModal,
+  VisorExportModal
 } from "../components";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Info, AlertTriangle, Terminal as TerminalIcon, MapPin, Search } from "lucide-react";
@@ -22,8 +24,10 @@ export function VisorView() {
   const [travelTime, setTravelTime] = useState(15);
   const [origin, setOrigin] = useState("Plaza de Bolívar");
   const [destination, setDestination] = useState("");
-  const [showGuide, setShowGuide] = useState(true);
+  const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showFloatingCard, setShowFloatingCard] = useState(true);
   const [showLocationModal, setShowLocationModal] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [activeServices, setActiveServices] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastQueryTime, setLastQueryTime] = useState<number | null>(null);
@@ -137,7 +141,7 @@ export function VisorView() {
     <section className="flex flex-col h-screen h-svh w-full overflow-hidden bg-background text-foreground font-sans">
       {/* Header Fijo */}
       <VisorHeader 
-        onOpenGuide={() => setShowGuide(true)} 
+        onOpenGuide={() => setShowGuideModal(true)} 
         profile={profile}
         onProfileChange={setProfile}
       />
@@ -153,6 +157,11 @@ export function VisorView() {
             activeServices={activeServices}
             isEmergency={profile === "profesional" && transportMode === "car" && destination !== ""}
             onLocateClick={() => setShowLocationModal(true)}
+            hasGenerated={lastQueryTime !== null}
+            onMapClick={(address) => {
+              setOrigin(address);
+              showToast(`Chincheta movida: ${address}`, "success");
+            }}
           />
           
           {/* Modal de Permiso de Ubicación */}
@@ -174,6 +183,8 @@ export function VisorView() {
             destination={destination}
             travelTime={travelTime}
             transportMode={transportMode}
+            hasGenerated={lastQueryTime !== null}
+            onOpenExport={() => setShowExportModal(true)}
           />
         </section>
 
@@ -196,13 +207,33 @@ export function VisorView() {
               lastQueryTime={lastQueryTime}
               activeServices={activeServices}
               onServicesChange={setActiveServices}
+              onOpenExport={() => setShowExportModal(true)}
             />
           </div>
         </div>
       </main>
 
-      {/* Guía Rápida */}
-      {showGuide && <VisorQuickGuide onClose={() => setShowGuide(false)} onApplyCase={handlePreset} />}
+      {/* Guía Rápida Flotante en 3 Pasos */}
+      {showFloatingCard && (
+        <VisorQuickStepsCard 
+          onClose={() => setShowFloatingCard(false)} 
+          profile={profile} 
+        />
+      )}
+
+      {/* Modal Completo de Guía de Inicio */}
+      {showGuideModal && (
+        <VisorQuickGuide 
+          onClose={() => setShowGuideModal(false)} 
+        />
+      )}
+
+      {/* Modal de Matriz de Exportación (PDF, KML, CSV, GeoJSON) */}
+      <VisorExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        onExport={(fmt) => showToast(`Reporte ${fmt.toUpperCase()} descargado exitosamente`, "success")}
+      />
 
       {/* Toast Mock */}
       {toast && (

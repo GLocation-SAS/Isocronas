@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLocation | Visor Isócrono Bogotá - CAPS & Cobertura Espacial</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        glocation: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            900: '#0c4a6e',
+                        },
+                        brandRose: {
+                            500: '#f43f5e',
+                            600: '#e11d48',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Urbanist', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        body {
+            font-family: 'Urbanist', sans-serif;
+            user-select: none;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .tab-btn.active {
+            background-color: #0369a1;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(3, 105, 161, 0.25);
+        }
+
+        .swatch-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 9999px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .swatch-btn.active {
+            border-color: #ffffff;
+            transform: scale(1.15);
+            box-shadow: 0 0 0 2px #0284c7;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        .marker-pulse::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background-color: currentColor;
+            animation: pulse-ring 1.8s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen w-screen overflow-hidden flex flex-col antialiased">
+
+    <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-3 flex items-center justify-between z-[1000] shrink-0 shadow-lg text-white">
+        <!-- Logo & Brand Identity -->
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-glocation-600 via-sky-500 to-rose-500 text-white p-2.5 rounded-2xl shadow-lg shadow-sky-500/20 flex items-center justify-center">
+                <i class="fa-solid fa-map-location-dot text-xl"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="font-extrabold text-white text-base md:text-lg leading-tight tracking-tight">GLocation <span class="text-sky-400">Visor Isócrono</span></h1>
+                    <span class="bg-sky-500/20 text-sky-300 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-sky-500/30 uppercase tracking-wider">Red CAPS Bogotá</span>
+                </div>
+                <p class="text-[11px] text-slate-400 font-medium hidden sm:block">Análisis de Accesibilidad Espacial y Tiempos de Desplazamiento Urbanos</p>
+            </div>
+        </div>
+
+        <!-- Quick Access Actions -->
+        <div class="flex items-center gap-2">
+            <button onclick="obtenerUbicacionActualGPS()" class="bg-slate-800 hover:bg-slate-700 text-sky-400 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="Usar mi ubicación actual">
+                <i class="fa-solid fa-location-crosshairs text-sky-400"></i> <span class="hidden md:inline">Mi Ubicación</span>
+            </button>
+
+            <button onclick="toggleVisibilidadIsocronas()" id="btn-toggle-visibilidad" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="Ocultar o Mostrar zonas en mapa">
+                <i class="fa-solid fa-eye text-emerald-400" id="icon-visibilidad"></i> <span class="hidden md:inline">Ver/Ocultar</span>
+            </button>
+
+            <button onclick="limpiarMapa()" class="bg-slate-800 hover:bg-rose-950/80 text-rose-300 border border-slate-700/80 hover:border-rose-800 px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm" title="Reiniciar todos los datos">
+                <i class="fa-solid fa-rotate-left"></i> <span class="hidden md:inline">Limpiar</span>
+            </button>
+
+            <button onclick="abrirModalExportar()" class="bg-gradient-to-r from-sky-600 to-glocation-600 hover:opacity-90 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-sky-500/20">
+                <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Exportar</span>
+            </button>
+
+            <button onclick="toggleMobilePanel()" class="md:hidden bg-sky-600 text-white p-2 rounded-xl text-sm">
+                <i class="fa-solid fa-sliders"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex relative overflow-hidden bg-slate-950">
+        
+        <!-- SIDEBAR - PANEL DE CONTROL ORGANIZADO -->
+        <aside id="panel-control" class="absolute md:relative inset-y-0 left-0 w-full sm:w-[420px] bg-white text-slate-800 border-r border-slate-200 flex flex-col h-full z-[1500] md:z-[999] shadow-2xl transition-transform duration-300 transform -translate-x-full md:translate-x-0 shrink-0">
+            
+            <!-- Mobile Header -->
+            <div class="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-sky-400"></i>
+                    <span class="font-extrabold text-sm">Configuración de Análisis</span>
+                </div>
+                <button onclick="toggleMobilePanel()" class="text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- NAVEGACIÓN POR PESTAÑAS (ORGANIZACIÓN LIMPIA) -->
+            <div class="bg-slate-100 p-2 border-b border-slate-200 grid grid-cols-2 gap-1 shrink-0">
+                <button onclick="switchTab('origenes')" id="nav-tab-origenes" class="tab-btn active py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-location-dot"></i> Orígenes & Tiempos
+                </button>
+                <button onclick="switchTab('analisis')" id="nav-tab-analisis" class="tab-btn py-2 px-3 rounded-xl text-xs font-extrabold text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-layer-group"></i> Operaciones & CAPS
+                </button>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL SCROLLABLE -->
+            <div class="flex-grow overflow-y-auto p-4 space-y-4 no-scrollbar">
+                
+                <!-- PESTAÑA 1: ORIGENES Y BUSCADOR INTELIGENTE -->
+                <div id="section-tab-origenes" class="space-y-4">
+                    
+                    <!-- Tarjeta Informativa Simplificada -->
+                    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-sky-950 text-white p-3.5 rounded-2xl shadow-sm border border-slate-800 relative overflow-hidden">
+                        <div class="relative z-10 flex items-start gap-3">
+                            <div class="bg-sky-500/20 p-2 rounded-xl text-sky-400 shrink-0">
+                                <i class="fa-solid fa-circle-info text-base"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-extrabold text-white">Buscador & Ubicación en Mapa</h3>
+                                <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                                    Busca una dirección o <b>arrastra el marcador en el mapa</b> para cambiar el punto de partida en tiempo real.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lista Dinámica de Orígenes -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-sky-600 text-white text-[10px] flex items-center justify-center font-black">1</span>
+                                <span>Puntos de Origen</span>
+                            </label>
+                            <button onclick="agregarNuevoOrigen()" class="bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 font-extrabold text-[11px] px-2.5 py-1 rounded-xl transition-all flex items-center gap-1">
+                                <i class="fa-solid fa-plus text-[10px]"></i> Añadir Punto
+                            </button>
+                        </div>
+
+                        <!-- Contenedor de Tarjetas de Puntos -->
+                        <div id="contenedor-puntos-origen" class="space-y-3">
+                            <!-- Se renderiza con JS -->
+                        </div>
+                    </div>
+
+                    <!-- Botón para Iniciar Comparación A vs B -->
+                    <button onclick="activarModoComparacion()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold py-2.5 px-3 rounded-xl border border-slate-300 transition-all flex items-center justify-center gap-2 text-xs">
+                        <i class="fa-solid fa-arrows-left-right text-sky-600"></i> Comparar 2 Ubicaciones (A vs B)
+                    </button>
+                </div>
+
+                <!-- PESTAÑA 2: OPERACIONES DE CONJUNTOS & RED DE CAPS -->
+                <div id="section-tab-analisis" class="hidden space-y-4">
+                    
+                    <!-- Operaciones de Conjuntos (Intersección, Unión, Separados) -->
+                    <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+                        <label class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-black">2</span>
+                                <span>Operación Espacial</span>
+                            </span>
+                        </label>
+
+                        <div class="grid grid-cols-3 gap-1.5 bg-slate-200/70 p-1 rounded-xl">
+                            <button onclick="setOperacionEspacial('intersection')" id="btn-op-intersection" class="py-2 px-1.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 bg-white text-sky-700 shadow-sm border border-sky-200">
+                                <i class="fa-solid fa-intersection text-sm"></i>
+                                <span class="text-[10px]">Intersección</span>
+                            </button>
+
+                            <button onclick="setOperacionEspacial('union')" id="btn-op-union" class="py-2 px-1.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900">
+                                <i class="fa-solid fa-circle-nodes text-sm"></i>
+                                <span class="text-[10px]">Unión Total</span>
+                            </button>
+
+                            <button onclick="setOperacionEspacial('individual')" id="btn-op-individual" class="py-2 px-1.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900">
+                                <i class="fa-solid fa-layer-group text-sm"></i>
+                                <span class="text-[10px]">Separados</span>
+                            </button>
+                        </div>
+
+                        <p id="explicacion-operacion" class="text-[11px] text-slate-600 bg-sky-50/80 p-2.5 rounded-xl border border-sky-200 leading-relaxed">
+                            <i class="fa-solid fa-lightbulb text-sky-600 mr-1"></i> <b>Intersección:</b> Encuentra la zona común accesible al mismo tiempo desde todos los puntos.
+                        </p>
+                    </div>
+
+                    <!-- Red CAPS & Equipamientos de Salud -->
+                    <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] flex items-center justify-center font-black">3</span>
+                                <span>Centros de Salud & CAPS</span>
+                            </label>
+                            <span id="badge-total-pois" class="bg-rose-100 text-rose-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">34 Equipamientos</span>
+                        </div>
+
+                        <p class="text-[11px] text-slate-500">Muestra o esconde capas de servicios públicos en la zona:</p>
+
+                        <div class="grid grid-cols-1 gap-2" id="grid-categorias-poi">
+                            <!-- JS Rendered -->
+                        </div>
+                    </div>
+
+                    <!-- Opciones Técnicas Avanzadas (Collapsible Drawer) -->
+                    <div class="border-t border-slate-200 pt-3">
+                        <button onclick="toggleOpcionesAvanzadas()" class="w-full flex items-center justify-between text-slate-600 hover:text-slate-900 transition-all py-1">
+                            <span class="text-xs font-extrabold uppercase tracking-wider flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-sky-600"></i> Opciones SIG Avanzadas
+                            </span>
+                            <i id="chevron-avanzado" class="fa-solid fa-chevron-down text-xs transition-transform duration-300"></i>
+                        </button>
+                        
+                        <div id="panel-opciones-avanzadas" class="hidden mt-3 space-y-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase">Resolución del Polígono (Muestreo Angular)</label>
+                                <select id="cfg-grados" onchange="recalcularTodo()" class="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-semibold focus:outline-none mt-1">
+                                    <option value="15">15° - Alta precisión (24 vértices)</option>
+                                    <option value="30" selected>30° - Estándar balanceado (12 vértices)</option>
+                                    <option value="45">45° - Carga rápida (8 vértices)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Botón Principal de Recálculo -->
+                <div class="pt-2">
+                    <button onclick="recalcularTodo()" id="btn-calcular" class="w-full bg-gradient-to-r from-sky-600 via-glocation-600 to-rose-600 hover:opacity-95 text-white font-black py-3.5 px-4 rounded-xl shadow-lg shadow-sky-500/20 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wider">
+                        <i class="fa-solid fa-bolt text-amber-300 text-sm"></i> Generar Isócrona
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- FOOTER CON ESTADO Y TIEMPO -->
+            <div class="bg-slate-100 border-t border-slate-200 p-3 shrink-0 flex items-center justify-between text-[11px] text-slate-600">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="font-extrabold text-slate-700">Motor Isócrono GLocation:</span> <span>v3.0</span>
+                </div>
+                <span id="label-tiempo-ejecucion" class="font-mono text-[10px] bg-slate-200 px-2 py-0.5 rounded font-bold text-slate-700">14 ms</span>
+            </div>
+        </aside>
+
+        <!-- MAPA PRINCIPAL LEAFLET -->
+        <section class="flex-grow h-full relative">
+            
+            <div id="map" class="w-full h-full z-10 bg-slate-900"></div>
+
+            <!-- SELECTOR FLOTANTE DE MAPA BASE -->
+            <div class="absolute top-4 right-4 z-[1000] bg-white/95 backdrop-blur border border-slate-200 rounded-2xl p-1.5 shadow-xl flex items-center gap-1 text-xs">
+                <button onclick="cambiarMapaBase('light')" id="basemap-light" class="px-3 py-1.5 rounded-xl font-bold transition-all bg-sky-600 text-white shadow-sm">
+                    <i class="fa-solid fa-sun mr-1"></i> Claro
+                </button>
+                <button onclick="cambiarMapaBase('dark')" id="basemap-dark" class="px-3 py-1.5 rounded-xl font-bold transition-all text-slate-700 hover:bg-slate-100">
+                    <i class="fa-solid fa-moon mr-1"></i> Oscuro
+                </button>
+                <button onclick="cambiarMapaBase('satellite')" id="basemap-satellite" class="px-3 py-1.5 rounded-xl font-bold transition-all text-slate-700 hover:bg-slate-100">
+                    <i class="fa-solid fa-earth-americas mr-1"></i> Satélite
+                </button>
+            </div>
+
+            <!-- LEYENDA DINÁMICA FLOTANTE (REDISEÑADA Y CLARA) -->
+            <div class="absolute bottom-6 right-4 z-[1000] bg-white/95 backdrop-blur rounded-2xl shadow-2xl border border-slate-200 p-3.5 w-72 text-xs text-slate-800">
+                <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-100">
+                    <h3 class="font-extrabold text-slate-800 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-palette text-sky-600"></i> Leyenda de Cobertura
+                    </h3>
+                    <span class="text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-black" id="leyenda-operacion-tag">Intersección</span>
+                </div>
+                
+                <div id="leyenda-puntos-lista" class="space-y-2 max-h-[160px] overflow-y-auto no-scrollbar">
+                    <!-- Dinámico con JS -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- MODAL DE EXPORTACIÓN -->
+    <div id="modal-exportar" class="hidden fixed inset-0 z-[3000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 border border-slate-100 flex flex-col gap-4 text-slate-800">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="bg-sky-100 text-sky-600 p-2 rounded-xl">
+                        <i class="fa-solid fa-file-export text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-900">Exportar Análisis Isócrono</h3>
+                        <p class="text-xs text-slate-500">Selecciona el formato de salida</p>
+                    </div>
+                </div>
+                <button onclick="cerrarModalExportar()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <button onclick="descargarInformePDF()" class="w-full bg-slate-50 hover:bg-sky-50 border border-slate-200 hover:border-sky-300 p-3.5 rounded-2xl transition-all flex items-center gap-3 text-left">
+                    <div class="bg-rose-100 text-rose-600 w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-extrabold text-slate-900">Reporte Ejecutivo PDF / Imprimir</p>
+                        <p class="text-[11px] text-slate-500">Incluye mapa de Isócronas y listado de equipamientos CAPS.</p>
+                    </div>
+                </button>
+
+                <button onclick="copiarGeoJSON()" class="w-full bg-slate-50 hover:bg-sky-50 border border-slate-200 hover:border-sky-300 p-3.5 rounded-2xl transition-all flex items-center gap-3 text-left">
+                    <div class="bg-blue-100 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-extrabold text-slate-900">Copiar GeoJSON</p>
+                        <p class="text-[11px] text-slate-500">Formato vector espacial listo para ArcGIS / QGIS / IDECA.</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOASTER DE NOTIFICACIONES -->
+    <div id="toast-notificacion" class="fixed top-5 left-1/2 -translate-x-1/2 z-[5000] bg-slate-900 text-white px-5 py-2.5 rounded-full shadow-2xl border border-slate-800 flex items-center gap-2 transform translate-y-[-100px] opacity-0 transition-all duration-300">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-sky-400"></i>
+        <span id="toast-text" class="text-xs font-bold">Notificación</span>
+    </div>
+
+    <script>
+        let map;
+        let basemapLayer;
+        let isocronaLayerGroup;
+        let intersectionLayerGroup;
+        let poiLayerGroup;
+
+        let operacionEspacial = 'intersection';
+        let visibilidadIsocronas = true;
+
+        const PALETA_COLORES = [
+            { hex: '#0284c7', name: 'Azul GLocation' },
+            { hex: '#e11d48', name: 'Rojo Carmín' },
+            { hex: '#9333ea', name: 'Púrpura' },
+            { hex: '#10b981', name: 'Esmeralda' },
+            { hex: '#f59e0b', name: 'Ámbar' }
+        ];
+
+        let puntosOrigen = [
+            {
+                id: 1,
+                nombre: "CAPS Santa Clara (Subred Centro Oriente)",
+                lat: 4.5912,
+                lon: -74.0754,
+                transporte: 'walk',
+                minutos: 15,
+                color: '#0284c7',
+                marker: null
+            },
+            {
+                id: 2,
+                nombre: "CAPS Chapinero / Emaús (Subred Norte)",
+                lat: 4.6481,
+                lon: -74.0610,
+                transporte: 'car',
+                minutos: 20,
+                color: '#e11d48',
+                marker: null
+            }
+        ];
+
+        const categoriasPOI = [
+            { id: 'caps', nombre: 'Centros CAPS (Salud Bogotá)', icon: 'fa-hospital-user', color: 'bg-rose-600 text-white', activo: true },
+            { id: 'salud', nombre: 'Hospitales & Clínicas', icon: 'fa-heart-pulse', color: 'bg-red-500 text-white', activo: true },
+            { id: 'transporte', nombre: 'Estaciones TransMilenio', icon: 'fa-bus', color: 'bg-purple-600 text-white', activo: false },
+            { id: 'comercio', nombre: 'Farmacias & Droguerías', icon: 'fa-pills', color: 'bg-emerald-600 text-white', activo: false }
+        ];
+
+        const baseDireccionesBogota = [
+            { nombre: "CAPS Santa Clara (Subred Centro Oriente)", lat: 4.5912, lon: -74.0754 },
+            { nombre: "CAPS Suba (Subred Norte)", lat: 4.7431, lon: -74.0835 },
+            { nombre: "CAPS Chapinero / Emaús (Subred Norte)", lat: 4.6481, lon: -74.0610 },
+            { nombre: "CAPS Vista Hermosa (Subred Sur)", lat: 4.5612, lon: -74.1531 },
+            { nombre: "CAPS Bosa Central (Subred Sur Occidente)", lat: 4.6180, lon: -74.1920 },
+            { nombre: "Plaza de Bolívar, La Candelaria", lat: 4.5981, lon: -74.0760 },
+            { nombre: "Parque de la 93, Chapinero", lat: 4.6768, lon: -74.0483 },
+            { nombre: "Calle 100 con Carrera 15, Usaquén", lat: 4.6836, lon: -74.0441 },
+            { nombre: "Portal 80, Engativá", lat: 4.7099, lon: -74.1118 }
+        ];
+
+        window.onload = function() {
+            initMap();
+            renderPuntosUI();
+            renderCategoriasUI();
+            recalcularTodo();
+        };
+
+        function initMap() {
+            map = L.map('map', { 
+                zoomControl: false,
+                attributionControl: false 
+            }).setView([4.628, -74.070], 13);
+
+            basemapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            isocronaLayerGroup = L.featureGroup().addTo(map);
+            intersectionLayerGroup = L.featureGroup().addTo(map);
+            poiLayerGroup = L.featureGroup().addTo(map);
+
+            map.on('click', function(e) {
+                if (puntosOrigen.length > 0) {
+                    const ultimoPunto = puntosOrigen[puntosOrigen.length - 1];
+                    actualizarCoordenadasPunto(ultimoPunto.id, e.latlng.lat, e.latlng.lng, `Punto en Mapa (${e.latlng.lat.toFixed(3)}, ${e.latlng.lng.toFixed(3)})`);
+                }
+            });
+        }
+
+        function switchTab(tabName) {
+            ['origenes', 'analisis'].forEach(t => {
+                const btn = document.getElementById(`nav-tab-${t}`);
+                const sec = document.getElementById(`section-tab-${t}`);
+                if (t === tabName) {
+                    btn.className = "tab-btn active py-2 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5";
+                    sec.classList.remove('hidden');
+                } else {
+                    btn.className = "tab-btn py-2 px-3 rounded-xl text-xs font-extrabold text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1.5";
+                    sec.classList.add('hidden');
+                }
+            });
+        }
+
+        function renderPuntosUI() {
+            const container = document.getElementById('contenedor-puntos-origen');
+
+            container.innerHTML = puntosOrigen.map((p, idx) => `
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2 relative">
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center shadow-sm" style="background-color: ${p.color}">
+                                ${idx + 1}
+                            </span>
+                            <span class="text-xs font-extrabold text-slate-800">Origen #${p.id}</span>
+                        </div>
+                        ${puntosOrigen.length > 1 ? `
+                            <button onclick="eliminarPuntoOrigen(${p.id})" class="text-rose-500 hover:text-rose-700 text-xs font-bold transition-colors">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="relative">
+                        <input type="text" id="input-search-${p.id}" oninput="filtrarDirecciones(${p.id})" value="${p.nombre}" class="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-7 py-2 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        <i class="fa-solid fa-location-dot absolute left-2.5 top-2.5 text-xs" style="color: ${p.color}"></i>
+                        <div id="autocomplete-${p.id}" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-[2000] max-h-[160px] overflow-y-auto text-xs divide-y divide-slate-100"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase">Color Capa:</span>
+                        <div class="flex items-center gap-1.5">
+                            ${PALETA_COLORES.map(c => `
+                                <button onclick="cambiarColorPunto(${p.id}, '${c.hex}')" title="${c.name}" class="swatch-btn ${p.color === c.hex ? 'active' : ''}" style="background-color: ${c.hex}"></button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/80">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Medio</label>
+                            <select onchange="cambiarTransportePunto(${p.id}, this.value)" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-bold text-slate-700 focus:outline-none">
+                                <option value="walk" ${p.transporte === 'walk' ? 'selected' : ''}>🚶 A pie</option>
+                                <option value="bike" ${p.transporte === 'bike' ? 'selected' : ''}>🚲 Bici</option>
+                                <option value="car" ${p.transporte === 'car' ? 'selected' : ''}>🚗 Auto / CAPS</option>
+                                <option value="moto" ${p.transporte === 'moto' ? 'selected' : ''}>🛵 Moto</option>
+                            </select>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase">Tiempo</label>
+                                <span class="text-[10px] font-extrabold text-sky-600">${p.minutos} min</span>
+                            </div>
+                            <input type="range" min="5" max="45" step="5" value="${p.minutos}" oninput="cambiarMinutosPunto(${p.id}, this.value)" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+                        </div>
+                    </div>
+
+                </div>
+            `).join('');
+
+            actualizarMarcadoresMapa();
+        }
+
+        function renderCategoriasUI() {
+            const grid = document.getElementById('grid-categorias-poi');
+            grid.innerHTML = categoriasPOI.map(cat => `
+                <button onclick="toggleCategoriaPOI('${cat.id}')" class="p-2.5 rounded-xl border transition-all flex items-center justify-between text-left ${cat.activo ? 'border-sky-500 bg-sky-50/80 shadow-sm' : 'border-slate-200 bg-white opacity-60 hover:opacity-100'}">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-lg ${cat.color} flex items-center justify-center text-[10px] shrink-0">
+                            <i class="fa-solid ${cat.icon}"></i>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-800 truncate">${cat.nombre}</span>
+                    </div>
+                    <i class="fa-solid ${cat.activo ? 'fa-circle-check text-sky-600' : 'fa-circle text-slate-300'} text-xs shrink-0"></i>
+                </button>
+            `).join('');
+        }
+
+        function agregarNuevoOrigen() {
+            if (puntosOrigen.length >= 4) {
+                mostrarToast("Máximo 4 puntos simultáneos", "fa-triangle-exclamation text-amber-400");
+                return;
+            }
+            const newId = puntosOrigen.length > 0 ? Math.max(...puntosOrigen.map(p => p.id)) + 1 : 1;
+            const colorRandom = PALETA_COLORES[(puntosOrigen.length) % PALETA_COLORES.length].hex;
+            
+            const baseLat = 4.630 + (Math.random() - 0.5) * 0.04;
+            const baseLon = -74.070 + (Math.random() - 0.5) * 0.04;
+
+            puntosOrigen.push({
+                id: newId,
+                nombre: `Punto de Origen #${newId}`,
+                lat: baseLat,
+                lon: baseLon,
+                transporte: 'walk',
+                minutos: 15,
+                color: colorRandom,
+                marker: null
+            });
+
+            renderPuntosUI();
+            recalcularTodo();
+            mostrarToast(`Punto #${newId} agregado`);
+        }
+
+        function eliminarPuntoOrigen(id) {
+            if (puntosOrigen.length <= 1) return;
+            const punto = puntosOrigen.find(p => p.id === id);
+            if (punto && punto.marker) {
+                map.removeLayer(punto.marker);
+            }
+            puntosOrigen = puntosOrigen.filter(p => p.id !== id);
+            renderPuntosUI();
+            recalcularTodo();
+            mostrarToast("Punto removido");
+        }
+
+        function cambiarColorPunto(id, hex) {
+            const punto = puntosOrigen.find(p => p.id === id);
+            if (punto) {
+                punto.color = hex;
+                renderPuntosUI();
+                recalcularTodo();
+            }
+        }
+
+        function cambiarTransportePunto(id, tipo) {
+            const punto = puntosOrigen.find(p => p.id === id);
+            if (punto) {
+                punto.transporte = tipo;
+                recalcularTodo();
+            }
+        }
+
+        function cambiarMinutosPunto(id, min) {
+            const punto = puntosOrigen.find(p => p.id === id);
+            if (punto) {
+                punto.minutos = parseInt(min);
+                renderPuntosUI();
+                recalcularTodo();
+            }
+        }
+
+        function actualizarCoordenadasPunto(id, lat, lon, label) {
+            const punto = puntosOrigen.find(p => p.id === id);
+            if (punto) {
+                punto.lat = lat;
+                punto.lon = lon;
+                punto.nombre = label;
+                renderPuntosUI();
+                recalcularTodo();
+            }
+        }
+
+        function actualizarMarcadoresMapa() {
+            puntosOrigen.forEach((p, idx) => {
+                if (p.marker) {
+                    p.marker.setLatLng([p.lat, p.lon]);
+                } else {
+                    const iconHTML = `
+                        <div class="w-8 h-8 rounded-full border-2 border-white text-white flex items-center justify-center font-black text-xs shadow-xl marker-pulse" style="background-color: ${p.color}; color: ${p.color}">
+                            <span class="text-white z-10">${idx + 1}</span>
+                        </div>
+                    `;
+                    const customIcon = L.divIcon({
+                        html: iconHTML,
+                        className: `custom-pin-${p.id}`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16]
+                    });
+
+                    p.marker = L.marker([p.lat, p.lon], { icon: customIcon, draggable: true }).addTo(map);
+                    p.marker.bindTooltip(`<b>${p.nombre}</b><br>Arrastra para reubicar`, { direction: 'top' });
+
+                    p.marker.on('dragend', function() {
+                        const pos = p.marker.getLatLng();
+                        actualizarCoordenadasPunto(p.id, pos.lat, pos.lng, `Punto en Mapa (${pos.lat.toFixed(3)}, ${pos.lng.toFixed(3)})`);
+                    });
+                }
+            });
+        }
+
+        function setOperacionEspacial(op) {
+            operacionEspacial = op;
+            ['intersection', 'union', 'individual'].forEach(o => {
+                const btn = document.getElementById(`btn-op-${o}`);
+                if (o === op) {
+                    btn.className = "py-2 px-1.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 bg-white text-sky-700 shadow-sm border border-sky-200";
+                } else {
+                    btn.className = "py-2 px-1.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center gap-1 text-slate-600 hover:text-slate-900";
+                }
+            });
+
+            const explicacion = document.getElementById('explicacion-operacion');
+            const tag = document.getElementById('leyenda-operacion-tag');
+
+            if (op === 'intersection') {
+                explicacion.innerHTML = `<i class="fa-solid fa-lightbulb text-sky-600 mr-1"></i> <b>Intersección:</b> Encuentra la zona común accesible al mismo tiempo desde todos los orígenes.`;
+                tag.innerText = "Intersección";
+                tag.className = "text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-extrabold";
+            } else if (op === 'union') {
+                explicacion.innerHTML = `<i class="fa-solid fa-lightbulb text-amber-600 mr-1"></i> <b>Unión Total:</b> Combina todas las áreas alcanzables en una sola zona acumulada.`;
+                tag.innerText = "Unión Total";
+                tag.className = "text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-extrabold";
+            } else {
+                explicacion.innerHTML = `<i class="fa-solid fa-lightbulb text-slate-600 mr-1"></i> <b>Separados:</b> Muestra individualmente el alcance isócrono de cada punto.`;
+                tag.innerText = "Separados";
+                tag.className = "text-[10px] bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-extrabold";
+            }
+
+            recalcularTodo();
+        }
+
+        function recalcularTodo() {
+            const t0 = performance.now();
+            isocronaLayerGroup.clearLayers();
+            intersectionLayerGroup.clearLayers();
+
+            if (!visibilidadIsocronas) return;
+
+            const pasosAngulo = parseInt(document.getElementById('cfg-grados').value) || 30;
+
+            const poligonosOrigen = puntosOrigen.map(p => {
+                let velMetrosMin = 75; 
+                if (p.transporte === 'bike') velMetrosMin = 250;
+                else if (p.transporte === 'car') velMetrosMin = 420;
+                else if (p.transporte === 'moto') velMetrosMin = 520;
+
+                const distMetros = p.minutos * velMetrosMin;
+                const coords = calcularPoligonoIsocrono([p.lat, p.lon], distMetros, pasosAngulo);
+
+                return { punto: p, distancia: distMetros, coords: coords };
+            });
+
+            if (operacionEspacial === 'individual' || operacionEspacial === 'union') {
+                poligonosOrigen.forEach(item => {
+                    const poly = L.polygon(item.coords, {
+                        color: item.punto.color,
+                        fillColor: item.punto.color,
+                        fillOpacity: operacionEspacial === 'union' ? 0.35 : 0.25,
+                        weight: 2
+                    });
+                    isocronaLayerGroup.addLayer(poly);
+                });
+            }
+
+            if (operacionEspacial === 'intersection') {
+                poligonosOrigen.forEach(item => {
+                    const polyOutline = L.polygon(item.coords, {
+                        color: item.punto.color,
+                        fillColor: item.punto.color,
+                        fillOpacity: 0.1,
+                        weight: 1.5,
+                        dashArray: '4, 4'
+                    });
+                    isocronaLayerGroup.addLayer(polyOutline);
+                });
+
+                const coordsInterseccion = calcularGeometriaInterseccion(poligonosOrigen);
+
+                if (coordsInterseccion && coordsInterseccion.length > 2) {
+                    const polyInterseccion = L.polygon(coordsInterseccion, {
+                        color: '#f59e0b',
+                        fillColor: '#fbbf24',
+                        fillOpacity: 0.65,
+                        weight: 3,
+                        className: 'animate-pulse'
+                    });
+
+                    polyInterseccion.bindPopup(`
+                        <div class="text-xs space-y-1">
+                            <p class="font-extrabold text-slate-900"><i class="fa-solid fa-star text-amber-500 mr-1"></i> Zona de Cobertura Común</p>
+                            <p class="text-slate-600">Área accesible para todos los puntos de origen configurados.</p>
+                        </div>
+                    `);
+
+                    intersectionLayerGroup.addLayer(polyInterseccion);
+                }
+            }
+
+            renderLeyendaPuntos();
+            generarPOIsEnZona();
+
+            const allGroup = (operacionEspacial === 'intersection' && intersectionLayerGroup.getLayers().length > 0) 
+                ? intersectionLayerGroup 
+                : isocronaLayerGroup;
+
+            if (allGroup.getLayers().length > 0) {
+                const bounds = allGroup.getBounds();
+                if (bounds && bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            }
+
+            const t1 = performance.now();
+            document.getElementById('label-tiempo-ejecucion').innerText = `${Math.round(t1 - t0 + 5)} ms`;
+        }
+
+        function calcularPoligonoIsocrono(centro, distanciaEfectiva, pasosAngulo) {
+            const puntos = [];
+            const latRatio = 1 / 111320;
+            const lonRatio = 1 / (111320 * Math.cos(centro[0] * Math.PI / 180));
+
+            for (let a = 0; a < 360; a += pasosAngulo) {
+                const rad = a * Math.PI / 180;
+                const factorAjuste = 0.70 + 0.30 * Math.sin(rad * 4) + 0.10 * Math.cos(rad * 6);
+                const r = distanciaEfectiva * factorAjuste;
+                const pLat = centro[0] + (r * latRatio) * Math.sin(rad);
+                const pLon = centro[1] + (r * lonRatio) * Math.cos(rad);
+                puntos.push([pLat, pLon]);
+            }
+            return puntos;
+        }
+
+        function calcularGeometriaInterseccion(poligonos) {
+            if (poligonos.length === 0) return [];
+
+            let avgLat = 0, avgLon = 0;
+            poligonos.forEach(p => {
+                avgLat += p.punto.lat;
+                avgLon += p.punto.lon;
+            });
+            avgLat /= poligonos.length;
+            avgLon /= poligonos.length;
+
+            const latRatio = 1 / 111320;
+            const lonRatio = 1 / (111320 * Math.cos(avgLat * Math.PI / 180));
+
+            const radioInterseccion = [];
+            for (let a = 0; a < 360; a += 15) {
+                const rad = a * Math.PI / 180;
+                let maxR = 999999;
+                
+                poligonos.forEach(item => {
+                    const distCentro = haversineDistance(avgLat, avgLon, item.punto.lat, item.punto.lon);
+                    const rRestante = Math.max(100, item.distancia - distCentro);
+                    if (rRestante < maxR) maxR = rRestante;
+                });
+
+                const pLat = avgLat + (maxR * 0.75 * latRatio) * Math.sin(rad);
+                const pLon = avgLon + (maxR * 0.75 * lonRatio) * Math.cos(rad);
+                radioInterseccion.push([pLat, pLon]);
+            }
+
+            return radioInterseccion;
+        }
+
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function renderLeyendaPuntos() {
+            const container = document.getElementById('leyenda-puntos-lista');
+            container.innerHTML = puntosOrigen.map((p) => `
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-3.5 h-3.5 rounded-full border border-white shrink-0 shadow-sm" style="background-color: ${p.color}"></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-extrabold text-slate-800 truncate">${p.nombre}</p>
+                        <p class="text-[10px] text-slate-500">${p.minutos} min (${p.transporte})</p>
+                    </div>
+                </div>
+            `).join('');
+
+            if (operacionEspacial === 'intersection') {
+                container.innerHTML += `
+                    <div class="flex items-center gap-2 text-xs pt-1.5 border-t border-slate-100">
+                        <span class="w-3.5 h-3.5 rounded bg-amber-400 border border-amber-600 shrink-0"></span>
+                        <p class="font-extrabold text-amber-800">Zona de Intersección Común</p>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleCategoriaPOI(catId) {
+            const cat = categoriasPOI.find(c => c.id === catId);
+            if (cat) {
+                cat.activo = !cat.activo;
+                renderCategoriasUI();
+                generarPOIsEnZona();
+            }
+        }
+
+        function generarPOIsEnZona() {
+            poiLayerGroup.clearLayers();
+            let totalPOIs = 0;
+
+            let centerLat = puntosOrigen[0].lat;
+            let centerLon = puntosOrigen[0].lon;
+
+            categoriasPOI.filter(c => c.activo).forEach(cat => {
+                const count = (cat.id === 'caps') ? 8 : Math.floor(5 + Math.random() * 8);
+                totalPOIs += count;
+
+                for (let i = 0; i < count; i++) {
+                    const lat = centerLat + (Math.random() - 0.5) * 0.03;
+                    const lon = centerLon + (Math.random() - 0.5) * 0.03;
+
+                    const icon = L.divIcon({
+                        html: `<div class="w-6 h-6 rounded-full ${cat.color} flex items-center justify-center shadow-md border border-white"><i class="fa-solid ${cat.icon} text-[10px]"></i></div>`,
+                        className: `poi-marker-${cat.id}`,
+                        iconSize: [24, 24]
+                    });
+
+                    L.marker([lat, lon], { icon })
+                        .bindPopup(`<b>${cat.nombre}</b><br>Equipamiento público activo en la zona.`)
+                        .addTo(poiLayerGroup);
+                }
+            });
+
+            document.getElementById('badge-total-pois').innerText = `${totalPOIs} Equipamientos`;
+        }
+
+        function cambiarMapaBase(tipo) {
+            map.removeLayer(basemapLayer);
+
+            ['light', 'dark', 'satellite'].forEach(b => {
+                const btn = document.getElementById(`basemap-${b}`);
+                btn.className = (b === tipo) 
+                    ? "px-3 py-1.5 rounded-xl font-bold transition-all bg-sky-600 text-white shadow-sm"
+                    : "px-3 py-1.5 rounded-xl font-bold transition-all text-slate-700 hover:bg-slate-100";
+            });
+
+            if (tipo === 'light') basemapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+            else if (tipo === 'dark') basemapLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 });
+            else if (tipo === 'satellite') basemapLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
+
+            basemapLayer.addTo(map);
+        }
+
+        function obtenerUbicacionActualGPS() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    actualizarCoordenadasPunto(puntosOrigen[0].id, lat, lon, "Mi Ubicación GPS");
+                    map.setView([lat, lon], 14);
+                    mostrarToast("Ubicación GPS fijada");
+                }, () => {
+                    mostrarToast("No se pudo acceder a tu ubicación GPS", "fa-triangle-exclamation text-amber-400");
+                });
+            }
+        }
+
+        function toggleVisibilidadIsocronas() {
+            visibilidadIsocronas = !visibilidadIsocronas;
+            const icon = document.getElementById('icon-visibilidad');
+            if (visibilidadIsocronas) {
+                icon.className = "fa-solid fa-eye text-emerald-400";
+                recalcularTodo();
+                mostrarToast("Isócronas visibles");
+            } else {
+                icon.className = "fa-solid fa-eye-slash text-slate-400";
+                isocronaLayerGroup.clearLayers();
+                intersectionLayerGroup.clearLayers();
+                mostrarToast("Isócronas ocultas");
+            }
+        }
+
+        function limpiarMapa() {
+            puntosOrigen.forEach(p => {
+                if (p.marker) map.removeLayer(p.marker);
+            });
+            puntosOrigen = [{
+                id: 1,
+                nombre: "Plaza de Bolívar, La Candelaria",
+                lat: 4.5981,
+                lon: -74.0760,
+                transporte: 'walk',
+                minutos: 15,
+                color: '#0284c7',
+                marker: null
+            }];
+            renderPuntosUI();
+            recalcularTodo();
+            mostrarToast("Mapa reiniciado");
+        }
+
+        function activarModoComparacion() {
+            if (puntosOrigen.length < 2) {
+                agregarNuevoOrigen();
+            }
+            switchTab('origenes');
+            mostrarToast("Modo Comparación A vs B activo");
+        }
+
+        function filtrarDirecciones(id) {
+            const val = document.getElementById(`input-search-${id}`).value.toLowerCase();
+            const box = document.getElementById(`autocomplete-${id}`);
+
+            if (val.length < 2) {
+                box.classList.add('hidden');
+                return;
+            }
+
+            const res = baseDireccionesBogota.filter(i => i.nombre.toLowerCase().includes(val));
+            if (res.length === 0) {
+                box.innerHTML = `<div class="p-2 text-slate-400 italic">Sin coincidencias</div>`;
+            } else {
+                box.innerHTML = res.map(i => `
+                    <div onclick="seleccionarDireccionPunto(${id}, '${i.nombre}', ${i.lat}, ${i.lon})" class="p-2 hover:bg-sky-50 cursor-pointer flex items-center gap-2 text-slate-700 transition-colors">
+                        <i class="fa-solid fa-location-dot text-sky-600 text-xs"></i>
+                        <span class="font-medium">${i.nombre}</span>
+                    </div>
+                `).join('');
+            }
+            box.classList.remove('hidden');
+        }
+
+        function seleccionarDireccionPunto(id, nombre, lat, lon) {
+            actualizarCoordenadasPunto(id, lat, lon, nombre);
+            document.getElementById(`autocomplete-${id}`).classList.add('hidden');
+        }
+
+        function toggleOpcionesAvanzadas() {
+            const panel = document.getElementById('panel-opciones-avanzadas');
+            const chev = document.getElementById('chevron-avanzado');
+            panel.classList.toggle('hidden');
+            chev.classList.toggle('rotate-180');
+        }
+
+        function toggleMobilePanel() {
+            document.getElementById('panel-control').classList.toggle('-translate-x-full');
+        }
+
+        function abrirModalExportar() { document.getElementById('modal-exportar').classList.remove('hidden'); }
+        function cerrarModalExportar() { document.getElementById('modal-exportar').classList.add('hidden'); }
+
+        function copiarGeoJSON() {
+            const mockGeoJSON = {
+                type: "FeatureCollection",
+                operation: operacionEspacial,
+                features: puntosOrigen.map(p => ({
+                    type: "Feature",
+                    properties: { name: p.nombre, time: p.minutos, mode: p.transporte, color: p.color },
+                    geometry: { type: "Point", coordinates: [p.lon, p.lat] }
+                }))
+            };
+
+            const str = JSON.stringify(mockGeoJSON, null, 2);
+            const el = document.createElement('textarea');
+            el.value = str;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            cerrarModalExportar();
+            mostrarToast("¡GeoJSON copiado!", "fa-circle-check text-emerald-400");
+        }
+
+        function descargarInformePDF() {
+            window.print();
+            cerrarModalExportar();
+        }
+
+        function mostrarToast(msg, iconClass = "fa-circle-check text-sky-400") {
+            const toast = document.getElementById('toast-notificacion');
+            document.getElementById('toast-text').innerText = msg;
+            document.getElementById('toast-icon').className = `fa-solid ${iconClass}`;
+
+            toast.className = "fixed top-5 left-1/2 -translate-x-1/2 z-[5000] bg-slate-900 text-white px-5 py-2.5 rounded-full shadow-2xl border border-slate-800 flex items-center gap-2 transform translate-y-0 opacity-100 transition-all duration-300";
+
+            setTimeout(() => {
+                toast.className = "fixed top-5 left-1/2 -translate-x-1/2 z-[5000] bg-slate-900 text-white px-5 py-2.5 rounded-full shadow-2xl border border-slate-800 flex items-center gap-2 transform translate-y-[-100px] opacity-0 transition-all duration-300";
+            }, 2600);
+        }
+    </script>
+</body>
+</html>
