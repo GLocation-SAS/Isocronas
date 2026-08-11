@@ -166,6 +166,7 @@ export function VisorMap({
           zoom: 13,
           zoomControl: false,
           attributionControl: false,
+          scrollWheelZoom: false,
         });
 
         const tileLayers = {
