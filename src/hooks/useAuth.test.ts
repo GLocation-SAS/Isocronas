@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { User } from "firebase/auth";
 import { useAuth } from "./useAuth";
 import { AuthProvider } from "@/providers/AuthProvider";
-import * as authService from "@/services/auth.service";
+import { authService } from "@/services/auth.service";
 
 // Mock del servicio de autenticación
 jest.mock("@/services/auth.service", () => ({

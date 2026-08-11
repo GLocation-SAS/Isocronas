@@ -11,11 +11,12 @@ import {
 
 export interface SearchProps extends Omit<React.ComponentProps<"input">, "size"> {
   size?: "default" | "sm" | "lg"
+  state?: "default" | "success" | "error"
   onClear?: () => void
 }
 
 const Search = React.forwardRef<HTMLInputElement, SearchProps>(
-  ({ className, size, onClear, value, onChange, ...props }, ref) => {
+  ({ className, size, state, onClear, value, onChange, ...props }, ref) => {
     const [internalValue, setInternalValue] = React.useState(value || "")
 
     React.useEffect(() => {
@@ -42,6 +43,7 @@ const Search = React.forwardRef<HTMLInputElement, SearchProps>(
     return (
       <InputGroup
         size={size}
+        state={state}
         className={cn("group/search", className)}
         leftIcon={
           <SearchIcon

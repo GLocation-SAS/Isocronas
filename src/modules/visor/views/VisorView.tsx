@@ -101,7 +101,7 @@ export function VisorView() {
   };
 
   const handlePreset = (caseId: number) => {
-    setShowGuide(false);
+    setShowGuideModal(false);
     switch(caseId) {
       case 0: // Vivienda
         setProfile("ciudadano");

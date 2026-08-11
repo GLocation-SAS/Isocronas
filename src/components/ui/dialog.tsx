@@ -19,7 +19,7 @@ const dialogVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-border border-primary shadow-2xl shadow-primary/25",
+        primary: "border-border border-primary shadow-2xl shadow-primary/25",
         success: "border-success/30 shadow-2xl shadow-success/10",
         danger: "border-danger/30 shadow-2xl shadow-danger/10",
         warning: "border-warning/30 shadow-2xl shadow-warning/10",
@@ -35,7 +35,7 @@ const dialogVariants = cva(
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "primary",
       size: "default",
     },
   }
@@ -107,7 +107,7 @@ function DialogContent({
           variant === "danger" && "bg-danger",
           variant === "warning" && "bg-warning",
           variant === "info" && "bg-info",
-          (variant === "default" || !variant) && "bg-primary"
+          (variant === "primary" || !variant) && "bg-primary"
         )} />
 
         <div className="relative z-10 grid gap-6">
@@ -146,11 +146,11 @@ function DialogContent({
 function DialogIcon({
   className,
   icon: Icon,
-  variant = "default",
+  variant = "primary",
   ...props
 }: React.ComponentProps<"div"> & {
   icon: React.ComponentType<{ className?: string }>;
-  variant?: "default" | "success" | "danger" | "warning" | "info";
+  variant?: "primary" | "success" | "danger" | "warning" | "info";
 }) {
   return (
     <div
@@ -168,7 +168,7 @@ function DialogIcon({
           variant === "danger" && "text-danger",
           variant === "warning" && "text-warning",
           variant === "info" && "text-info",
-          (variant === "default" || !variant) && "text-primary"
+          (variant === "primary" || !variant) && "text-primary"
         )}
       />
     </div>

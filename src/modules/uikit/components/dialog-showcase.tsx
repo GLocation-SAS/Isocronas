@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type DialogVariant = "default" | "success" | "danger" | "warning" | "info";
+type DialogVariant = "primary" | "success" | "danger" | "warning" | "info";
 type DialogSize = "sm" | "default" | "lg" | "xl";
 
 export function DialogShowcase() {
@@ -266,7 +266,7 @@ export function DialogShowcase() {
             <div className="space-y-2">
               <label className="text-xs font-bold text-foreground">Variante Semántica:</label>
               <div className="grid grid-cols-3 gap-2">
-                {(["default", "success", "danger", "warning", "info"] as const).map((v) => (
+                {(["primary", "success", "danger", "warning", "info"] as const).map((v) => (
                   <button
                     key={v}
                     onClick={() => setVariant(v)}
@@ -324,7 +324,7 @@ export function DialogShowcase() {
       {/* MODALES REALES INTERACTIVOS POR ESTADO */}
       {/* 1. Default / Normal */}
       <Dialog open={openDefault} onOpenChange={setOpenDefault}>
-        <DialogContent variant="default" size="sm">
+        <DialogContent variant="primary" size="sm">
           <DialogHeader>
             <div className="size-14 rounded-full bg-background border border-border shadow-md flex items-center justify-center mb-2">
               <Shield className="size-6 text-primary" />

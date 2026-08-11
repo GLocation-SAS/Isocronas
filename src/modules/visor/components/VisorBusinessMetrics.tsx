@@ -1,7 +1,8 @@
-import { Card, CardContent, CardTitle, CardBadge, CardIcon } from "@/components/ui/card";
+import { Card, CardContent, CardTitle, CardIcon } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Users, Store, Target } from "lucide-react";
 
-export function VisorBusinessMetrics() {
+export function VisorBusinessMetrics({ isGenerating }: { isGenerating?: boolean }) {
   return (
     <Card 
       variant="featured" 
@@ -10,7 +11,7 @@ export function VisorBusinessMetrics() {
     >
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
-          <CardBadge variant="success" appearance="soft">MODO PRO</CardBadge>
+          <Badge variant="success" appearance="soft" className="text-[10px]">MODO PRO</Badge>
           <div className="flex size-8 items-center justify-center rounded-lg bg-success/10 text-success">
             <TrendingUp className="size-4" />
           </div>
