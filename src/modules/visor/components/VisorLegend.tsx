@@ -16,6 +16,7 @@ interface VisorLegendProps {
 export function VisorLegend({ 
   origin, 
   destination, 
+  travelTime = 30,
   hasGenerated = false, 
   onOpenExport 
 }: VisorLegendProps) {
@@ -23,6 +24,12 @@ export function VisorLegend({
 
   const displayOrigin = origin ? origin.replace(" (Reubicado)", "") : "Punto de referencia";
   const displayDest = destination ? destination.replace(" (Destino Reubicado)", "") : null;
+
+  const T = travelTime;
+  const t1 = Math.round(T / 6);
+  const t2 = Math.round(T / 3);
+  const t3 = Math.round(T / 2);
+  const t4 = Math.round((T * 2) / 3);
 
   return (
     <Card className="absolute bottom-6 left-6 md:left-[440px] w-56 shadow-2xl border-border/80 bg-card/95 backdrop-blur-xl z-30 transition-all duration-300 pointer-events-auto">
@@ -38,23 +45,31 @@ export function VisorLegend({
           <div className="flex items-center justify-between text-[11px]">
             <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full bg-isochrone-5min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">0 - 5 min</span>
+              <span className="font-semibold text-foreground">0 - {t1} min</span>
             </div>
             <span className="text-[10px] text-muted-foreground font-mono">Cercano</span>
           </div>
 
           <div className="flex items-center justify-between text-[11px]">
             <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-isochrone-15min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">5 - 15 min</span>
+              <span className="size-2.5 rounded-full bg-isochrone-10min shadow-xs shrink-0" />
+              <span className="font-semibold text-foreground">{t1} - {t2} min</span>
             </div>
             <span className="text-[10px] text-muted-foreground font-mono">Medio</span>
           </div>
 
           <div className="flex items-center justify-between text-[11px]">
             <div className="flex items-center gap-2">
+              <span className="size-2.5 rounded-full bg-isochrone-15min shadow-xs shrink-0" />
+              <span className="font-semibold text-foreground">{t2} - {t3} min</span>
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">Estándar</span>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full bg-isochrone-30min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">15 - 30 min</span>
+              <span className="font-semibold text-foreground">{t3} - {t4} min</span>
             </div>
             <span className="text-[10px] text-muted-foreground font-mono">Extendido</span>
           </div>
@@ -62,7 +77,7 @@ export function VisorLegend({
           <div className="flex items-center justify-between text-[11px]">
             <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full bg-isochrone-maxmin shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">30+ min</span>
+              <span className="font-semibold text-foreground">{t4} - {T} min</span>
             </div>
             <span className="text-[10px] text-muted-foreground font-mono">Límite</span>
           </div>

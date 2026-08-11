@@ -291,8 +291,59 @@ export function VisorMap({
     if (time <= 30) return { fill: "fill-isochrone-30min/20", stroke: "stroke-isochrone-30min" };
     return { fill: "fill-isochrone-maxmin/20", stroke: "stroke-isochrone-maxmin" };
   };
-  const mapColor = getIsochroneStyle(travelTime);
-  const size = (travelTime / 15) * 450;
+  const getTransportFactor = (mode: string) => {
+    switch (mode) {
+      case "walk": return 0.45;
+      case "bike": return 0.75;
+      case "transit": return 0.9;
+      case "car": return 1.25;
+      case "motorcycle": return 1.35;
+      default: return 1.0;
+    }
+  };
+
+  const transportFactor = getTransportFactor(transportMode);
+  const maxSize = (travelTime / 30) * 550 * transportFactor;
+
+  const angles = Array.from({ length: 16 }, (_, i) => (i * 360) / 16);
+  const factors = [0.85, 0.65, 0.95, 1.1, 0.75, 0.55, 0.8, 1.05, 0.9, 0.7, 1.0, 1.15, 0.8, 0.6, 0.9, 1.0];
+  
+  const R1 = factors.map(f => 75 * f);
+  const R2 = factors.map(f => 150 * f);
+  const R3 = factors.map(f => 225 * f);
+  const R4 = factors.map(f => 300 * f);
+  const R5 = factors.map(f => 450 * f);
+
+  const getRingPath = (outerRadii: number[], innerRadii?: number[]) => {
+    const outerPoints = outerRadii.map((r, idx) => {
+      const angle = (idx * 360) / 16;
+      const rad = (angle * Math.PI) / 180;
+      const x = 500 + r * Math.cos(rad);
+      const y = 500 + r * Math.sin(rad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    
+    let path = `M ${outerPoints.join(" L ")} Z`;
+    
+    if (innerRadii) {
+      const innerPoints = innerRadii.map((r, idx) => {
+        const angle = (idx * 360) / 16;
+        const rad = (angle * Math.PI) / 180;
+        const x = 500 + r * Math.cos(rad);
+        const y = 500 + r * Math.sin(rad);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).reverse();
+      path += ` M ${innerPoints.join(" L ")} Z`;
+    }
+    
+    return path;
+  };
+
+  const path1 = getRingPath(R1);
+  const path2 = getRingPath(R2, R1);
+  const path3 = getRingPath(R3, R2);
+  const path4 = getRingPath(R4, R3);
+  const path5 = getRingPath(R5, R4);
 
   return (
     <div 
@@ -320,28 +371,128 @@ export function VisorMap({
           ref={mapContainerRef} 
           className="absolute inset-0 z-0 w-full h-full bg-cover bg-center transition-all duration-300 pointer-events-auto"
           style={{
-            backgroundImage: mapMode === "light" ? "url('/bogota_map.png')" : "url('/bogota_map_dark.png')",
+            backgroundImage: mapMode === "light" ? "url('/Isocronas/bogota_map.png')" : "url('/Isocronas/bogota_map_dark.png')",
             filter: mapMode === "satellite" ? "contrast(1.2) brightness(0.85) saturate(1.4)" : "none",
           }}
         />
 
         {/* Capa de Polígonos e Isócronas por encima de Leaflet (solo tras generar) */}
-        {hasGenerated && (
+        {hasGenerated && showIsochroneLayer && (
           <div className="absolute inset-0 pointer-events-none z-10">
             <div 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center transition-all duration-700 ease-out"
-              style={{ width: `${size}px`, height: `${size}px` }}
+              className="absolute top-1/2 left-1/2 flex items-center justify-center transition-all duration-300 ease-out"
+              style={{ 
+                width: `${maxSize}px`, 
+                height: `${maxSize}px`,
+                transform: `translate(calc(-50% + ${pinOffset.x}px), calc(-50% + ${pinOffset.y}px))`
+              }}
             >
-              {/* SVG Isocrona Concéntrica Animada */}
-              <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-2xl">
-                <path 
-                  d="M 50,5 C 75,5 95,25 95,50 C 95,75 75,95 50,95 C 25,95 5,75 5,50 C 5,25 25,5 50,5 Z" 
-                  className={cn(mapColor.fill, mapColor.stroke, "stroke-[1.5] transition-all duration-500 animate-pulse")} 
-                />
-                <path 
-                  d="M 50,18 C 68,18 82,32 82,50 C 82,68 68,82 50,82 C 32,82 18,68 18,50 C 18,32 32,18 50,18 Z" 
-                  className="fill-primary/10 stroke-primary stroke-1 opacity-70" 
-                />
+              <svg viewBox="0 0 1000 1000" className="w-full h-full drop-shadow-2xl pointer-events-none" fillRule="evenodd">
+                {/* 5 Polígonos irregulares / Anillos concéntricos sin solapamientos con tooltips */}
+                {(() => {
+                  const T = travelTime;
+                  const t1 = Math.round(T / 6);
+                  const t2 = Math.round(T / 3);
+                  const t3 = Math.round(T / 2);
+                  const t4 = Math.round((T * 2) / 3);
+
+                  const getTransportLabel = (mode: string) => {
+                    switch (mode) {
+                      case "walk": return "caminando";
+                      case "bike": return "en bicicleta";
+                      case "transit": return "en transporte público";
+                      case "car": return "en carro";
+                      case "motorcycle": return "en moto";
+                      default: return "desplazándose";
+                    }
+                  };
+                  const transportLabel = getTransportLabel(transportMode);
+
+                  return (
+                    <TooltipProvider delayDuration={50}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <path d={path1} className="fill-isochrone-5min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
+                        </TooltipTrigger>
+                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                          Muy cercano: 0 a {t1} min {transportLabel} (Acceso excelente)
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <path d={path2} className="fill-isochrone-10min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
+                        </TooltipTrigger>
+                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                          Cercano: {t1} a {t2} min {transportLabel} (Acceso rápido)
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <path d={path3} className="fill-isochrone-15min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
+                        </TooltipTrigger>
+                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                          Estándar: {t2} a {t3} min {transportLabel} (Acceso moderado)
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <path d={path4} className="fill-isochrone-30min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
+                        </TooltipTrigger>
+                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                          Extendido: {t3} a {t4} min {transportLabel} (Límite sugerido)
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <path d={path5} className="fill-isochrone-maxmin pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
+                        </TooltipTrigger>
+                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                          Límite: {t4} a {T} min {transportLabel} (Alcance máximo)
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                })()}
+
+                {/* Contornos punteados de cada límite temporal */}
+                <path d={getRingPath(R1)} fill="none" className="stroke-isochrone-5min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
+                <path d={getRingPath(R2)} fill="none" className="stroke-isochrone-10min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
+                <path d={getRingPath(R3)} fill="none" className="stroke-isochrone-15min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
+                <path d={getRingPath(R4)} fill="none" className="stroke-isochrone-30min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
+                <path d={getRingPath(R5)} fill="none" className="stroke-isochrone-maxmin stroke-[2] pointer-events-none" strokeDasharray="4 4" />
+
+                {/* Líneas radiales punteadas compuestas por tramos coloreados */}
+                {angles.map((angle, i) => {
+                  const rad = (angle * Math.PI) / 180;
+                  const cos = Math.cos(rad);
+                  const sin = Math.sin(rad);
+                  
+                  const p0 = { x: 500, y: 500 };
+                  const p1 = { x: 500 + R1[i] * cos, y: 500 + R1[i] * sin };
+                  const p2 = { x: 500 + R2[i] * cos, y: 500 + R2[i] * sin };
+                  const p3 = { x: 500 + R3[i] * cos, y: 500 + R3[i] * sin };
+                  const p4 = { x: 500 + R4[i] * cos, y: 500 + R4[i] * sin };
+                  const p5 = { x: 500 + R5[i] * cos, y: 500 + R5[i] * sin };
+                  
+                  return (
+                    <g key={i} className="pointer-events-none">
+                      <line x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} className="stroke-isochrone-5min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+                      <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} className="stroke-isochrone-10min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+                      <line x1={p2.x} y1={p2.y} x2={p3.x} y2={p3.y} className="stroke-isochrone-15min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+                      <line x1={p3.x} y1={p3.y} x2={p4.x} y2={p4.y} className="stroke-isochrone-30min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+                      <line x1={p4.x} y1={p4.y} x2={p5.x} y2={p5.y} className="stroke-isochrone-maxmin" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+                    </g>
+                  );
+                })}
+
+                {/* Marcador circular central de origen */}
+                <circle cx={500} cy={500} r={14} className="fill-blue-500/20 stroke-blue-500 stroke-[1.5] pointer-events-none" />
+                <circle cx={500} cy={500} r={8} className="fill-white pointer-events-none" />
+                <circle cx={500} cy={500} r={4.5} className="fill-blue-600 pointer-events-none" />
               </svg>
             </div>
           </div>
