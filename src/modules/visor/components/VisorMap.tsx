@@ -238,6 +238,14 @@ export function VisorMap({
     if (mapInstanceRef.current) mapInstanceRef.current.zoomOut();
   };
 
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    const zoomFactor = 0.08;
+    setZoom((prev) => {
+      const delta = e.deltaY < 0 ? zoomFactor : -zoomFactor;
+      return Math.max(0.5, Math.min(3.0, prev + delta));
+    });
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest("button") || (e.target as HTMLElement).closest(".pointer-events-auto")) {
       return;
@@ -294,11 +302,11 @@ export function VisorMap({
   };
   const getTransportFactor = (mode: string) => {
     switch (mode) {
-      case "walk": return 0.45;
-      case "bike": return 0.75;
-      case "transit": return 0.9;
-      case "car": return 1.25;
-      case "motorcycle": return 1.35;
+      case "walk": return 0.65;
+      case "bike": return 1.0;
+      case "transit": return 1.2;
+      case "car": return 1.6;
+      case "motorcycle": return 1.7;
       default: return 1.0;
     }
   };
@@ -358,6 +366,7 @@ export function VisorMap({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={() => setIsDragging(false)}
+      onWheel={handleWheel}
     >
       {/* Contenedor Unificado de Capas y Pines Geográficos con Pan y Zoom */}
       <div 
@@ -490,11 +499,21 @@ export function VisorMap({
                   );
                 })}
 
-                {/* Marcador circular central de origen */}
-                <circle cx={500} cy={500} r={14} className="fill-blue-500/20 stroke-blue-500 stroke-[1.5] pointer-events-none" />
-                <circle cx={500} cy={500} r={8} className="fill-white pointer-events-none" />
-                <circle cx={500} cy={500} r={4.5} className="fill-blue-600 pointer-events-none" />
+                {/* Marcador circular central de origen removido del SVG */}
               </svg>
+            </div>
+            {/* Marcador central premium independiente con escala corregida */}
+            <div 
+              className="absolute top-1/2 left-1/2 flex items-center justify-center pointer-events-none z-15"
+              style={{
+                transform: `translate(calc(-50% + ${pinOffset.x}px), calc(-50% + ${pinOffset.y}px)) scale(${1 / zoom})`
+              }}
+            >
+              <div className="size-6.5 rounded-full bg-blue-600/20 border border-blue-500 flex items-center justify-center">
+                <div className="size-4.5 rounded-full bg-white flex items-center justify-center shadow-md">
+                  <div className="size-2 rounded-full bg-blue-600" />
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -503,7 +522,7 @@ export function VisorMap({
         <div 
           className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
           style={{
-            transform: `translate(calc(-50% + ${pinOffset.x}px), calc(-50% + ${pinOffset.y}px))`
+            transform: `translate(calc(-50% + ${pinOffset.x}px), calc(-50% + ${pinOffset.y}px)) scale(${1 / zoom})`
           }}
           onMouseDown={handlePinMouseDown}
         >
@@ -542,7 +561,7 @@ export function VisorMap({
           <div 
             className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
             style={{
-              transform: `translate(calc(140px + ${destPinOffset.x}px), calc(-90px + ${destPinOffset.y}px))`
+              transform: `translate(calc(140px + ${destPinOffset.x}px), calc(-90px + ${destPinOffset.y}px)) scale(${1 / zoom})`
             }}
             onMouseDown={handleDestPinMouseDown}
           >
@@ -582,13 +601,35 @@ export function VisorMap({
             <div className="absolute inset-0 pointer-events-none z-20">
               {MOCK_POIS.filter(poi => activeServices.includes(poi.type) || (poi.type === "stores" && activeServices.includes("shopping"))).map((poi) => {
                 const PoiIcon = poi.icon;
+                const D = Math.sqrt(poi.dx * poi.dx + poi.dy * poi.dy);
+                const poiTime = Math.round(travelTime * (D / 450));
+
+                const getTransportVerb = (mode: string) => {
+                  switch (mode) {
+                    case "walk": return "caminando";
+                    case "bike": return "en bicicleta";
+                    case "transit": return "en transporte público";
+                    case "car": return "en carro";
+                    case "motorcycle": return "en moto";
+                    default: return "desplazándose";
+                  }
+                };
+                const transportVerb = getTransportVerb(transportMode);
+
+                const tooltipText = hasGenerated
+                  ? poiTime <= travelTime
+                    ? `${poi.name} — Llegas en ${poiTime} min ${transportVerb}`
+                    : `${poi.name} — Fuera de alcance (a más de ${travelTime} min ${transportVerb})`
+                  : poi.name;
+
                 return (
                   <div
                     key={poi.id}
-                    className="absolute flex items-center justify-center -translate-x-1/2 -translate-y-1/2 pointer-events-auto"
+                    className="absolute flex items-center justify-center pointer-events-auto"
                     style={{
                       left: `${markerPos.x + poi.dx}px`,
                       top: `${markerPos.y + poi.dy}px`,
+                      transform: `translate(-50%, -50%) scale(${1 / zoom})`
                     }}
                   >
                     <Tooltip>
@@ -600,8 +641,8 @@ export function VisorMap({
                           <PoiIcon className="size-3.5 sm:size-4 text-white drop-shadow" />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent variant="primary" side="top" sideOffset={6} className="text-xs font-bold">
-                        {poi.name}
+                      <TooltipContent variant="primary" side="top" sideOffset={6} className="text-xs font-bold bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                        {tooltipText}
                       </TooltipContent>
                     </Tooltip>
                   </div>
