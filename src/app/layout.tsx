@@ -4,9 +4,6 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-
-import { cookies } from "next/headers";
-
 const montserrat = Montserrat({ subsets: ["latin"], variable: "--font-montserrat" });
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" });
 
@@ -19,14 +16,9 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function RootLayout({ children }: RootLayoutProps) {
-  // Obtener el tema desde las cookies en el servidor para evitar que Next.js
-  // elimine el atributo 'data-theme' de la etiqueta html durante las transiciones de ruta
-  const cookieStore = await cookies();
-  const theme = cookieStore.get("glocation-theme")?.value || "light";
-
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="es" data-theme={theme} className={cn(montserrat.variable, nunito.variable, "font-sans")} suppressHydrationWarning>
+    <html lang="es" data-theme="light" className={cn(montserrat.variable, nunito.variable, "font-sans")} suppressHydrationWarning>
       <head>
         <Script
           id="theme-init"
