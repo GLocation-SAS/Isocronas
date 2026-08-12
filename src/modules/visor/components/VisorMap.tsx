@@ -25,6 +25,9 @@ import {
   Eye,
   EyeOff,
   X,
+  Bike,
+  Car,
+  Footprints,
 } from "lucide-react";
 import {
   Tooltip,
@@ -32,6 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef } from "react";
 
@@ -51,51 +55,21 @@ interface VisorMapProps {
   onLocateClick?: () => void;
   hasGenerated?: boolean;
   onMapClick?: (address: string) => void;
+  analysisMode?: string;
 }
 
-const MOCK_POIS = [
-  // Hospitales / Salud (Carmesí / HeartPulse icon como foto de referencia)
-  { id: "h1", type: "hospitals", name: "Hospital San Ignacio", dx: -120, dy: -80, icon: HeartPulse, color: "bg-[#e11d48]" },
-  { id: "h2", type: "hospitals", name: "Clínica Marly", dx: 80, dy: -140, icon: HeartPulse, color: "bg-[#e11d48]" },
-  { id: "h3", type: "hospitals", name: "Centro de Salud La Candelaria", dx: -40, dy: 110, icon: HeartPulse, color: "bg-[#e11d48]" },
-  { id: "h4", type: "hospitals", name: "Hospital Santa Clara", dx: 160, dy: 90, icon: HeartPulse, color: "bg-[#e11d48]" },
-  { id: "h5", type: "hospitals", name: "Clínica del Country (Sede)", dx: -180, dy: 60, icon: HeartPulse, color: "bg-[#e11d48]" },
-  { id: "h6", type: "hospitals", name: "Centro Médico Teusaquillo", dx: 140, dy: -60, icon: HeartPulse, color: "bg-[#e11d48]" },
-
-  // Colegios / Educación (Indigo / GraduationCap icon)
-  { id: "e1", type: "schools", name: "Colegio Mayor de San Bartolomé", dx: -90, dy: 40, icon: GraduationCap, color: "bg-[#6366f1]" },
-  { id: "e2", type: "schools", name: "Universidad de los Andes", dx: 110, dy: -110, icon: GraduationCap, color: "bg-[#6366f1]" },
-  { id: "e3", type: "schools", name: "Universidad del Rosario", dx: -30, dy: -70, icon: GraduationCap, color: "bg-[#6366f1]" },
-  { id: "e4", type: "schools", name: "Colegio Manuela Beltrán", dx: 180, dy: 130, icon: GraduationCap, color: "bg-[#6366f1]" },
-
-  // Tiendas / Comercio (Carmesí / Store icon)
-  { id: "s1", type: "stores", name: "Éxito Calle 53", dx: -150, dy: -130, icon: Store, color: "bg-[#e11d48]" },
-  { id: "s2", type: "stores", name: "Centro Comercial Santafé", dx: 60, dy: 60, icon: Store, color: "bg-[#e11d48]" },
-  { id: "s3", type: "stores", name: "Supermercado Carulla", dx: -60, dy: -30, icon: Store, color: "bg-[#e11d48]" },
-  { id: "s4", type: "stores", name: "Plaza de Mercado Paloquemao", dx: 130, dy: 160, icon: Store, color: "bg-[#e11d48]" },
-
-  // Droguerías / Farmacias (Teal / Pill icon)
-  { id: "p1", type: "pharmacies", name: "Droguería Cruz Verde", dx: -70, dy: -120, icon: Pill, color: "bg-[#0284c7]" },
-  { id: "p2", type: "pharmacies", name: "Farmatodo Septima", dx: 40, dy: -50, icon: Pill, color: "bg-[#0284c7]" },
-  { id: "p3", type: "pharmacies", name: "Droguerías La Rebaja", dx: 90, dy: 80, icon: Pill, color: "bg-[#0284c7]" },
-
-  // Comida / Restaurantes (Orange / Utensils icon)
-  { id: "f1", type: "food", name: "Restaurante Andrés DC", dx: 30, dy: -150, icon: Utensils, color: "bg-[#ea580c]" },
-  { id: "f2", type: "food", name: "Café Pasaje", dx: -110, dy: 20, icon: Utensils, color: "bg-[#ea580c]" },
-  { id: "f3", type: "food", name: "Crepes & Waffles Centro", dx: -10, dy: 80, icon: Utensils, color: "bg-[#ea580c]" },
-
-  // Parques (Green / TreePine icon)
-  { id: "pk1", type: "parks", name: "Parque de la Independencia", dx: -130, dy: -50, icon: TreePine, color: "bg-[#10b981]" },
-  { id: "pk2", type: "parks", name: "Parque Tercer Milenio", dx: 120, dy: 120, icon: TreePine, color: "bg-[#10b981]" },
-
-  // TM (Red / Train icon)
-  { id: "tm1", type: "tm", name: "Estación Museo del Oro", dx: -20, dy: -90, icon: Train, color: "bg-[#ef4444]" },
-  { id: "tm2", type: "tm", name: "Estación San Victorino", dx: 70, dy: 40, icon: Train, color: "bg-[#ef4444]" },
-
-  // SITP (Blue / Bus icon)
-  { id: "st1", type: "sitp", name: "Paradero Cra 7 Cl 19", dx: 50, dy: -80, icon: Bus, color: "bg-[#3b82f6]" },
-  { id: "st2", type: "sitp", name: "Paradero Av Jiménez", dx: -80, dy: 10, icon: Bus, color: "bg-[#3b82f6]" },
-];
+import { MOCK_POIS, getTransportFactor, getTransportSpeed, getRoadNetworkRadius, isPoiInsideIsochrone } from "@/modules/visor/utils/geo";
+const MotorcycleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="6" cy="18" r="3" />
+    <circle cx="18" cy="18" r="3" />
+    <path d="M12 18V9H9" />
+    <path d="M18 18h-4l-2.5-5H6" />
+    <path d="m14 9 2.5-3.5h3.5" />
+    <path d="M10 9h4" />
+  
+</svg>
+);
 
 export function VisorMap({ 
   transportMode, 
@@ -106,6 +80,7 @@ export function VisorMap({
   isEmergency,
   onLocateClick,
   hasGenerated = false,
+  analysisMode = "explore",
   onMapClick
 }: VisorMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -300,32 +275,27 @@ export function VisorMap({
     if (time <= 30) return { fill: "fill-isochrone-30min/20", stroke: "stroke-isochrone-30min" };
     return { fill: "fill-isochrone-maxmin/20", stroke: "stroke-isochrone-maxmin" };
   };
-  const getTransportFactor = (mode: string) => {
-    switch (mode) {
-      case "walk": return 0.65;
-      case "bike": return 1.0;
-      case "transit": return 1.2;
-      case "car": return 1.6;
-      case "motorcycle": return 1.7;
-      default: return 1.0;
-    }
-  };
+
 
   const transportFactor = getTransportFactor(transportMode);
   const maxSize = (travelTime / 30) * 550 * transportFactor;
 
-  const angles = Array.from({ length: 16 }, (_, i) => (i * 360) / 16);
-  const factors = [0.85, 0.65, 0.95, 1.1, 0.75, 0.55, 0.8, 1.05, 0.9, 0.7, 1.0, 1.15, 0.8, 0.6, 0.9, 1.0];
+  const angles = Array.from({ length: 64 }, (_, i) => (i * 360) / 64);
+  const radialAngles = Array.from({ length: 16 }, (_, i) => (i * 360) / 16);
   
-  const R1 = factors.map(f => 75 * f);
-  const R2 = factors.map(f => 150 * f);
-  const R3 = factors.map(f => 225 * f);
-  const R4 = factors.map(f => 300 * f);
-  const R5 = factors.map(f => 450 * f);
+  const getRadiiForZone = (baseR: number) => {
+    return angles.map(angle => getRoadNetworkRadius(angle, baseR));
+  };
+  
+  const R1 = getRadiiForZone(75);
+  const R2 = getRadiiForZone(150);
+  const R3 = getRadiiForZone(225);
+  const R4 = getRadiiForZone(300);
+  const R5 = getRadiiForZone(450);
 
   const getRingPath = (outerRadii: number[], innerRadii?: number[]) => {
     const outerPoints = outerRadii.map((r, idx) => {
-      const angle = (idx * 360) / 16;
+      const angle = (idx * 360) / 64;
       const rad = (angle * Math.PI) / 180;
       const x = 500 + r * Math.cos(rad);
       const y = 500 + r * Math.sin(rad);
@@ -336,7 +306,7 @@ export function VisorMap({
     
     if (innerRadii) {
       const innerPoints = innerRadii.map((r, idx) => {
-        const angle = (idx * 360) / 16;
+        const angle = (idx * 360) / 64;
         const rad = (angle * Math.PI) / 180;
         const x = 500 + r * Math.cos(rad);
         const y = 500 + r * Math.sin(rad);
@@ -353,6 +323,9 @@ export function VisorMap({
   const path3 = getRingPath(R3, R2);
   const path4 = getRingPath(R4, R3);
   const path5 = getRingPath(R5, R4);
+
+  const [hoveredPoi, setHoveredPoi] = useState<string | null>(null);
+  const [selectedPoi, setSelectedPoi] = useState<string | null>(null);
 
   return (
     <div 
@@ -398,109 +371,42 @@ export function VisorMap({
               }}
             >
               <svg viewBox="0 0 1000 1000" className="w-full h-full drop-shadow-2xl pointer-events-none" fillRule="evenodd">
-                {/* 5 Polígonos irregulares / Anillos concéntricos sin solapamientos con tooltips */}
+                
+                {analysisMode !== "route" && (
+                  <>
+{/* 1 Solo polígono correspondiente al tiempo seleccionado */}
                 {(() => {
                   const T = travelTime;
-                  const t1 = Math.round(T / 6);
-                  const t2 = Math.round(T / 3);
-                  const t3 = Math.round(T / 2);
-                  const t4 = Math.round((T * 2) / 3);
-
-                  const getTransportLabel = (mode: string) => {
-                    switch (mode) {
-                      case "walk": return "caminando";
-                      case "bike": return "en bicicleta";
-                      case "transit": return "en transporte público";
-                      case "car": return "en carro";
-                      case "motorcycle": return "en moto";
-                      default: return "desplazándose";
-                    }
-                  };
-                  const transportLabel = getTransportLabel(transportMode);
-
+                  // Asignar un color según el tiempo
+                  let ringClass = "fill-isochrone-maxmin";
+                  let strokeClass = "stroke-isochrone-maxmin";
+                  if (T <= 5) { ringClass = "fill-isochrone-5min"; strokeClass = "stroke-isochrone-5min"; }
+                  else if (T <= 15) { ringClass = "fill-isochrone-10min"; strokeClass = "stroke-isochrone-10min"; }
+                  else if (T <= 30) { ringClass = "fill-isochrone-15min"; strokeClass = "stroke-isochrone-15min"; }
+                  else if (T <= 45) { ringClass = "fill-isochrone-30min"; strokeClass = "stroke-isochrone-30min"; }
+                  
                   return (
                     <TooltipProvider delayDuration={50}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <path d={path1} className="fill-isochrone-5min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
+                          <path d={getRingPath(R5)} className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40`} fillOpacity={0.4} />
                         </TooltipTrigger>
                         <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                          Muy cercano: 0 a {t1} min {transportLabel} (Acceso excelente)
+                          Área de alcance: {T} min
                         </TooltipContent>
                       </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <path d={path2} className="fill-isochrone-10min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
-                        </TooltipTrigger>
-                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                          Cercano: {t1} a {t2} min {transportLabel} (Acceso rápido)
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <path d={path3} className="fill-isochrone-15min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
-                        </TooltipTrigger>
-                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                          Estándar: {t2} a {t3} min {transportLabel} (Acceso moderado)
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <path d={path4} className="fill-isochrone-30min pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
-                        </TooltipTrigger>
-                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                          Extendido: {t3} a {t4} min {transportLabel} (Límite sugerido)
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <path d={path5} className="fill-isochrone-maxmin pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40" fillOpacity={0.3} />
-                        </TooltipTrigger>
-                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                          Límite: {t4} a {T} min {transportLabel} (Alcance máximo)
-                        </TooltipContent>
-                      </Tooltip>
+                      <path d={getRingPath(R5)} fill="none" className={`${strokeClass} stroke-[3] pointer-events-none`} strokeDasharray="6 6" />
                     </TooltipProvider>
                   );
                 })()}
+                  </>
+                )}
 
-                {/* Contornos punteados de cada límite temporal */}
-                <path d={getRingPath(R1)} fill="none" className="stroke-isochrone-5min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
-                <path d={getRingPath(R2)} fill="none" className="stroke-isochrone-10min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
-                <path d={getRingPath(R3)} fill="none" className="stroke-isochrone-15min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
-                <path d={getRingPath(R4)} fill="none" className="stroke-isochrone-30min stroke-[2] pointer-events-none" strokeDasharray="4 4" />
-                <path d={getRingPath(R5)} fill="none" className="stroke-isochrone-maxmin stroke-[2] pointer-events-none" strokeDasharray="4 4" />
-
-                {/* Líneas radiales punteadas compuestas por tramos coloreados */}
-                {angles.map((angle, i) => {
-                  const rad = (angle * Math.PI) / 180;
-                  const cos = Math.cos(rad);
-                  const sin = Math.sin(rad);
-                  
-                  const p0 = { x: 500, y: 500 };
-                  const p1 = { x: 500 + R1[i] * cos, y: 500 + R1[i] * sin };
-                  const p2 = { x: 500 + R2[i] * cos, y: 500 + R2[i] * sin };
-                  const p3 = { x: 500 + R3[i] * cos, y: 500 + R3[i] * sin };
-                  const p4 = { x: 500 + R4[i] * cos, y: 500 + R4[i] * sin };
-                  const p5 = { x: 500 + R5[i] * cos, y: 500 + R5[i] * sin };
-                  
-                  return (
-                    <g key={i} className="pointer-events-none">
-                      <line x1={p0.x} y1={p0.y} x2={p1.x} y2={p1.y} className="stroke-isochrone-5min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
-                      <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} className="stroke-isochrone-10min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
-                      <line x1={p2.x} y1={p2.y} x2={p3.x} y2={p3.y} className="stroke-isochrone-15min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
-                      <line x1={p3.x} y1={p3.y} x2={p4.x} y2={p4.y} className="stroke-isochrone-30min" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
-                      <line x1={p4.x} y1={p4.y} x2={p5.x} y2={p5.y} className="stroke-isochrone-maxmin" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
-                    </g>
-                  );
-                })}
-
-                {/* Marcador circular central de origen removido del SVG */}
-              </svg>
+                
+{/* Marcador circular central de origen removido del SVG */}
+              
+                
+</svg>
             </div>
             {/* Marcador central premium independiente con escala corregida */}
             <div 
@@ -515,6 +421,47 @@ export function VisorMap({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        
+        {/* Capa independiente para la Ruta (Solo modo Trayecto) */}
+        {hasGenerated && analysisMode === "route" && destination && (
+          <div 
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
+            style={{
+              transform: `translate(${pinOffset.x}px, ${pinOffset.y}px) scale(${1 / zoom})`
+            }}
+          >
+            <svg 
+              className="overflow-visible" 
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            >
+              <defs>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              <path 
+                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                fill="none" 
+                className="stroke-primary stroke-[5] drop-shadow-2xl" 
+                strokeLinejoin="round" 
+                strokeLinecap="round" 
+                filter="url(#glow)"
+              />
+              <path 
+                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                fill="none" 
+                stroke="white"
+                strokeWidth="2"
+                strokeDasharray="6 6"
+                strokeLinejoin="round" 
+                strokeLinecap="round" 
+                className="opacity-80 animate-[dash_1s_linear_infinite]"
+              />
+            </svg>
           </div>
         )}
 
@@ -595,61 +542,174 @@ export function VisorMap({
           </div>
         )}
 
-        {/* Renderizado de Puntos de Interés (POIs) con Tooltips del UI Kit */}
-        {activeServices.length > 0 && (
-          <TooltipProvider delayDuration={100}>
-            <div className="absolute inset-0 pointer-events-none z-20">
-              {MOCK_POIS.filter(poi => activeServices.includes(poi.type) || (poi.type === "stores" && activeServices.includes("shopping"))).map((poi) => {
-                const PoiIcon = poi.icon;
-                const D = Math.sqrt(poi.dx * poi.dx + poi.dy * poi.dy);
-                const poiTime = Math.round(travelTime * (D / 450));
+        {/* Renderizado de Puntos de Interés (POIs) con Filtro Espacial y Hover Card Premium */}
+        {hasGenerated && activeServices.length > 0 && (
+          <div className="absolute inset-0 pointer-events-none z-20">
+            {MOCK_POIS.filter(poi => activeServices.includes(poi.type) || (poi.type === "stores" && activeServices.includes("shopping"))).map((poi) => {
+              const PoiIcon = poi.icon;
+              
+              // 1. Consulta espacial: Solo mostrar si está DENTRO de la isócrona actual
+              if (!isPoiInsideIsochrone(poi, travelTime, transportMode)) return null;
+              
+              // 2. Calcular el tiempo y la distancia personalizados
+              const boundaryR = getRoadNetworkRadius(Math.atan2(poi.dy, poi.dx) * (180 / Math.PI) < 0 ? Math.atan2(poi.dy, poi.dx) * (180 / Math.PI) + 360 : Math.atan2(poi.dy, poi.dx) * (180 / Math.PI), 450);
+              const D = Math.sqrt(poi.dx * poi.dx + poi.dy * poi.dy);
+              
+              // 4. Calcular el tiempo y la distancia personalizados
+              const poiTime = Math.round(travelTime * (D / boundaryR));
+              const speed = getTransportSpeed(transportMode);
+              const distanceKm = (speed * poiTime) / 60;
+              
+              // 5. Detalles de dirección y categoría
+              const getPoiDetails = (p: typeof MOCK_POIS[0]) => {
+                switch (p.type) {
+                  case "hospitals":
+                    return {
+                      category: "Hospital / Salud",
+                      address: p.name.includes("San Ignacio") ? "Cra. 7 # 40-62, Bogotá" : "Av. Caracas # 1-15, Bogotá"
+                    };
+                  case "schools":
+                    return {
+                      category: "Colegio / Educación",
+                      address: "Calle 9 # 1-10, Bogotá"
+                    };
+                  case "stores":
+                    return {
+                      category: "Comercio / Tienda",
+                      address: "Av. Carrera 14 # 53-22, Bogotá"
+                    };
+                  case "pharmacies":
+                    return {
+                      category: "Droguería / Farmacia",
+                      address: "Carrera 15 # 85-12, Bogotá"
+                    };
+                  case "food":
+                    return {
+                      category: "Restaurante / Comida",
+                      address: "Calle 82 # 11-50, Bogotá"
+                    };
+                  case "parks":
+                    return {
+                      category: "Parque / Recreación",
+                      address: "Calle 26 # 19B-30, Bogotá"
+                    };
+                  default:
+                    return {
+                      category: "Transporte Público",
+                      address: "Av. Jiménez con Cra. 10, Bogotá"
+                    };
+                }
+              };
+              
+              
+              // Asignar color de la isócrona correspondiente si el modo es "explore"
+              let poiColorClass = "bg-primary";
+              let poiTextClass = "text-primary-foreground";
+              if (analysisMode === "explore") {
+                const subTime = travelTime * (D / boundaryR);
+                if (subTime <= 5) {
+                  poiColorClass = "bg-[#2563eb]"; // Color 5min
+                } else if (subTime <= 10) {
+                  poiColorClass = "bg-[#3b82f6]"; // Color 10min
+                } else if (subTime <= 15) {
+                  poiColorClass = "bg-[#60a5fa]"; // Color 15min
+                } else {
+                  poiColorClass = "bg-[#93c5fd]";
+                }
+                // Si el POI está hovered, podemos hacerlo resaltar aún más
+              }
+  
+              const { category, address } = getPoiDetails(poi);
 
-                const getTransportVerb = (mode: string) => {
-                  switch (mode) {
-                    case "walk": return "caminando";
-                    case "bike": return "en bicicleta";
-                    case "transit": return "en transporte público";
-                    case "car": return "en carro";
-                    case "motorcycle": return "en moto";
-                    default: return "desplazándose";
-                  }
-                };
-                const transportVerb = getTransportVerb(transportMode);
-
-                const tooltipText = hasGenerated
-                  ? poiTime <= travelTime
-                    ? `${poi.name} — Llegas en ${poiTime} min ${transportVerb}`
-                    : `${poi.name} — Fuera de alcance (a más de ${travelTime} min ${transportVerb})`
-                  : poi.name;
-
-                return (
-                  <div
-                    key={poi.id}
-                    className="absolute flex items-center justify-center pointer-events-auto"
-                    style={{
-                      left: `${markerPos.x + poi.dx}px`,
-                      top: `${markerPos.y + poi.dy}px`,
-                      transform: `translate(-50%, -50%) scale(${1 / zoom})`
-                    }}
-                  >
-                    <Tooltip>
+              return (
+                <div
+                  key={poi.id}
+                  className="absolute flex items-center justify-center pointer-events-auto"
+                  style={{
+                    left: `${markerPos.x + poi.dx}px`,
+                    top: `${markerPos.y + poi.dy}px`,
+                    transform: `translate(-50%, -50%) scale(${1 / zoom})`,
+                    zIndex: hoveredPoi === poi.id || selectedPoi === poi.id ? 40 : 20
+                  }}
+                  onMouseEnter={() => setHoveredPoi(poi.id)}
+                  onMouseLeave={() => setHoveredPoi(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedPoi(selectedPoi === poi.id ? null : poi.id);
+                  }}
+                >
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip open={false}> {/* Desactivar el tooltip nativo ya que usamos la card flotante */}
                       <TooltipTrigger asChild>
-                        <div className={cn(
-                          "flex items-center justify-center size-7 sm:size-8 rounded-full border-2 border-white text-white shadow-xl transition-all duration-300 hover:scale-125 cursor-pointer",
-                          poi.color
-                        )}>
+                        <div className={cn("p-2 rounded-xl shadow-lg border border-white/20 transition-all duration-300 hover:scale-125 group hover:shadow-2xl cursor-pointer", poiColorClass, poiTextClass, hoveredPoi === poi.id || selectedPoi === poi.id ? "ring-2 ring-white scale-110 z-50" : "")}>
                           <PoiIcon className="size-3.5 sm:size-4 text-white drop-shadow" />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent variant="primary" side="top" sideOffset={6} className="text-xs font-bold bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                        {tooltipText}
-                      </TooltipContent>
                     </Tooltip>
-                  </div>
-                );
-              })}
-            </div>
-          </TooltipProvider>
+                  </TooltipProvider>
+
+                  {/* Card Flotante Premium (Hover / Click) */}
+                  {(hoveredPoi === poi.id || selectedPoi === poi.id) && (
+                    <Card className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 p-3.5 bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl text-left pointer-events-auto z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                      <div className="flex items-start gap-2.5">
+                        <div className={cn("size-8 rounded-xl flex items-center justify-center shrink-0 border border-white/10 text-white shadow-sm", poi.color)}>
+                          <PoiIcon className="size-4.5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-1">
+                            <h4 className="text-xs font-bold text-foreground leading-tight truncate pr-2">{poi.name}</h4>
+                            {selectedPoi === poi.id && (
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedPoi(null);
+                                }}
+                                className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors p-0.5"
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[9px] text-primary font-bold mt-0.5 leading-none uppercase tracking-wider">{category}</p>
+                          <p className="text-[10px] text-muted-foreground mt-1.5 truncate">📍 {address}</p>
+                          
+                          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border/40 text-[10px] text-foreground font-bold">
+                            <span className="flex items-center gap-1.5">
+                              {transportMode === "walk" && <Footprints className="size-3.5 text-primary" />}
+                              {transportMode === "bike" && <Bike className="size-3.5 text-success" />}
+                              {transportMode === "transit" && <Train className="size-3.5 text-info" />}
+                              {transportMode === "car" && <Car className="size-3.5 text-foreground" />}
+                              {transportMode === "motorcycle" && <MotorcycleIcon className="size-3.5 text-warning" />}
+                              <span>{poiTime} min desde origen</span>
+                            </span>
+                            <span className="text-muted-foreground font-mono text-[9px] bg-surface px-1.5 py-0.5 rounded-md">
+                              {distanceKm.toFixed(1)} km
+                            </span>
+                          </div>
+                          
+                          {selectedPoi === poi.id && (
+                            <div className="mt-2.5 pt-2 border-t border-border/40 flex justify-end">
+                              <Button 
+                                size="xs" 
+                                variant="primary" 
+                                className="h-6 text-[9px] font-bold rounded-lg cursor-pointer px-3"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  alert(`Consultando detalle completo de ${poi.name}...`);
+                                }}
+                              >
+                                Ver detalle
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
 

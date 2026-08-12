@@ -22,6 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { 
+  CheckCircle2,
+  AlertTriangle,
   MapPin, 
   Navigation, 
   Bike, 
@@ -62,6 +64,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { MOCK_POIS, isPoiInsideIsochrone } from "@/modules/visor/utils/geo";
 
 const MOCK_ADDRESS_SUGGESTIONS = [
   {
@@ -156,6 +159,8 @@ const MotorcycleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 interface VisorSidebarProps {
   profile: string;
+  analysisMode: "explore" | "route" | "compare";
+  onAnalysisModeChange: (mode: "explore" | "route" | "compare") => void;
   transportMode: string;
   onTransportChange: (mode: string) => void;
   travelTime: number;
@@ -172,10 +177,16 @@ interface VisorSidebarProps {
   onServicesChange: (services: string[]) => void;
   onLocateClick?: () => void;
   onOpenExport?: () => void;
+  isOutdated?: boolean;
+  outdatedReason?: "location" | "transport" | "time" | null;
+  generatedTravelTime?: number;
+  generatedTransportMode?: string;
 }
 
 export function VisorSidebar({
   profile,
+  analysisMode,
+  onAnalysisModeChange,
   transportMode,
   onTransportChange,
   travelTime,
@@ -192,7 +203,24 @@ export function VisorSidebar({
   onServicesChange,
   onLocateClick,
   onOpenExport,
+  isOutdated = false,
+  outdatedReason = null,
+  generatedTravelTime,
+  generatedTransportMode
 }: VisorSidebarProps) {
+  const getPoiCount = (type: string | string[]) => {
+    if (lastQueryTime === null || !generatedTravelTime || !generatedTransportMode) return null;
+    const types = Array.isArray(type) ? type : [type];
+    return MOCK_POIS.filter(poi => 
+      types.includes(poi.type) && 
+      isPoiInsideIsochrone(poi, generatedTravelTime, generatedTransportMode)
+    ).length;
+  };
+
+  const hasZeroResults = lastQueryTime !== null && activeServices.some(s => {
+    if (s === "density" || s === "comp") return false;
+    return getPoiCount(s === "shopping" ? ["stores", "shopping"] : s) === 0;
+  });
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showMainCard, setShowMainCard] = useState(true);
@@ -203,18 +231,17 @@ export function VisorSidebar({
   const [confirmAction, setConfirmAction] = useState<{ type: "replace" | "delete"; target: "A" | "B" } | null>(null);
   
   // Nuevo estado para la intención de análisis: explorar, ruta o comparar
-  const [analysisMode, setAnalysisMode] = useState<"explore" | "route" | "compare">("explore");
 
   // Sincronizar el modo de análisis con las variables globales del visor (por ejemplo, al activar presets)
   useEffect(() => {
     if (destination) {
       if (profile === "tecnico" || profile === "ciudadano") {
-        setAnalysisMode("compare");
+        onAnalysisModeChange("compare");
       } else {
-        setAnalysisMode("route");
+        onAnalysisModeChange("route");
       }
     } else {
-      setAnalysisMode("explore");
+      onAnalysisModeChange("explore");
     }
   }, [destination, profile]);
 
@@ -640,7 +667,7 @@ export function VisorSidebar({
                     <TooltipTrigger asChild>
                       <div
                         onClick={() => {
-                          setAnalysisMode(mode.id);
+                          onAnalysisModeChange(mode.id);
                           if (mode.id === "explore") {
                             onDestinationChange("");
                           } else if (!destination) {
@@ -701,9 +728,9 @@ export function VisorSidebar({
                 </span>
               </div>
               <p className="text-[10px] text-muted-foreground/85 pl-8 leading-snug text-left">
-                {analysisMode === "explore" && "Busca una dirección, selecciona en el mapa o elige una ubicación guardada."}
-                {analysisMode === "route" && "Define tu punto de origen y de destino para calcular la ruta."}
-                {analysisMode === "compare" && "Compara la accesibilidad temporal de dos ubicaciones."}
+                {analysisMode === "explore" && "Descubre hasta dónde puedes llegar según tu tiempo."}
+                {analysisMode === "route" && "Consulta cuánto tardas entre dos ubicaciones."}
+                {analysisMode === "compare" && "Compara el alcance y accesibilidad de dos puntos de análisis."}
               </p>
             </div>
 
@@ -846,7 +873,18 @@ export function VisorSidebar({
                         </div>
                       );
                     })}
+
                   </div>
+                  {hasZeroResults && (
+                    <div className="p-3 mt-3 rounded-xl border border-warning/30 bg-warning/10 flex items-start gap-2.5 animate-in slide-in-from-bottom-2">
+                      <AlertTriangle className="size-4 text-warning shrink-0" />
+                      <div className="text-[11px] text-foreground space-y-1">
+                        <strong className="text-warning font-bold block">Sin resultados</strong>
+                        <p>No encontramos servicios para algunas categorías activas dentro de tu zona de alcance actual.</p>
+                        <p className="text-muted-foreground">Prueba aumentando el tiempo de viaje o seleccionando otro punto de origen para encontrar más opciones.</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1055,7 +1093,7 @@ export function VisorSidebar({
                 /* Dotted Add Card */
                 <div 
                   onClick={() => {
-                    setAnalysisMode("compare");
+                    onAnalysisModeChange("compare");
                     onDestinationChange("Centro Comercial Gran Estación");
                     setActiveInput('B');
                   }}
@@ -1296,7 +1334,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("hospitals") ? "bg-danger/20 text-danger" : "bg-muted text-muted-foreground")}>
                           <HeartPulse className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Hospitales / Salud</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Hospitales / Salud</span>
+                          {lastQueryTime !== null && activeServices.includes("hospitals") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("hospitals") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("hospitals")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("hospitals")}
@@ -1309,7 +1354,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("schools") ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
                           <GraduationCap className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Colegios / Educación</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Colegios / Educación</span>
+                          {lastQueryTime !== null && activeServices.includes("schools") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("schools") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("schools")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("schools")}
@@ -1322,7 +1374,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("stores") || activeServices.includes("shopping") ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground")}>
                           <Store className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Tiendas / Comercio</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Tiendas / Comercio</span>
+                          {lastQueryTime !== null && (activeServices.includes("stores") || activeServices.includes("shopping")) && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount(["stores", "shopping"]) === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount(["stores", "shopping"])} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("stores") || activeServices.includes("shopping")}
@@ -1338,7 +1397,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("pharmacies") ? "bg-info/20 text-info" : "bg-muted text-muted-foreground")}>
                           <Pill className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Droguerías / Farmacias</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Droguerías / Farmacias</span>
+                          {lastQueryTime !== null && activeServices.includes("pharmacies") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("pharmacies") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("pharmacies")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("pharmacies")}
@@ -1351,7 +1417,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("food") ? "bg-secondary/20 text-secondary" : "bg-muted text-muted-foreground")}>
                           <Utensils className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Comida / Restaurantes</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Comida / Restaurantes</span>
+                          {lastQueryTime !== null && activeServices.includes("food") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("food") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("food")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("food")}
@@ -1364,7 +1437,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("parks") ? "bg-success/20 text-success" : "bg-muted text-muted-foreground")}>
                           <TreePine className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Parques / Ocio</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Parques / Ocio</span>
+                          {lastQueryTime !== null && activeServices.includes("parks") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("parks") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("parks")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("parks")}
@@ -1377,7 +1457,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("tm") ? "bg-danger/20 text-danger" : "bg-muted text-muted-foreground")}>
                           <Train className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Estaciones TM</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Estaciones TM</span>
+                          {lastQueryTime !== null && activeServices.includes("tm") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("tm") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("tm")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("tm")}
@@ -1390,7 +1477,14 @@ export function VisorSidebar({
                         <div className={cn("p-1.5 rounded-md", activeServices.includes("sitp") ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
                           <Bus className="size-4" />
                         </div>
-                        <span className="text-sm font-medium">Paraderos SITP</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">Paraderos SITP</span>
+                          {lastQueryTime !== null && activeServices.includes("sitp") && (
+                            <span className={cn("text-[9px] font-bold leading-none mt-0.5", getPoiCount("sitp") === 0 ? "text-warning" : "text-muted-foreground")}>
+                              {getPoiCount("sitp")} resultados
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Checkbox 
                         checked={activeServices.includes("sitp")}
@@ -1497,28 +1591,60 @@ export function VisorSidebar({
 
         <Separator className="bg-border/50" />
 
+        {/* Mensaje de estado desactualizado */}
+        {isOutdated && (lastQueryTime !== null) && (
+          <div className="p-3 mt-2 rounded-xl border border-warning/30 bg-warning/10 flex items-start gap-2.5 animate-in slide-in-from-bottom-2 duration-300">
+            <AlertTriangle className="size-4.5 text-warning shrink-0 mt-0.5" />
+            <div className="space-y-1 text-[11px] text-foreground">
+              <strong className="text-warning font-bold flex block">
+                {outdatedReason === "mode" && "Cambiaste el modo de análisis"}
+                {outdatedReason === "location" && "Has cambiado una ubicación"}
+                {outdatedReason === "transport" && "Cambiaste el medio de transporte"}
+                {outdatedReason === "time" && "Cambiaste el tiempo de viaje"}
+              </strong>
+              <p className="text-muted-foreground leading-snug">
+                {outdatedReason === "mode" && "Actualiza el análisis para ver el nuevo modo."}
+                {outdatedReason === "location" && "Genera nuevamente el análisis para actualizar el área de alcance."}
+                {outdatedReason === "transport" && "Actualiza el análisis para ver el nuevo alcance."}
+                {outdatedReason === "time" && "Actualiza el análisis para calcular la nueva zona de alcance."}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Botones de acción respetando el UI Kit con Tooltips */}
         <TooltipProvider delayDuration={100}>
-          <div className="space-y-3">
+          <div className="space-y-3 pt-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
-                  variant="primary"
+                  variant={isOutdated ? "warning" : ((lastQueryTime !== null) ? "neutral" : "primary")}
                   size="lg"
                   onClick={onGenerate}
-                  disabled={isGenerating}
+                  disabled={isGenerating || ((lastQueryTime !== null) && !isOutdated)}
+                  className={cn(
+                    "w-full transition-all duration-300",
+                    (lastQueryTime !== null) && !isOutdated && "bg-success/10 text-success border-success/30 opacity-100 font-bold"
+                  )}
+                  leftIcon={
+                    (lastQueryTime !== null) && !isOutdated ? <CheckCircle2 className="size-4" /> : undefined
+                  }
                   rightIcon={
                     isGenerating ? (
                       <Loader2 className="size-4 animate-spin" />
-                    ) : (
+                    ) : ((lastQueryTime !== null) && !isOutdated ? undefined : (
                       <svg className="size-4 fill-current" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
-                    )
+                    ))
                   }
                 >
                   {isGenerating ? (
                     "PROCESANDO..."
+                  ) : (lastQueryTime !== null) && !isOutdated ? (
+                    "Análisis actualizado"
+                  ) : isOutdated ? (
+                    "Actualizar análisis"
                   ) : (
                     <>
                       {analysisMode === "explore" && "Generar área de alcance"}
@@ -1528,8 +1654,8 @@ export function VisorSidebar({
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold">
-                Calcular análisis de accesibilidad con los parámetros seleccionados
+              <TooltipContent variant={isOutdated ? "warning" : "primary"} side="right" sideOffset={8} className="text-xs font-bold">
+                {isOutdated ? "Haz clic para actualizar la isócrona con los nuevos cambios" : ((lastQueryTime !== null) ? "El mapa muestra la versión más reciente" : "Calcular análisis de accesibilidad con los parámetros seleccionados")}
               </TooltipContent>
             </Tooltip>
 

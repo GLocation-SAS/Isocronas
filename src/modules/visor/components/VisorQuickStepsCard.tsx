@@ -1,63 +1,152 @@
 import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
-  Home,
   MapPin,
   Car,
   Globe,
-  Lightbulb,
   X,
   BookOpen,
   ChevronLeft,
   ChevronRight,
   Briefcase,
   Building2,
+  Home,
+  Target,
+  Route,
+  Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VisorQuickStepsCardProps {
   onClose: () => void;
+  analysisMode?: "explore" | "route" | "compare";
+  hasGenerated?: boolean;
+  origin?: string;
+  originB?: string;
+  destination?: string;
+  travelTime?: number;
+  transportMode?: string;
+  activeServicesCount?: number;
   profile?: string;
 }
 
-const STEPS = [
-  {
-    number: 1,
-    title: "Selecciona una ubicación",
-    description: "Puedes buscar una dirección, seleccionar en el mapa o activar tu ubicación en tiempo real.",
-    icon: MapPin,
-  },
-  {
-    number: 2,
-    title: "Elige transporte y tiempo",
-    description: "Configura el medio de desplazamiento y los minutos de viaje.",
-    icon: Car,
-  },
-  {
-    number: 3,
-    title: "Explora el resultado",
-    description: "Visualiza en el mapa las zonas a las que puedes llegar.",
-    icon: Globe,
-  },
-];
-
-export function VisorQuickStepsCard({ onClose, profile = "ciudadano" }: VisorQuickStepsCardProps) {
+export function VisorQuickStepsCard({ 
+  onClose, 
+  analysisMode = "explore",
+  hasGenerated = false,
+  origin,
+  originB,
+  destination,
+  travelTime = 30,
+  transportMode = "car",
+  activeServicesCount = 0,
+  profile = "ciudadano" 
+}: VisorQuickStepsCardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-advance de pasos cada 4.5 segundos ("se vaya pasando solita")
+  // Auto-advance de pasos cada 5 segundos
   useEffect(() => {
     if (isPaused) return;
     const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % STEPS.length);
-    }, 4500);
+      setCurrentStep((prev) => (prev + 1) % 2); // Sólo 2 pasos ahora (Instrucción vs Tip)
+    }, 5000);
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  const activeStepObj = STEPS[currentStep];
-  const StepIcon = activeStepObj.icon;
   const WatermarkIcon = profile === "profesional" ? Briefcase : profile === "tecnico" ? Building2 : Home;
+
+  // Lógica de Contenido Dinámico
+  const getDynamicContent = () => {
+    const transportLabel = transportMode === "car" ? "Automóvil" : transportMode === "bike" ? "Bicicleta" : transportMode === "transit" ? "Transporte Público" : "A pie";
+
+    if (analysisMode === "explore") {
+      if (!hasGenerated) {
+        return {
+          header: "Explorar",
+          icon: Target,
+          question: "¿Hasta dónde puedo llegar desde este punto?",
+          mainData: null,
+          text: "Selecciona un punto, cómo te mueves y cuánto tiempo tienes.",
+          tip: "Tip: Amplía el tiempo para explorar una zona mayor."
+        };
+      } else {
+        return {
+          header: "Explorar",
+          icon: Target,
+          question: "¿Hasta dónde puedo llegar desde este punto?",
+          mainData: null,
+          text: `La zona coloreada muestra únicamente el área que puedes alcanzar dentro de ${travelTime} min en ${transportLabel}.`,
+          context: activeServicesCount > 0 ? `${activeServicesCount} servicios dentro de tu alcance.` : "No encontramos servicios de esta categoría dentro de tu zona actual.",
+          tip: "Tip: Amplía el tiempo para explorar una zona mayor."
+        };
+      }
+    }
+
+    if (analysisMode === "route") {
+      if (!hasGenerated) {
+        return {
+          header: "Trayecto",
+          icon: Route,
+          question: "¿Cuánto me toma llegar de A hasta B?",
+          mainData: null,
+          text: "Selecciona un origen y un destino para calcular el recorrido.",
+          tip: "Tip: Cambia el medio de transporte para comparar cuánto varía el tiempo."
+        };
+      } else {
+        const simulatedDist = ((travelTime * 0.4) + 1.2).toFixed(1);
+        return {
+          header: "Trayecto",
+          icon: Route,
+          question: "¿Cuánto me toma llegar de A hasta B?",
+          mainData: `${travelTime} min`,
+          text: "La línea del mapa representa el recorrido entre el origen y el destino seleccionados.",
+          context: `Este trayecto conecta ${origin || "A"} con ${destination || "B"}.`,
+          tip: "Tip: Cambia el medio de transporte para comparar cuánto varía el tiempo."
+        };
+      }
+    }
+
+    if (analysisMode === "compare") {
+      if (!hasGenerated) {
+        return {
+          header: "Comparación",
+          icon: Scale,
+          question: "¿Desde cuál ubicación llego más rápido?",
+          mainData: null,
+          text: "Selecciona dos ubicaciones y un destino común para comparar su accesibilidad.",
+          tip: "Tip: Cambia uno de los puntos para evaluar otra alternativa."
+        };
+      } else {
+        const timeA = travelTime;
+        const timeB = Math.max(5, travelTime - 9);
+        const diff = Math.abs(timeA - timeB);
+        const winner = timeA <= timeB ? (origin || "A") : (originB || "B");
+
+        return {
+          header: "Comparación",
+          icon: Scale,
+          question: "¿Desde cuál ubicación llego más rápido?",
+          mainData: `🏆 ${winner} es mejor`,
+          text: `Comparamos el tiempo necesario para llegar desde el Punto A y el Punto B hacia un mismo destino.`,
+          context: `Ahorras ${diff} minutos frente a la otra opción.`,
+          tip: "Tip: Cambia uno de los puntos para evaluar otra alternativa."
+        };
+      }
+    }
+
+    return {
+      header: "Guía",
+      icon: BookOpen,
+      question: "¿Qué hacer?",
+      mainData: null,
+      text: "Selecciona una opción del panel izquierdo.",
+      tip: "Tip: Explora los diferentes modos de análisis."
+    };
+  };
+
+  const content = getDynamicContent();
+  const ModeIcon = content.icon;
 
   return (
     <div 
@@ -65,27 +154,23 @@ export function VisorQuickStepsCard({ onClose, profile = "ciudadano" }: VisorQui
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Glassmorphism Card con backdrop blur y bordes traslúcidos */}
       <Card 
         variant="featured" 
         className="relative p-3.5 sm:p-4 shadow-[0_16px_36px_rgba(0,0,0,0.4)] border border-white/15 bg-card/75 backdrop-blur-2xl supports-[backdrop-filter]:bg-card/60 rounded-2xl overflow-hidden flex flex-col gap-2.5 text-left"
       >
-        {/* Marca de agua traslúcida en la esquina inferior derecha */}
         <WatermarkIcon className="absolute right-[-14px] bottom-[-14px] size-32 text-muted-foreground/10 pointer-events-none -rotate-12 select-none" />
 
-        {/* Encabezado: Título + Wizard Dots + Botón X */}
         <div className="flex items-center justify-between z-10 pb-1.5 border-b border-border/40">
           <div className="flex items-center gap-1.5">
             <div className="size-5 rounded-md bg-primary/15 text-primary flex items-center justify-center shrink-0">
-              <BookOpen className="size-3" />
+              <ModeIcon className="size-3" />
             </div>
-            <span className="text-xs font-heading font-extrabold text-foreground tracking-tight">Guía rápida</span>
+            <span className="text-xs font-heading font-extrabold text-foreground tracking-tight">Guía rápida · {content.header}</span>
           </div>
 
-          {/* Indicadores de pasos (Wizard Dots) */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              {STEPS.map((_, idx) => (
+              {[0, 1].map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setCurrentStep(idx)}
@@ -99,72 +184,63 @@ export function VisorQuickStepsCard({ onClose, profile = "ciudadano" }: VisorQui
                 />
               ))}
             </div>
-
-            <span className="text-[9.5px] font-mono font-bold text-muted-foreground">
-              {currentStep + 1}/3
-            </span>
-
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
               onClick={onClose}
-              className="size-5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors shrink-0 ml-0.5"
-              aria-label="Cerrar guía rápida"
+              className="size-5 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
             >
               <X className="size-3" />
-            </Button>
+            </button>
           </div>
         </div>
 
-        {/* Tarjeta del paso activo con efecto de vidrio */}
-        <div key={currentStep} className="z-10 animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex items-start gap-3 p-3 rounded-xl bg-surface/40 backdrop-blur-md border border-white/10 hover:bg-surface/60 transition-all duration-200 group">
-            {/* Círculo numérico */}
-            <div className="size-8 rounded-full bg-primary/10 border border-primary/30 text-primary flex items-center justify-center font-bold text-xs shrink-0 shadow-xs group-hover:scale-110 transition-transform mt-0.5">
-              {activeStepObj.number}
-            </div>
+        <div className="z-10 flex flex-col gap-2 min-h-[90px]">
+          <h4 className="text-[13px] font-bold text-foreground leading-tight tracking-tight mt-1">
+            {content.question}
+          </h4>
 
-            {/* Icono + Título + Descripción */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground group-hover:text-primary transition-colors">
-                <StepIcon className="size-3.5 text-primary shrink-0" />
-                <span className="truncate">{activeStepObj.title}</span>
-              </div>
-              <p className="text-[10.5px] text-muted-foreground leading-relaxed mt-0.5 text-pretty">
-                {activeStepObj.description}
+          {currentStep === 0 ? (
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-2">
+              {content.mainData && (
+                 <div className="text-2xl font-black text-primary tracking-tighter">
+                   {content.mainData}
+                 </div>
+              )}
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {content.text}
+              </p>
+              {content.context && (
+                <p className="text-[11px] font-medium text-foreground bg-surface/50 p-1.5 rounded-md inline-block">
+                  {content.context}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-right-2 duration-300 flex items-start gap-2 bg-primary/10 border border-primary/20 rounded-lg p-2.5 mt-1">
+              <span className="text-lg">💡</span>
+              <p className="text-[11px] text-primary-foreground font-medium leading-relaxed">
+                {content.tip}
               </p>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Footer: Tip bar + Botones de navegación */}
-        <div className="flex items-center justify-between gap-2 z-10 pt-0.5">
-          <div className="flex items-center gap-1.5 text-[9.5px] text-muted-foreground flex-1 min-w-0">
-            <Lightbulb className="size-3 text-primary shrink-0" />
-            <span className="truncate">
-              <strong className="text-primary font-bold">Tip:</strong> Comparación en tiempo real.
-            </span>
-          </div>
-
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => setCurrentStep((prev) => (prev > 0 ? prev - 1 : STEPS.length - 1))}
-              className="size-5 rounded-full hover:bg-muted"
-              title="Paso anterior"
+        <div className="flex items-center justify-between z-10 pt-2 border-t border-border/40 mt-1">
+          <button className="text-[10px] font-bold text-primary hover:underline cursor-pointer">
+            {analysisMode === "explore" ? "Ver cómo interpretar el área" : analysisMode === "route" ? "Ver detalles del trayecto" : "Ver comparación completa"}
+          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentStep((prev) => (prev - 1 + 2) % 2)}
+              className="size-6 flex items-center justify-center rounded-full bg-surface hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
             >
               <ChevronLeft className="size-3" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => setCurrentStep((prev) => (prev + 1) % STEPS.length)}
-              className="size-5 rounded-full hover:bg-muted"
-              title="Siguiente paso"
+            </button>
+            <button
+              onClick={() => setCurrentStep((prev) => (prev + 1) % 2)}
+              className="size-6 flex items-center justify-center rounded-full bg-surface hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
             >
               <ChevronRight className="size-3" />
-            </Button>
+            </button>
           </div>
         </div>
       </Card>

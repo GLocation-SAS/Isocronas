@@ -1,127 +1,227 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardTitle, CardHeader, CardBadge, CardDecorativeIcon } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, MapPin, Target } from "lucide-react";
+import { Target, Route, Scale, Sparkles, MapPin, Minimize2, Maximize2, X } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface VisorLegendProps {
+  analysisMode?: "explore" | "route" | "compare";
   origin?: string;
+  originB?: string;
   destination?: string;
   travelTime?: number;
   transportMode?: string;
   hasGenerated?: boolean;
+  isGenerating?: boolean;
+  activeServicesCount?: number;
   onOpenExport?: () => void;
 }
 
 export function VisorLegend({ 
+  analysisMode = "explore",
   origin, 
+  originB,
   destination, 
   travelTime = 30,
+  transportMode = "car",
   hasGenerated = false, 
+  isGenerating = false,
+  activeServicesCount = 0,
   onOpenExport 
 }: VisorLegendProps) {
-  if (!hasGenerated) return null;
+  const [isMinimized, setIsMinimized] = useState(false);
 
-  const displayOrigin = origin ? origin.replace(" (Reubicado)", "") : "Punto de referencia";
-  const displayDest = destination ? destination.replace(" (Destino Reubicado)", "") : null;
+  // No mostrar si no se ha generado y no está cargando
+  if (!hasGenerated && !isGenerating) return null;
 
-  const T = travelTime;
-  const t1 = Math.round(T / 6);
-  const t2 = Math.round(T / 3);
-  const t3 = Math.round(T / 2);
-  const t4 = Math.round((T * 2) / 3);
+  const transportLabel = transportMode === "car" ? "Automóvil" : transportMode === "bike" ? "Bicicleta" : transportMode === "transit" ? "Transporte Público" : "A pie";
 
-  return (
-    <Card className="absolute bottom-6 left-6 md:left-[440px] w-56 shadow-2xl border-border/80 bg-card/95 backdrop-blur-xl z-30 transition-all duration-300 pointer-events-auto">
-      <CardHeader className="py-2 px-3 flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-xs font-bold tracking-tight text-foreground whitespace-nowrap">
-          Leyenda de tiempos
-        </CardTitle>
-      </CardHeader>
-      <Separator className="bg-border/50" />
-      <CardContent className="py-2.5 px-3 space-y-2">
-        {/* Rangos de colores por minutos */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-isochrone-5min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">0 - {t1} min</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">Cercano</span>
-          </div>
+  // Estado de carga Skeleton
+  if (isGenerating) {
+    return (
+      <Card variant="featured" className="absolute bottom-6 left-6 md:left-[440px] w-64 shadow-2xl z-30 transition-all duration-300 pointer-events-auto overflow-hidden animate-pulse">
+        <CardHeader className="pb-2">
+          <div className="h-4 w-32 bg-muted rounded"></div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="h-10 w-24 bg-muted rounded"></div>
+          <div className="h-3 w-40 bg-muted rounded"></div>
+          <div className="h-3 w-32 bg-muted rounded"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-isochrone-10min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">{t1} - {t2} min</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">Medio</span>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-isochrone-15min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">{t2} - {t3} min</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">Estándar</span>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-isochrone-30min shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">{t3} - {t4} min</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">Extendido</span>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-2">
-              <span className="size-2.5 rounded-full bg-isochrone-maxmin shadow-xs shrink-0" />
-              <span className="font-semibold text-foreground">{t4} - {T} min</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground font-mono">Límite</span>
-          </div>
-        </div>
-
-        <Separator className="bg-border/40 mt-2.5 mb-2" />
-
-        {/* Puntos de Referencia dinámicos */}
-        <div className="space-y-2 pt-0.5">
-          {/* Origen A */}
-          <div className="flex items-start gap-2 text-left">
-            <Badge variant="primary" appearance="soft" className="size-4.5 rounded-full p-0 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">
-              A
-            </Badge>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
-                <MapPin className="size-3 text-primary shrink-0" />
-                <span>Origen (A)</span>
-              </span>
-              <span className="text-[10px] text-muted-foreground truncate leading-tight mt-0.5">
-                {displayOrigin}
-              </span>
-            </div>
-          </div>
-
-          {/* Destino B (si aplica) */}
-          {displayDest && (
-            <div className="flex items-start gap-2 text-left animate-in fade-in duration-200">
-              <Badge variant="warning" appearance="soft" className="size-4.5 rounded-full p-0 flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5">
-                B
-              </Badge>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
-                  <Target className="size-3 text-warning shrink-0" />
-                  <span>Destino (B)</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground truncate leading-tight mt-0.5">
-                  {displayDest}
-                </span>
+  // Explorar
+  if (analysisMode === "explore") {
+    return (
+      <Card variant="featured" className={cn("absolute bottom-6 left-6 md:left-[440px] w-72 shadow-2xl z-30 transition-all duration-300 pointer-events-auto", isMinimized && "w-auto")}>
+        {!isMinimized ? (
+          <>
+            <button onClick={() => setIsMinimized(true)} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+              <Minimize2 className="size-4" />
+            </button>
+            <CardHeader className="pb-1">
+              <CardTitle className="text-xs text-muted-foreground">Área de alcance</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-4xl font-black text-foreground tracking-tighter">
+                {travelTime} <span className="text-xl font-bold text-muted-foreground">min</span>
               </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
+              <div className="space-y-1">
+                <div className="text-sm font-bold">{transportLabel}</div>
+                <div className="text-xs text-muted-foreground">{origin || "Punto seleccionado"}</div>
+              </div>
+              
+              <div className="pt-2 border-t border-border/50">
+                {activeServicesCount > 0 ? (
+                   <p className="text-xs text-foreground"><strong>Servicios dentro de tu alcance:</strong> {activeServicesCount} categorías encontradas.</p>
+                ) : (
+                   <p className="text-xs text-warning"><strong>No encontramos servicios</strong> seleccionados dentro de esta zona.</p>
+                )}
+              </div>
+            </CardContent>
+          </>
+        ) : (
+           <div className="px-4 py-3 flex items-center justify-between gap-4 cursor-pointer" onClick={() => setIsMinimized(false)}>
+              <div className="flex items-center gap-2">
+                 <Target className="size-4 text-primary" />
+                 <span className="text-sm font-bold">{travelTime} min</span>
+              </div>
+              <Maximize2 className="size-3.5 text-muted-foreground" />
+           </div>
+        )}
+      </Card>
+    );
+  }
+
+  // Route
+  if (analysisMode === "route") {
+    // Calculamos tiempo mock si no lo hay. Asumamos que travelTime es el tiempo estimado simulado
+    const simulatedDist = ((travelTime * 0.4) + 1.2).toFixed(1);
+    
+    return (
+      <Card variant="featured" className={cn("absolute bottom-6 left-6 md:left-[440px] w-80 shadow-2xl z-30 transition-all duration-300 pointer-events-auto", isMinimized && "w-auto")}>
+        {!isMinimized ? (
+          <>
+            <button onClick={() => setIsMinimized(true)} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+              <Minimize2 className="size-4" />
+            </button>
+            <CardHeader className="pb-2">
+               <div className="flex items-center gap-2">
+                 <Route className="size-4 text-primary" />
+                 <CardTitle className="text-xs text-foreground font-bold">Resumen del trayecto</CardTitle>
+               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 divide-x divide-border/50">
+                <div>
+                   <div className="text-2xl font-black text-foreground tracking-tighter">
+                     {travelTime} <span className="text-sm font-bold text-muted-foreground">min</span>
+                   </div>
+                   <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-1">Tiempo estimado</div>
+                </div>
+                <div className="pl-4">
+                   <div className="text-2xl font-black text-foreground tracking-tighter">
+                     {simulatedDist} <span className="text-sm font-bold text-muted-foreground">km</span>
+                   </div>
+                   <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mt-1">Distancia estimada</div>
+                </div>
+              </div>
+              
+              <div className="pt-3 border-t border-border/50 bg-surface/30 -mx-4 px-4 pb-1">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground mb-1">
+                  <Badge variant="primary" appearance="soft" className="px-1.5 py-0">A</Badge>
+                  <span className="truncate max-w-[100px]">{origin || "Origen"}</span>
+                  <span className="text-primary">→</span>
+                  <Badge variant="success" appearance="soft" className="px-1.5 py-0">B</Badge>
+                  <span className="truncate max-w-[100px]">{destination || "Destino"}</span>
+                </div>
+                <div className="text-[10px] text-muted-foreground/70">{transportLabel}</div>
+              </div>
+            </CardContent>
+          </>
+        ) : (
+           <div className="px-4 py-3 flex items-center justify-between gap-4 cursor-pointer" onClick={() => setIsMinimized(false)}>
+              <div className="flex items-center gap-2">
+                 <Route className="size-4 text-primary" />
+                 <span className="text-sm font-bold">{travelTime} min</span>
+              </div>
+              <Maximize2 className="size-3.5 text-muted-foreground" />
+           </div>
+        )}
+      </Card>
+    );
+  }
+
+  // Compare
+  if (analysisMode === "compare") {
+    // Simulamos un ganador. Si travelTime > 15, B gana. Si no, A gana.
+    const timeA = travelTime;
+    const timeB = Math.max(5, travelTime - 9); // mock diff
+    const diff = Math.abs(timeA - timeB);
+    const winner = timeA <= timeB ? "Punto A" : "Punto B";
+    const winnerName = timeA <= timeB ? (origin || "Punto A") : (originB || "Punto B");
+
+    return (
+      <Card variant="featured" className={cn("absolute bottom-6 left-6 md:left-[440px] w-80 shadow-2xl z-30 transition-all duration-300 pointer-events-auto", isMinimized && "w-auto")}>
+        {!isMinimized ? (
+          <>
+            <button onClick={() => setIsMinimized(true)} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+              <Minimize2 className="size-4" />
+            </button>
+            <CardHeader className="pb-3 border-b border-border/50 mb-3">
+               <div className="flex items-center gap-2">
+                 <Scale className="size-4 text-warning" />
+                 <CardTitle className="text-xs text-foreground font-bold">Resumen de la comparación</CardTitle>
+               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-2">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <span className="size-2.5 rounded-full bg-primary shadow-xs shrink-0" />
+                       <span className="text-xs font-bold text-muted-foreground">Punto A → Destino</span>
+                    </div>
+                    <span className="text-sm font-black text-foreground">{timeA} min</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <span className="size-2.5 rounded-full bg-secondary shadow-xs shrink-0" />
+                       <span className="text-xs font-bold text-muted-foreground">Punto B → Destino</span>
+                    </div>
+                    <span className="text-sm font-black text-foreground">{timeB} min</span>
+                 </div>
+              </div>
+              
+              <div className="bg-success/10 border border-success/20 rounded-xl p-3 flex flex-col gap-1">
+                 <span className="text-[10px] text-success font-bold uppercase tracking-wider">Mejor accesibilidad</span>
+                 <span className="text-sm font-black text-success truncate">{winnerName}</span>
+                 <span className="text-xs text-success/80">{diff} min más rápido</span>
+              </div>
+
+              <div className="pt-3 border-t border-border/50 text-xs">
+                 <div className="flex items-start gap-2 text-muted-foreground">
+                    <Sparkles className="size-3.5 text-info shrink-0 mt-0.5" />
+                    <p className="leading-snug">
+                      <strong>Insight:</strong> El {winner} ofrece mejor accesibilidad al destino, reduciendo el tiempo de viaje significativamente.
+                    </p>
+                 </div>
+              </div>
+            </CardContent>
+          </>
+        ) : (
+           <div className="px-4 py-3 flex items-center justify-between gap-4 cursor-pointer" onClick={() => setIsMinimized(false)}>
+              <div className="flex items-center gap-2">
+                 <Scale className="size-4 text-warning" />
+                 <span className="text-sm font-bold">Ganador: {winner}</span>
+              </div>
+              <Maximize2 className="size-3.5 text-muted-foreground" />
+           </div>
+        )}
+      </Card>
+    );
+  }
+
+  return null;
 }

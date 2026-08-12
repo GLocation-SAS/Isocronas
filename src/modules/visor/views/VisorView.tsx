@@ -23,7 +23,9 @@ export function VisorView() {
   const [transportMode, setTransportMode] = useState("walk");
   const [travelTime, setTravelTime] = useState(15);
   const [origin, setOrigin] = useState("Plaza de Bolívar");
+  const [originB, setOriginB] = useState("");
   const [destination, setDestination] = useState("");
+  const [analysisMode, setAnalysisMode] = useState<"explore" | "route" | "compare">("explore");
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showFloatingCard, setShowFloatingCard] = useState(true);
   const [showLocationModal, setShowLocationModal] = useState(true);
@@ -31,11 +33,37 @@ export function VisorView() {
   const [activeServices, setActiveServices] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastQueryTime, setLastQueryTime] = useState<number | null>(null);
+  const [generatedParams, setGeneratedParams] = useState({
+    origin: "",
+    originB: "",
+    destination: "",
+    transportMode: "",
+    travelTime: 0,
+    analysisMode: "explore" as "explore" | "route" | "compare"
+  });
   const [toast, setToast] = useState<{ message: string; type: "info" | "success" | "warning" } | null>(null);
   const [logs, setLogs] = useState<string[]>([
     "[System] Iniciando servicio de grafos espaciales...",
     "[System] Mapa base cargado: CartoDB.Positron [BOG]"
   ]);
+
+  const isOutdated = lastQueryTime !== null && (
+    origin !== generatedParams.origin ||
+    originB !== generatedParams.originB ||
+    destination !== generatedParams.destination ||
+    transportMode !== generatedParams.transportMode ||
+    travelTime !== generatedParams.travelTime ||
+    analysisMode !== generatedParams.analysisMode
+  );
+  
+  const getOutdatedReason = () => {
+    if (!isOutdated) return null;
+    if (analysisMode !== generatedParams.analysisMode) return "mode";
+    if (origin !== generatedParams.origin || destination !== generatedParams.destination || originB !== generatedParams.originB) return "location";
+    if (transportMode !== generatedParams.transportMode) return "transport";
+    if (travelTime !== generatedParams.travelTime) return "time";
+    return null;
+  };
 
   // --- LOCATION HANDLERS ---
   const handleAllowLocationAlways = () => {
@@ -78,7 +106,8 @@ export function VisorView() {
     setTimeout(() => {
       setIsGenerating(false);
       setLastQueryTime(116);
-      showToast("Isócrona generada con éxito", "success");
+      setGeneratedParams({ origin, originB, destination, transportMode, travelTime, analysisMode });
+      showToast("Análisis generado con éxito", "success");
       if (profile === "tecnico") {
         setLogs(prev => [
           ...prev, 
@@ -150,14 +179,16 @@ export function VisorView() {
         {/* Área de Mapa (Canvas Completo de Fondo) */}
         <section className="absolute inset-0 z-0 overflow-hidden">
           <VisorMap 
-            transportMode={transportMode}
-            travelTime={travelTime}
-            origin={origin}
-            destination={destination}
+            transportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
+            travelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
+            origin={lastQueryTime !== null ? generatedParams.origin : origin}
+            destination={lastQueryTime !== null ? generatedParams.destination : destination}
+            analysisMode={lastQueryTime !== null ? generatedParams.analysisMode : analysisMode}
             activeServices={activeServices}
             isEmergency={profile === "profesional" && transportMode === "car" && destination !== ""}
             onLocateClick={() => setShowLocationModal(true)}
             hasGenerated={lastQueryTime !== null}
+            isOutdated={isOutdated}
             onMapClick={(address) => {
               setOrigin(address);
               showToast(`Chincheta movida: ${address}`, "success");
@@ -179,10 +210,10 @@ export function VisorView() {
           {profile === "tecnico" && <VisorTechnicalConsole logs={logs} onCopy={() => showToast("GeoJSON copiado (Mock)", "success")} />}
           
           <VisorLegend 
-            origin={origin}
-            destination={destination}
-            travelTime={travelTime}
-            transportMode={transportMode}
+            origin={lastQueryTime !== null ? generatedParams.origin : origin}
+            destination={lastQueryTime !== null ? generatedParams.destination : destination}
+            travelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
+            transportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
             hasGenerated={lastQueryTime !== null}
             onOpenExport={() => setShowExportModal(true)}
           />
@@ -193,6 +224,8 @@ export function VisorView() {
           <div className="pointer-events-auto h-full flex flex-col overflow-hidden">
             <VisorSidebar 
               profile={profile}
+              analysisMode={analysisMode}
+              onAnalysisModeChange={setAnalysisMode}
               transportMode={transportMode}
               onTransportChange={setTransportMode}
               travelTime={travelTime}
@@ -208,6 +241,10 @@ export function VisorView() {
               activeServices={activeServices}
               onServicesChange={setActiveServices}
               onOpenExport={() => setShowExportModal(true)}
+              isOutdated={isOutdated}
+              outdatedReason={getOutdatedReason()}
+              generatedTravelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
+              generatedTransportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
             />
           </div>
         </div>
