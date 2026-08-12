@@ -41,6 +41,8 @@ export function VisorView() {
     travelTime: 0,
     analysisMode: "explore" as "explore" | "route" | "compare"
   });
+  const [activeInput, setActiveInput] = useState<'A' | 'B' | 'DEST'>('A');
+  const [inputMethod, setInputMethod] = useState<"search" | "map" | "gps">("search");
   const [toast, setToast] = useState<{ message: string; type: "info" | "success" | "warning" } | null>(null);
   const [logs, setLogs] = useState<string[]>([
     "[System] Iniciando servicio de grafos espaciales...",
@@ -48,18 +50,25 @@ export function VisorView() {
   ]);
 
   const isOutdated = lastQueryTime !== null && (
+    analysisMode !== generatedParams.analysisMode ||
     origin !== generatedParams.origin ||
-    originB !== generatedParams.originB ||
-    destination !== generatedParams.destination ||
+    (analysisMode !== "explore" && destination !== generatedParams.destination) ||
+    (analysisMode === "compare" && originB !== generatedParams.originB) ||
     transportMode !== generatedParams.transportMode ||
-    travelTime !== generatedParams.travelTime ||
-    analysisMode !== generatedParams.analysisMode
+    travelTime !== generatedParams.travelTime
   );
   
   const getOutdatedReason = () => {
     if (!isOutdated) return null;
     if (analysisMode !== generatedParams.analysisMode) return "mode";
-    if (origin !== generatedParams.origin || destination !== generatedParams.destination || originB !== generatedParams.originB) return "location";
+    
+    // Check location changes based on the mode that was generated
+    const mode = generatedParams.analysisMode;
+    const originChanged = origin !== generatedParams.origin;
+    const destChanged = mode !== "explore" && destination !== generatedParams.destination;
+    const originBChanged = mode === "compare" && originB !== generatedParams.originB;
+    
+    if (originChanged || destChanged || originBChanged) return "location";
     if (transportMode !== generatedParams.transportMode) return "transport";
     if (travelTime !== generatedParams.travelTime) return "time";
     return null;
@@ -118,15 +127,17 @@ export function VisorView() {
     }, 800);
   };
 
+  const handleClearResults = () => {
+    setLastQueryTime(null);
+  };
+
   const handleReset = () => {
-    setProfile("ciudadano");
-    setTransportMode("walk");
-    setTravelTime(15);
-    setOrigin("Plaza de Bolívar");
+    setOrigin("");
+    setOriginB("");
     setDestination("");
     setActiveServices([]);
     setLastQueryTime(null);
-    showToast("Prototipo reiniciado al estado inicial", "info");
+    showToast("Mapa limpiado", "info");
   };
 
   const handlePreset = (caseId: number) => {
@@ -182,6 +193,7 @@ export function VisorView() {
             transportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
             travelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
             origin={lastQueryTime !== null ? generatedParams.origin : origin}
+            originB={lastQueryTime !== null ? generatedParams.originB : originB}
             destination={lastQueryTime !== null ? generatedParams.destination : destination}
             analysisMode={lastQueryTime !== null ? generatedParams.analysisMode : analysisMode}
             activeServices={activeServices}
@@ -248,6 +260,10 @@ export function VisorView() {
               onServicesChange={setActiveServices}
               onOpenExport={() => setShowExportModal(true)}
               isOutdated={isOutdated}
+              activeInput={activeInput}
+              setActiveInput={setActiveInput}
+              inputMethod={inputMethod}
+              setInputMethod={setInputMethod}
               outdatedReason={getOutdatedReason()}
               generatedTravelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
               generatedTransportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}

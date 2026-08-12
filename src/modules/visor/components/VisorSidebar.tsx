@@ -183,6 +183,10 @@ interface VisorSidebarProps {
   outdatedReason?: "location" | "transport" | "time" | "mode" | null;
   generatedTravelTime?: number;
   generatedTransportMode?: string;
+  activeInput: 'A' | 'B' | 'DEST';
+  setActiveInput: (val: 'A' | 'B' | 'DEST') => void;
+  inputMethod: "search" | "map" | "gps";
+  setInputMethod: (val: "search" | "map" | "gps") => void;
 }
 
 export function VisorSidebar({
@@ -210,7 +214,11 @@ export function VisorSidebar({
   isOutdated = false,
   outdatedReason = null,
   generatedTravelTime,
-  generatedTransportMode
+  generatedTransportMode,
+  activeInput,
+  setActiveInput,
+  inputMethod,
+  setInputMethod
 }: VisorSidebarProps) {
   const getPoiCount = (type: string | string[]) => {
     if (lastQueryTime === null || !generatedTravelTime || !generatedTransportMode) return null;
@@ -228,11 +236,9 @@ export function VisorSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showMainCard, setShowMainCard] = useState(true);
-  const [activeInput, setActiveInput] = useState<'A' | 'B' | 'DEST'>('A');
   const [showAdvanced, setShowAdvanced] = useState(true);
-  const [inputMethod, setInputMethod] = useState<"search" | "map" | "gps">("search");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<{ type: "replace" | "delete"; target: "A" | "B" } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: "replace" | "delete"; target: "A" | "B" | "DEST" } | null>(null);
   
   // Nuevo estado para la intención de análisis: explorar, ruta o comparar
 
@@ -666,6 +672,9 @@ export function VisorSidebar({
                           } else if (!destination) {
                             onDestinationChange("Centro Comercial Gran Estación");
                           }
+                          if (mode.id === "compare" && !originB && onOriginBChange) {
+                            onOriginBChange("Universidad Nacional");
+                          }
                         }}
                         className={cn(
                           "flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer select-none gap-2 h-auto min-h-[140px]",
@@ -913,12 +922,15 @@ export function VisorSidebar({
                   Ubicaciones seleccionadas
                 </span>
                 <span className="flex items-center justify-center size-5 rounded-full bg-primary/10 text-primary text-[10px] font-extrabold">
-                  {analysisMode !== "explore" ? 2 : 1}
+                  {analysisMode === "explore" ? (origin ? 1 : 0) : analysisMode === "route" ? (origin ? 1 : 0) + (destination ? 1 : 0) : (origin ? 1 : 0) + (originB ? 1 : 0) + (destination ? 1 : 0)}
                 </span>
               </div>
               
               <div
                 onClick={() => {
+                  onOriginChange("");
+                  if (onOriginBChange) onOriginBChange("");
+                  onDestinationChange("");
                   onReset();
                 }}
                 className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground hover:text-danger hover:underline transition-colors cursor-pointer"
@@ -1010,9 +1022,9 @@ export function VisorSidebar({
 
               
               {/* Origen B (solo compare) */}
-              {analysisMode === "compare" && (
+              {analysisMode === "compare" && originB && (
                 <div 
-                  onClick={() => setActiveInput(analysisMode === "compare" ? 'DEST' : 'B')}
+                  onClick={() => setActiveInput('B')}
                   className={cn(
                     "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
                     activeInput === 'B' 
@@ -1032,10 +1044,10 @@ export function VisorSidebar({
                     </div>
                     <div className="text-left min-w-0">
                       <div className="text-xs font-bold text-foreground truncate max-w-[120px] md:max-w-[160px]">
-                        {originB || "Centro Comercial Gran Estación"}
+                        {originB}
                       </div>
                       <div className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[160px]">
-                        {originB ? "Bogotá, Colombia" : "Ac. 26 # 68B-50, Bogotá, Colombia"}
+                        Bogotá, Colombia
                       </div>
                     </div>
                   </div>
@@ -1088,14 +1100,30 @@ export function VisorSidebar({
                   </div>
                 </div>
               )}
+              {analysisMode === "compare" && !originB && (
+                <div 
+                  onClick={() => {
+                    setActiveInput('B');
+                  }}
+                  className={cn(
+                    "flex items-center justify-center gap-3 p-3.5 rounded-xl border border-dashed transition-all cursor-pointer group",
+                    activeInput === 'B' 
+                      ? "border-info bg-info/5 ring-1 ring-info/20" 
+                      : "border-border/80 bg-surface/10 hover:bg-surface/30 text-muted-foreground"
+                  )}
+                >
+                  <Plus className="size-4" />
+                  <span className="text-xs font-bold">Agregar Origen B</span>
+                </div>
+              )}
 
               {/* Ubicación B (Destino) */}
               {analysisMode !== "explore" ? (
                 <div 
-                  onClick={() => setActiveInput('B')}
+                  onClick={() => setActiveInput('DEST')}
                   className={cn(
                     "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
-                    (activeInput === 'B' && analysisMode !== 'compare') || activeInput === 'DEST'
+                    activeInput === 'DEST'
                       ? "border-warning bg-warning/5 shadow-xs ring-1 ring-warning/20" 
                       : "border-border/60 bg-card hover:bg-surface/50"
                   )}
@@ -1141,7 +1169,7 @@ export function VisorSidebar({
                             className="rounded-lg border border-border/80 bg-surface/50 hover:bg-warning/10 hover:text-warning hover:border-warning/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setConfirmAction({ type: "replace", target: "B" });
+                              setConfirmAction({ type: "replace", target: "DEST" });
                             }}
                           >
                             <Pencil className="size-3.5" />
@@ -1160,14 +1188,14 @@ export function VisorSidebar({
                             className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setConfirmAction({ type: "delete", target: "B" });
+                              setConfirmAction({ type: "delete", target: "DEST" });
                             }}
                           >
                             <Trash2 className="size-3.5" />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
-                          Eliminar ubicación B
+                          Eliminar Destino
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -1713,7 +1741,14 @@ export function VisorSidebar({
                   variant={isOutdated ? "warning" : ((lastQueryTime !== null) ? "neutral" : "primary")}
                   size="lg"
                   onClick={onGenerate}
-                  disabled={isGenerating || ((lastQueryTime !== null) && !isOutdated)}
+                  disabled={
+                    isGenerating || 
+                    ((lastQueryTime !== null) && !isOutdated) ||
+                    (analysisMode === "explore" && !origin) ||
+                    (analysisMode === "route" && (!origin || !destination)) ||
+                    (analysisMode === "compare" && (!origin || !originB || !destination)) ||
+                    !transportMode
+                  }
                   className={cn(
                     "w-full transition-all duration-300",
                     (lastQueryTime !== null) && !isOutdated && "bg-success/10 text-success border-success/30 opacity-100 font-bold"
@@ -1809,7 +1844,7 @@ export function VisorSidebar({
       {/* Modal de Confirmación para Reemplazar o Eliminar Ubicación */}
       <Dialog open={confirmAction !== null} onOpenChange={() => setConfirmAction(null)}>
         <DialogContent className="sm:max-w-md border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl p-6">
-          <DialogHeader className="text-left space-y-1.5 border-b border-border/40 pb-3">
+          <DialogHeader className="text-center space-y-2 border-b border-border/40 pb-4">
             <DialogTitle className="text-lg font-heading font-bold text-foreground">
               {confirmAction?.type === "replace" ? "¿Reemplazar ubicación?" : "¿Eliminar ubicación?"}
             </DialogTitle>
@@ -1821,7 +1856,7 @@ export function VisorSidebar({
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2.5 border-t border-border/40 pt-4 w-full">
             <Button
-              variant={confirmAction?.type === "delete" ? "danger" : "primary"}
+              variant={confirmAction?.type === "delete" ? "danger" : "secondary"}
               size="lg"
               className="w-full font-bold shadow-md"
               onClick={() => {

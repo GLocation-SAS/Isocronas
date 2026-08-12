@@ -55,9 +55,11 @@ interface VisorMapProps {
   isEmergency?: boolean;
   onLocateClick?: () => void;
   hasGenerated?: boolean;
-  onMapClick?: (address: string) => void;
+  onMapClick?: (address: string, pinType?: string) => void;
   analysisMode?: string;
   isOutdated?: boolean;
+  activeInput?: 'A' | 'B' | 'DEST';
+  inputMethod?: "search" | "map" | "gps";
 }
 
 import { MOCK_POIS, getTransportFactor, getTransportSpeed, getRoadNetworkRadius, isPoiInsideIsochrone } from "@/modules/visor/utils/geo";
@@ -149,7 +151,9 @@ export function VisorMap({
   onLocateClick,
   hasGenerated = false,
   analysisMode = "explore",
-  onMapClick
+  onMapClick,
+  activeInput,
+  inputMethod
 }: VisorMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -159,6 +163,7 @@ export function VisorMap({
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [mapMode, setMapMode] = useState<"dark" | "light" | "satellite">("dark");
   const [showMapGallery, setShowMapGallery] = useState(false);
   const [markerPos, setMarkerPos] = useState({ x: 600, y: 400 });
@@ -307,6 +312,7 @@ export function VisorMap({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    setMousePos({ x: e.clientX, y: e.clientY });
     if (isDraggingPin) {
       setPinOffset({
         x: e.clientX - pinDragStart.x,
@@ -338,17 +344,30 @@ export function VisorMap({
   const handleMouseUp = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isDraggingPin) {
       setIsDraggingPin(false);
-      onMapClick?.("Cra. 7 con Calle 26 (Reubicado)");
+      onMapClick?.("Cra. 7 con Calle 26 (Reubicado)", "origin");
+      return;
+    }
+    if (isDraggingOriginBPin) {
+      setIsDraggingOriginBPin(false);
+      onMapClick?.("Parque Simón Bolívar (Reubicado)", "originB");
       return;
     }
     if (isDraggingDestPin) {
       setIsDraggingDestPin(false);
-    setIsDraggingOriginBPin(false);
-      onMapClick?.("Centro Comercial Gran Estación (Destino Reubicado)");
+      onMapClick?.("Centro Comercial Gran Estación (Destino Reubicado)", "destination");
       return;
     }
+    
+    // Si inputMethod es map y no se arrastró mucho (es un click)
+    const isClick = Math.abs(e.clientX - panOffset.x - dragStart.x) < 5 && Math.abs(e.clientY - panOffset.y - dragStart.y) < 5;
+    
     if (isDragging) {
       setIsDragging(false);
+      if (isClick && inputMethod === "map") {
+        const pinType = activeInput === 'A' ? 'origin' : activeInput === 'B' ? 'originB' : 'destination';
+        const address = `Ubicación en mapa (${Math.floor(e.clientX)}x, ${Math.floor(e.clientY)}y)`;
+        onMapClick?.(address, pinType);
+      }
     }
   };
 
@@ -493,21 +512,14 @@ export function VisorMap({
                     }
 
                     return (
-                      <TooltipProvider delayDuration={50} key={timeLimit}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <path 
-                              d={pathData} 
-                              className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200`} 
-                              fillOpacity={opacity} 
-                              onMouseEnter={() => setHoveredRing(timeLimit)}
-                              onMouseLeave={() => setHoveredRing(null)}
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent variant="neutral" className="text-xs font-bold p-2 z-50">
-                            {timeLimit} minutos
-                          </TooltipContent>
-                        </Tooltip>
+                      <g key={timeLimit}>
+                        <path 
+                          d={pathData} 
+                          className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200`} 
+                          fillOpacity={opacity} 
+                          onMouseEnter={() => setHoveredRing(timeLimit)}
+                          onMouseLeave={() => setHoveredRing(null)}
+                        />
                         <path 
                           d={pathData} 
                           fill="none" 
@@ -515,7 +527,7 @@ export function VisorMap({
                           strokeWidth={strokeWidth}
                           strokeDasharray={strokeDash} 
                         />
-                      </TooltipProvider>
+                      </g>
                     );
                   };
 
@@ -566,37 +578,53 @@ export function VisorMap({
         {/* Capa independiente para la Ruta (Solo modo Trayecto) */}
         {hasGenerated && analysisMode === "route" && destination && (
           <div 
-            className="absolute top-1/2 left-1/2 z-15 pointer-events-none overflow-visible"
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
             style={{
-              width: 0,
-              height: 0
+              width: 4000,
+              height: 4000,
+              transform: "translate(-50%, -50%)"
             }}
           >
-            <svg className="overflow-visible absolute" style={{ top: 0, left: 0 }}>
+            <svg className="w-full h-full overflow-visible" viewBox="-2000 -2000 4000 4000">
               <defs>
-                <filter id="glow-route" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
+                <filter id="glow-route" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
+                <linearGradient id="route-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
               </defs>
-              {/* Línea principal que conecta exactamente A y B */}
+              {/* Línea principal que conecta exactamente A y B con estilo de ruta real */}
               <path 
-                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
+                d={(() => {
+                  const sx = pinOffset.x; const sy = pinOffset.y;
+                  const ex = 140 + destPinOffset.x; const ey = -90 + destPinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  return `M ${sx} ${sy} L ${sx + dx * 0.2} ${sy + dy * 0.15 + 20} L ${sx + dx * 0.4} ${sy + dy * 0.4 - 15} L ${sx + dx * 0.6} ${sy + dy * 0.6 + 10} L ${sx + dx * 0.8} ${sy + dy * 0.85 - 20} L ${ex} ${ey}`;
+                })()}
                 fill="none" 
-                className="stroke-primary stroke-[5] drop-shadow-2xl opacity-90" 
+                stroke="url(#route-gradient)"
+                className="stroke-[6] drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] opacity-100" 
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
                 filter="url(#glow-route)"
               />
               <path 
-                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
+                d={(() => {
+                  const sx = pinOffset.x; const sy = pinOffset.y;
+                  const ex = 140 + destPinOffset.x; const ey = -90 + destPinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  return `M ${sx} ${sy} L ${sx + dx * 0.2} ${sy + dy * 0.15 + 20} L ${sx + dx * 0.4} ${sy + dy * 0.4 - 15} L ${sx + dx * 0.6} ${sy + dy * 0.6 + 10} L ${sx + dx * 0.8} ${sy + dy * 0.85 - 20} L ${ex} ${ey}`;
+                })()}
                 fill="none" 
                 stroke="white"
-                strokeWidth="2"
-                strokeDasharray="6 6"
+                strokeWidth="2.5"
+                strokeDasharray="8 8"
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
-                className="opacity-80 animate-[dash_1s_linear_infinite]"
+                className="opacity-90 animate-[dash_1s_linear_infinite]"
               />
             </svg>
           </div>
@@ -605,57 +633,88 @@ export function VisorMap({
         {/* Capas de Ruta para el Modo Comparación (2 Rutas) */}
         {hasGenerated && analysisMode === "compare" && destination && originB && (
           <div 
-            className="absolute top-1/2 left-1/2 z-15 pointer-events-none overflow-visible"
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
             style={{
-              width: 0,
-              height: 0
+              width: 4000,
+              height: 4000,
+              transform: "translate(-50%, -50%)"
             }}
           >
-            <svg className="overflow-visible absolute" style={{ top: 0, left: 0 }}>
+            <svg className="w-full h-full overflow-visible" viewBox="-2000 -2000 4000 4000">
               <defs>
-                <filter id="glow-compare" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
+                <filter id="glow-compare" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
+                <linearGradient id="route-a-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+                <linearGradient id="route-b-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
               </defs>
               {/* Ruta A (Azul: Origen A -> Destino) */}
               <path 
-                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
+                d={(() => {
+                  const sx = pinOffset.x; const sy = pinOffset.y;
+                  const ex = 140 + destPinOffset.x; const ey = -90 + destPinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  return `M ${sx} ${sy} L ${sx + dx * 0.25} ${sy + dy * 0.2 + 15} L ${sx + dx * 0.5} ${sy + dy * 0.5 - 10} L ${sx + dx * 0.75} ${sy + dy * 0.8 + 5} L ${ex} ${ey}`;
+                })()}
                 fill="none" 
-                className="stroke-primary stroke-[5] drop-shadow-2xl opacity-90" 
+                stroke="url(#route-a-gradient)"
+                className="stroke-[6] drop-shadow-2xl opacity-100" 
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
                 filter="url(#glow-compare)"
               />
               <path 
-                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
+                d={(() => {
+                  const sx = pinOffset.x; const sy = pinOffset.y;
+                  const ex = 140 + destPinOffset.x; const ey = -90 + destPinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  return `M ${sx} ${sy} L ${sx + dx * 0.25} ${sy + dy * 0.2 + 15} L ${sx + dx * 0.5} ${sy + dy * 0.5 - 10} L ${sx + dx * 0.75} ${sy + dy * 0.8 + 5} L ${ex} ${ey}`;
+                })()}
                 fill="none" 
                 stroke="white"
-                strokeWidth="2"
-                strokeDasharray="6 6"
+                strokeWidth="2.5"
+                strokeDasharray="8 8"
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
-                className="opacity-80 animate-[dash_1s_linear_infinite]"
+                className="opacity-90 animate-[dash_1s_linear_infinite]"
               />
 
               {/* Ruta B (Morada: Origen B -> Destino) */}
               <path 
-                d={`M ${-140 + originBPinOffset.x} ${90 + originBPinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
+                d={(() => {
+                  const sx = -140 + originBPinOffset.x; const sy = 90 + originBPinOffset.y;
+                  const ex = 140 + destPinOffset.x; const ey = -90 + destPinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  return `M ${sx} ${sy} L ${sx + dx * 0.3} ${sy + dy * 0.25 - 20} L ${sx + dx * 0.6} ${sy + dy * 0.6 + 15} L ${ex} ${ey}`;
+                })()}
                 fill="none" 
-                className="stroke-info stroke-[5] drop-shadow-2xl opacity-90" 
+                stroke="url(#route-b-gradient)"
+                className="stroke-[6] drop-shadow-2xl opacity-100" 
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
                 filter="url(#glow-compare)"
               />
               <path 
-                d={`M ${-140 + originBPinOffset.x} ${90 + originBPinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
+                d={(() => {
+                  const sx = -140 + originBPinOffset.x; const sy = 90 + originBPinOffset.y;
+                  const ex = 140 + destPinOffset.x; const ey = -90 + destPinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  return `M ${sx} ${sy} L ${sx + dx * 0.3} ${sy + dy * 0.25 - 20} L ${sx + dx * 0.6} ${sy + dy * 0.6 + 15} L ${ex} ${ey}`;
+                })()}
                 fill="none" 
                 stroke="white"
-                strokeWidth="2"
-                strokeDasharray="6 6"
+                strokeWidth="2.5"
+                strokeDasharray="8 8"
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
-                className="opacity-80 animate-[dash_1s_linear_infinite]"
+                className="opacity-90 animate-[dash_1s_linear_infinite]"
               />
             </svg>
           </div>
@@ -706,7 +765,7 @@ export function VisorMap({
           <div 
             className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
             style={{
-              transform: `translate(calc(-140px + ${originBPinOffset.x}px), calc(90px + ${originBPinOffset.y}px)) scale(${1 / zoom})`
+              transform: `translate(calc(-50% - 140px + ${originBPinOffset.x}px), calc(-50% + 90px + ${originBPinOffset.y}px)) scale(${1 / zoom})`
             }}
             onMouseDown={handleOriginBPinMouseDown}
           >
@@ -745,7 +804,7 @@ export function VisorMap({
           <div 
             className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
             style={{
-              transform: `translate(calc(140px + ${destPinOffset.x}px), calc(-90px + ${destPinOffset.y}px)) scale(${1 / zoom})`
+              transform: `translate(calc(-50% + 140px + ${destPinOffset.x}px), calc(-50% - 90px + ${destPinOffset.y}px)) scale(${1 / zoom})`
             }}
             onMouseDown={handleDestPinMouseDown}
           >
@@ -788,12 +847,57 @@ export function VisorMap({
               // 1. Consulta espacial según el modo de análisis
               if (analysisMode === "explore") {
                 if (!isPoiInsideIsochrone(poi, travelTime, transportMode)) return null;
-              } else if (analysisMode === "route") {
-                if (!isPoiNearSegment(poi, { x: pinOffset.x, y: pinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y })) return null;
-              } else if (analysisMode === "compare") {
-                const nearA = isPoiNearSegment(poi, { x: pinOffset.x, y: pinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y });
-                const nearB = isPoiNearSegment(poi, { x: -140 + originBPinOffset.x, y: 90 + originBPinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y });
-                if (!nearA && !nearB) return null;
+              } else if (analysisMode === "route" || analysisMode === "compare") {
+                const ex = 140 + destPinOffset.x; 
+                const ey = -90 + destPinOffset.y;
+                
+                // Convert POI relative coords (dx, dy) to absolute screen coords
+                const absPoi = {
+                  dx: pinOffset.x + poi.dx,
+                  dy: pinOffset.y + poi.dy
+                };
+
+                const isPoiNearPolyline = (p: {dx: number, dy: number}, points: {x: number, y: number}[], threshold: number = 75) => {
+                  for (let i = 0; i < points.length - 1; i++) {
+                    if (isPoiNearSegment(p, points[i], points[i+1], threshold)) return true;
+                  }
+                  return false;
+                };
+
+                if (analysisMode === "route") {
+                  const sx = pinOffset.x; const sy = pinOffset.y;
+                  const dx = ex - sx; const dy = ey - sy;
+                  const routePoints = [
+                    {x: sx, y: sy},
+                    {x: sx + dx * 0.2, y: sy + dy * 0.15 + 20},
+                    {x: sx + dx * 0.4, y: sy + dy * 0.4 - 15},
+                    {x: sx + dx * 0.6, y: sy + dy * 0.6 + 10},
+                    {x: sx + dx * 0.8, y: sy + dy * 0.85 - 20},
+                    {x: ex, y: ey}
+                  ];
+                  if (!isPoiNearPolyline(absPoi, routePoints)) return null;
+                } else {
+                  const sxA = pinOffset.x; const syA = pinOffset.y;
+                  const dxA = ex - sxA; const dyA = ey - syA;
+                  const routeAPoints = [
+                    {x: sxA, y: syA},
+                    {x: sxA + dxA * 0.25, y: syA + dyA * 0.2 + 15},
+                    {x: sxA + dxA * 0.5, y: syA + dyA * 0.5 - 10},
+                    {x: sxA + dxA * 0.75, y: syA + dyA * 0.8 + 5},
+                    {x: ex, y: ey}
+                  ];
+                  
+                  const sxB = -140 + originBPinOffset.x; const syB = 90 + originBPinOffset.y;
+                  const dxB = ex - sxB; const dyB = ey - syB;
+                  const routeBPoints = [
+                    {x: sxB, y: syB},
+                    {x: sxB + dxB * 0.3, y: syB + dyB * 0.25 - 20},
+                    {x: sxB + dxB * 0.6, y: syB + dyB * 0.6 + 15},
+                    {x: ex, y: ey}
+                  ];
+                  
+                  if (!isPoiNearPolyline(absPoi, routeAPoints) && !isPoiNearPolyline(absPoi, routeBPoints)) return null;
+                }
               }
               
               // 2. Calcular el tiempo y la distancia personalizados
@@ -892,79 +996,68 @@ export function VisorMap({
                   </div>
 
                   {(hoveredPoi === poi.id || selectedPoi === poi.id) && (
-                    <Card className="absolute bottom-full mb-3.5 left-1/2 -translate-x-1/2 w-80 p-4 bg-card/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-3xl text-left pointer-events-auto z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 relative">
-                      {selectedPoi === poi.id && (
-                        <button 
-                          onClick={(e) => {
-                             e.stopPropagation();
-                             setSelectedPoi(null);
-                          }}
-                          className="absolute top-3.5 right-3.5 size-7 rounded-full border border-border/40 bg-surface/50 text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-all hover:scale-105"
-                        >
-                          <X className="size-3.5" />
-                        </button>
-                      )}
-                      
-                      <div className="flex gap-4">
-                        <div className={cn("size-14 rounded-full flex items-center justify-center shrink-0 text-white shadow-md bg-gradient-to-br from-white/10 to-transparent", poi.color)}>
-                          <PoiIcon className="size-6 text-white drop-shadow-md" />
-                        </div>
-                        <div className="flex-1 min-w-0 pr-6">
-                          <h4 className="text-[15px] font-extrabold text-foreground leading-tight tracking-tight truncate">{poi.name}</h4>
-                          <p className="text-[9px] font-bold text-primary tracking-wider uppercase mt-1 leading-none">{category}</p>
-                          <p className="text-[10.5px] text-muted-foreground mt-2 flex items-center gap-1.5 leading-none">
-                            <MapPin className="size-3.5 text-danger shrink-0" />
-                            <span className="truncate">{address}</span>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="h-px bg-border/40 my-3" />
-
-                      <div className="grid grid-cols-2 gap-2.5">
-                        {/* Métrica 1: Tiempo */}
-                        <div className="p-2.5 rounded-2xl border border-border/40 flex items-center gap-2.5 bg-surface/30">
-                          <div className="text-primary shrink-0">
-                            {transportMode === "walk" && <Footprints className="size-5" />}
-                            {transportMode === "bike" && <Bike className="size-5" />}
-                            {transportMode === "transit" && <Train className="size-5" />}
-                            {transportMode === "car" && <Car className="size-5" />}
-                            {transportMode === "motorcycle" && <MotorcycleIcon className="size-5" />}
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[13px] font-black text-foreground leading-none">{poiTime} min</span>
-                            <span className="text-[9px] text-muted-foreground font-medium mt-0.5 leading-none">desde origen</span>
-                          </div>
-                        </div>
-
-                        {/* Métrica 2: Distancia */}
-                        <div className="p-2.5 rounded-2xl border border-border/40 flex items-center gap-2.5 bg-surface/30">
-                          <div className="text-success shrink-0">
-                            <MapPin className="size-5" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-[13px] font-black text-foreground leading-none">{distanceKm.toFixed(1)} km</span>
-                            <span className="text-[9px] text-muted-foreground font-medium mt-0.5 leading-none">de distancia</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {selectedPoi === poi.id && (
-                        <div className="mt-3 flex justify-end">
-                          <Button 
-                            size="sm" 
-                            variant="primary" 
-                            className="h-6 text-[9.5px] font-bold rounded-lg cursor-pointer px-3"
+                    <div className="absolute bottom-full mb-6 left-1/2 -translate-x-1/2 w-[310px] z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                      <Card className="w-full p-4 bg-slate-900/90 backdrop-blur-md border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl text-left pointer-events-auto relative">
+                        {selectedPoi === poi.id && (
+                          <button 
                             onClick={(e) => {
-                              e.stopPropagation();
-                              alert(`Consultando detalle completo de ${poi.name}...`);
+                               e.stopPropagation();
+                               setSelectedPoi(null);
                             }}
+                            className="absolute top-3 right-3 size-6 rounded-full border border-white/10 bg-white/5 text-white/60 hover:text-white flex items-center justify-center cursor-pointer transition-all hover:bg-white/10"
                           >
-                            Ver detalle
-                          </Button>
+                            <X className="size-3.5" />
+                          </button>
+                        )}
+                        
+                        <div className="flex gap-3.5 items-start">
+                          <div className={cn("size-12 rounded-full flex items-center justify-center shrink-0 text-white shadow-md bg-gradient-to-br from-white/10 to-transparent", poi.color)}>
+                            <PoiIcon className="size-6 text-white drop-shadow-md" />
+                          </div>
+                          <div className="flex-1 min-w-0 flex flex-col items-start text-left pt-0.5">
+                            <h4 className="text-[15px] font-bold text-white leading-tight tracking-tight truncate w-full text-left">{poi.name}</h4>
+                            <p className="text-[10px] font-semibold text-blue-400 tracking-wider uppercase mt-1 leading-none w-full text-left truncate">{category}</p>
+                            <p className="text-[11px] text-white/60 mt-2 flex items-center gap-1.5 leading-none w-full text-left truncate">
+                              <MapPin className="size-3.5 text-danger shrink-0" />
+                              <span className="truncate">{address}</span>
+                            </p>
+                          </div>
                         </div>
-                      )}
-                    </Card>
+
+                        <div className="h-px bg-white/10 my-4" />
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Métrica 1: Tiempo */}
+                          <div className="px-3 py-2.5 rounded-2xl border border-white/10 flex items-center gap-3 bg-white/5 overflow-hidden">
+                            <div className="text-teal-400 shrink-0">
+                              {transportMode === "walk" && <Footprints className="size-5" />}
+                              {transportMode === "bike" && <Bike className="size-5" />}
+                              {transportMode === "transit" && <Train className="size-5" />}
+                              {transportMode === "car" && <Car className="size-5" />}
+                              {transportMode === "motorcycle" && <MotorcycleIcon className="size-5" />}
+                            </div>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="text-[13px] font-bold text-white leading-tight whitespace-nowrap">{poiTime} min</span>
+                              <span className="text-[9px] text-white/60 font-medium whitespace-nowrap mt-0.5">desde origen</span>
+                            </div>
+                          </div>
+
+                          {/* Métrica 2: Distancia */}
+                          <div className="px-3 py-2.5 rounded-2xl border border-white/10 flex items-center gap-3 bg-white/5 overflow-hidden">
+                            <div className="text-teal-400 shrink-0">
+                              <MapPin className="size-5" />
+                            </div>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="text-[13px] font-bold text-white leading-tight whitespace-nowrap">{distanceKm.toFixed(1)} km</span>
+                              <span className="text-[9px] text-white/60 font-medium whitespace-nowrap mt-0.5">de distancia</span>
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                      
+                      {/* Caret pointing down */}
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-slate-900/90" />
+                    </div>
                   )}
                 </div>
               );
@@ -1164,6 +1257,26 @@ export function VisorMap({
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Tooltip Dinámico Flotante */}
+      {hoveredRing !== null && (
+        <div 
+          className={cn(
+            "fixed pointer-events-none z-[9999] shadow-md text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 animate-in fade-in-0 zoom-in-95 duration-200",
+            hoveredRing === 5 ? "bg-isochrone-5min text-white" :
+            hoveredRing === 10 ? "bg-isochrone-10min text-white" :
+            hoveredRing === 15 ? "bg-isochrone-15min text-white" :
+            hoveredRing === 30 ? "bg-isochrone-30min text-white" :
+            "bg-isochrone-maxmin text-white"
+          )}
+          style={{ 
+            left: mousePos.x + 15, 
+            top: mousePos.y + 15 
+          }}
+        >
+          {hoveredRing} minutos
         </div>
       )}
     </div>
