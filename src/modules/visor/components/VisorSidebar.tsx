@@ -1117,6 +1117,23 @@ export function VisorSidebar({
                 </div>
               )}
 
+              {analysisMode === "compare" && !originB && (
+                <div 
+                  onClick={() => {
+                    setActiveInput('B');
+                  }}
+                  className={cn(
+                    "flex items-center justify-center gap-3 p-3.5 rounded-xl border border-dashed transition-all cursor-pointer group",
+                    activeInput === 'B' 
+                      ? "border-info bg-info/5 ring-1 ring-info/20" 
+                      : "border-border/80 bg-surface/10 hover:bg-surface/30 text-muted-foreground"
+                  )}
+                >
+                  <Plus className="size-4" />
+                  <span className="text-xs font-bold">Agregar Origen B</span>
+                </div>
+              )}
+
               {/* Ubicación B (Destino) */}
               {analysisMode !== "explore" ? (
                 <div 

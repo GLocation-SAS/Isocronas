@@ -552,12 +552,9 @@ export function VisorMap({
 
                   return sortedConfigs.map(config => renderRing(config.limit, config.path, config.color));
                 })()}
-                
-{/* Marcador circular central de origen removido del SVG */}
-              
-                
-</svg>
+              </svg>
             </div>
+            
             {/* Marcador central premium independiente con escala corregida */}
             <div 
               className="absolute top-1/2 left-1/2 flex items-center justify-center pointer-events-none z-15"
