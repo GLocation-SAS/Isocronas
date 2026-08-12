@@ -73,13 +73,15 @@ export function VisorLegend({
                 <div className="text-xs text-muted-foreground">{origin || "Punto seleccionado"}</div>
               </div>
               
+              
               <div className="pt-2 border-t border-border/50">
-                {activeServicesCount > 0 ? (
-                   <p className="text-xs text-foreground"><strong>Servicios dentro de tu alcance:</strong> {activeServicesCount} categorías encontradas.</p>
-                ) : (
-                   <p className="text-xs text-warning"><strong>No encontramos servicios</strong> seleccionados dentro de esta zona.</p>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Incluye también los rangos menores para facilitar la lectura del alcance.
+                </p>
+                {activeServicesCount > 0 && (
+                  <p className="text-xs text-foreground mt-2"><strong>Servicios dentro de tu alcance:</strong> {activeServicesCount} categorías encontradas.</p>
                 )}
-              </div>
+</div>
             </CardContent>
           </>
         ) : (

@@ -374,31 +374,54 @@ export function VisorMap({
                 
                 {analysisMode !== "route" && (
                   <>
-{/* 1 Solo polígono correspondiente al tiempo seleccionado */}
+{/* Isócronas Acumulativas */}
                 {(() => {
                   const T = travelTime;
-                  // Asignar un color según el tiempo
-                  let ringClass = "fill-isochrone-maxmin";
-                  let strokeClass = "stroke-isochrone-maxmin";
-                  if (T <= 5) { ringClass = "fill-isochrone-5min"; strokeClass = "stroke-isochrone-5min"; }
-                  else if (T <= 15) { ringClass = "fill-isochrone-10min"; strokeClass = "stroke-isochrone-10min"; }
-                  else if (T <= 30) { ringClass = "fill-isochrone-15min"; strokeClass = "stroke-isochrone-15min"; }
-                  else if (T <= 45) { ringClass = "fill-isochrone-30min"; strokeClass = "stroke-isochrone-30min"; }
                   
-                  return (
-                    <TooltipProvider delayDuration={50}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <path d={getRingPath(R5)} className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-40`} fillOpacity={0.4} />
-                        </TooltipTrigger>
-                        <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
-                          Área de alcance: {T} min
-                        </TooltipContent>
-                      </Tooltip>
-                      <path d={getRingPath(R5)} fill="none" className={`${strokeClass} stroke-[3] pointer-events-none`} strokeDasharray="6 6" />
-                    </TooltipProvider>
-                  );
+                  // Helper function to render a ring
+                  const renderRing = (timeLimit, pathData, ringClassBase) => {
+                    const isPrincipal = timeLimit === T;
+                    const ringClass = isPrincipal ? `fill-${ringClassBase}` : `fill-${ringClassBase}/40`;
+                    const strokeClass = isPrincipal ? `stroke-${ringClassBase}` : "stroke-white/20";
+                    const opacity = isPrincipal ? 0.6 : 0.2;
+                    const strokeWidth = isPrincipal ? 3 : 1;
+                    
+                    return (
+                      <TooltipProvider delayDuration={50} key={timeLimit}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <path 
+                              d={pathData} 
+                              className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-60`} 
+                              fillOpacity={opacity} 
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                            Área de alcance: ${timeLimit} min ${isPrincipal ? "(Actual)" : ""}
+                          </TooltipContent>
+                        </Tooltip>
+                        <path 
+                          d={pathData} 
+                          fill="none" 
+                          className={`${strokeClass} pointer-events-none`} 
+                          strokeWidth={strokeWidth}
+                          strokeDasharray={isPrincipal ? "none" : "4 4"} 
+                        />
+                      </TooltipProvider>
+                    );
+                  };
+
+                  const rings = [];
+                  if (T >= 5) rings.push(renderRing(5, getRingPath(R1), "isochrone-5min"));
+                  if (T >= 10) rings.push(renderRing(10, getRingPath(R2), "isochrone-10min"));
+                  if (T >= 15) rings.push(renderRing(15, getRingPath(R3), "isochrone-15min"));
+                  if (T >= 30) rings.push(renderRing(30, getRingPath(R4), "isochrone-30min"));
+                  if (T > 30) rings.push(renderRing(T, getRingPath(R5), "isochrone-maxmin"));
+
+                  // Ensure they render back-to-front (largest first)
+                  return rings.reverse();
                 })()}
+
                   </>
                 )}
 
