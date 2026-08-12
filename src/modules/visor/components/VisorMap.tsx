@@ -49,6 +49,7 @@ interface VisorMapProps {
   transportMode: string;
   travelTime: number;
   origin: string;
+  originB?: string;
   destination: string;
   activeServices: string[];
   isEmergency?: boolean;
@@ -56,6 +57,7 @@ interface VisorMapProps {
   hasGenerated?: boolean;
   onMapClick?: (address: string) => void;
   analysisMode?: string;
+  isOutdated?: boolean;
 }
 
 import { MOCK_POIS, getTransportFactor, getTransportSpeed, getRoadNetworkRadius, isPoiInsideIsochrone } from "@/modules/visor/utils/geo";
@@ -75,6 +77,7 @@ export function VisorMap({
   transportMode, 
   travelTime, 
   origin, 
+  originB,
   destination, 
   activeServices,
   isEmergency,
@@ -101,6 +104,9 @@ export function VisorMap({
   const [pinDragStart, setPinDragStart] = useState({ x: 0, y: 0 });
 
   const [destPinOffset, setDestPinOffset] = useState({ x: 0, y: 0 });
+  const [originBPinOffset, setOriginBPinOffset] = useState({ x: -140, y: 90 });
+  const [isDraggingOriginBPin, setIsDraggingOriginBPin] = useState(false);
+  const [originBPinDragStart, setOriginBPinDragStart] = useState({ x: 0, y: 0 });
   const [isDraggingDestPin, setIsDraggingDestPin] = useState(false);
   const [destPinDragStart, setDestPinDragStart] = useState({ x: 0, y: 0 });
 
@@ -110,6 +116,12 @@ export function VisorMap({
     e.stopPropagation();
     setIsDraggingPin(true);
     setPinDragStart({ x: e.clientX - pinOffset.x, y: e.clientY - pinOffset.y });
+  };
+
+  const handleOriginBPinMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDraggingOriginBPin(true);
+    setOriginBPinDragStart({ x: e.clientX - originBPinOffset.x, y: e.clientY - originBPinOffset.y });
   };
 
   const handleDestPinMouseDown = (e: React.MouseEvent) => {
@@ -237,6 +249,12 @@ export function VisorMap({
       });
       return;
     }
+    if (isDraggingOriginBPin) {
+      setOriginBPinOffset({
+        x: e.clientX - originBPinDragStart.x,
+        y: e.clientY - originBPinDragStart.y
+      });
+    }
     if (isDraggingDestPin) {
       setDestPinOffset({
         x: e.clientX - destPinDragStart.x,
@@ -260,6 +278,7 @@ export function VisorMap({
     }
     if (isDraggingDestPin) {
       setIsDraggingDestPin(false);
+    setIsDraggingOriginBPin(false);
       onMapClick?.("Centro Comercial Gran Estación (Destino Reubicado)");
       return;
     }
@@ -375,11 +394,11 @@ export function VisorMap({
                 {analysisMode !== "route" && (
                   <>
 {/* Isócronas Acumulativas */}
-                {(() => {
+                {analysisMode !== "compare" && (() => {
                   const T = travelTime;
                   
                   // Helper function to render a ring
-                  const renderRing = (timeLimit, pathData, ringClassBase) => {
+                  const renderRing = (timeLimit: number, pathData: string, ringClassBase: string) => {
                     const isPrincipal = timeLimit === T;
                     const ringClass = isPrincipal ? `fill-${ringClassBase}` : `fill-${ringClassBase}/40`;
                     const strokeClass = isPrincipal ? `stroke-${ringClassBase}` : "stroke-white/20";
@@ -396,7 +415,7 @@ export function VisorMap({
                               fillOpacity={opacity} 
                             />
                           </TooltipTrigger>
-                          <TooltipContent variant="primary" className="text-xs font-bold p-2 bg-card/95 backdrop-blur-xl border border-border shadow-md text-foreground">
+                          <TooltipContent variant="neutral" className="text-xs font-bold p-2">
                             Área de alcance: ${timeLimit} min ${isPrincipal ? "(Actual)" : ""}
                           </TooltipContent>
                         </Tooltip>
@@ -488,7 +507,85 @@ export function VisorMap({
           </div>
         )}
 
-        {/* Marcador Central de Origen (A) SIEMPRE VISIBLE */}
+        
+        {/* Capa independiente para Comparar (2 Rutas) */}
+        {hasGenerated && analysisMode === "compare" && destination && originB && (
+          <div 
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
+            style={{
+              transform: `translate(${pinOffset.x}px, ${pinOffset.y}px) scale(${1 / zoom})`
+            }}
+          >
+            <svg 
+              className="overflow-visible" 
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            >
+              <defs>
+                <filter id="glow-compare" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+              {/* Ruta A (Azul) */}
+              <path 
+                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                fill="none" 
+                className="stroke-primary stroke-[5] drop-shadow-2xl" 
+                strokeLinejoin="round" 
+                strokeLinecap="round" 
+                filter="url(#glow-compare)"
+              />
+              <path 
+                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                fill="none" 
+                stroke="white"
+                strokeWidth="2"
+                strokeDasharray="6 6"
+                strokeLinejoin="round" 
+                strokeLinecap="round" 
+                className="opacity-80 animate-[dash_1s_linear_infinite]"
+              />
+            </svg>
+          </div>
+        )}
+
+        {/* Segundo SVG para Ruta B relativo a pin B */}
+        {hasGenerated && analysisMode === "compare" && destination && originB && (
+          <div 
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
+            style={{
+              transform: `translate(calc(-140px + ${originBPinOffset.x}px), calc(90px + ${originBPinOffset.y}px)) scale(${1 / zoom})`
+            }}
+          >
+            <svg 
+              className="overflow-visible" 
+              style={{ position: 'absolute', top: 0, left: 0 }}
+            >
+              {/* Ruta B (Morada) */}
+              <path 
+                d={`M 0 0 L 0 ${-180 + destPinOffset.y - originBPinOffset.y} L ${300 + destPinOffset.x - originBPinOffset.x} ${-180 + destPinOffset.y - originBPinOffset.y}`}
+                fill="none" 
+                className="stroke-purple-500 stroke-[5] drop-shadow-2xl" 
+                strokeLinejoin="round" 
+                strokeLinecap="round" 
+                filter="url(#glow-compare)"
+              />
+              <path 
+                d={`M 0 0 L 0 ${-180 + destPinOffset.y - originBPinOffset.y} L ${300 + destPinOffset.x - originBPinOffset.x} ${-180 + destPinOffset.y - originBPinOffset.y}`}
+                fill="none" 
+                stroke="white"
+                strokeWidth="2"
+                strokeDasharray="6 6"
+                strokeLinejoin="round" 
+                strokeLinecap="round" 
+                className="opacity-80 animate-[dash_1s_linear_infinite]"
+              />
+            </svg>
+          </div>
+        )}
+  
+
+{/* Marcador Central de Origen (A) SIEMPRE VISIBLE */}
         <div 
           className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
           style={{
@@ -526,7 +623,47 @@ export function VisorMap({
           </TooltipProvider>
         </div>
 
-        {/* Marcador de Destino (B) interactivo */}
+        
+        {/* Marcador de Origen B interactivo (Modo Compare) */}
+        {analysisMode === "compare" && originB && (
+          <div 
+            className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
+            style={{
+              transform: `translate(calc(-140px + ${originBPinOffset.x}px), calc(90px + ${originBPinOffset.y}px)) scale(${1 / zoom})`
+            }}
+            onMouseDown={handleOriginBPinMouseDown}
+          >
+            <Badge 
+              variant="secondary" 
+              appearance="default"
+              className="mb-1.5 shadow-2xl bg-purple-500 text-white text-[11px] font-bold py-1 px-3 flex items-center gap-1.5 pointer-events-none animate-in fade-in zoom-in duration-300 border-none"
+            >
+              <MapPin className="size-3.5 shrink-0" />
+              <span>Origen (B): {originB.replace(" (Reubicado)", "")}</span>
+            </Badge>
+
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className={cn(
+                      "p-2 rounded-full shadow-2xl border-none transition-all duration-300 hover:scale-125 bg-purple-500 text-white group active:scale-95",
+                      isDraggingOriginBPin && "ring-4 ring-purple-500/50 scale-125"
+                    )}
+                  >
+                    <MapPin className="size-4 animate-bounce" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent variant="secondary" side="bottom" sideOffset={6} className="text-xs font-bold">
+                  Toca o arrastra para mover
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )}
+
+
+{/* Marcador de Destino (B) interactivo */}
         {destination && (
           <div 
             className="absolute top-1/2 left-1/2 flex flex-col items-center z-20 pointer-events-auto cursor-grab active:cursor-grabbing transition-transform duration-75"
@@ -631,13 +768,13 @@ export function VisorMap({
               if (analysisMode === "explore") {
                 const subTime = travelTime * (D / boundaryR);
                 if (subTime <= 5) {
-                  poiColorClass = "bg-[#2563eb]"; // Color 5min
+                  poiColorClass = "bg-isochrone-5min"; // Color 5min
                 } else if (subTime <= 10) {
-                  poiColorClass = "bg-[#3b82f6]"; // Color 10min
+                  poiColorClass = "bg-isochrone-10min"; // Color 10min
                 } else if (subTime <= 15) {
-                  poiColorClass = "bg-[#60a5fa]"; // Color 15min
+                  poiColorClass = "bg-isochrone-15min"; // Color 15min
                 } else {
-                  poiColorClass = "bg-[#93c5fd]";
+                  poiColorClass = "bg-isochrone-30min";
                 }
                 // Si el POI está hovered, podemos hacerlo resaltar aún más
               }
@@ -713,7 +850,7 @@ export function VisorMap({
                           {selectedPoi === poi.id && (
                             <div className="mt-2.5 pt-2 border-t border-border/40 flex justify-end">
                               <Button 
-                                size="xs" 
+                                size="sm" 
                                 variant="primary" 
                                 className="h-6 text-[9px] font-bold rounded-lg cursor-pointer px-3"
                                 onClick={(e) => {

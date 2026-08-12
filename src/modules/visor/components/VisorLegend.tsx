@@ -158,65 +158,100 @@ export function VisorLegend({
 
   // Compare
   if (analysisMode === "compare") {
-    // Simulamos un ganador. Si travelTime > 15, B gana. Si no, A gana.
-    const timeA = travelTime;
-    const timeB = Math.max(5, travelTime - 9); // mock diff
-    const diff = Math.abs(timeA - timeB);
-    const winner = timeA <= timeB ? "Punto A" : "Punto B";
-    const winnerName = timeA <= timeB ? (origin || "Punto A") : (originB || "Punto B");
+    // Calculamos tiempos y distancias mock simulados
+    const timeA = Math.round(travelTime * 1.2);
+    const distA = ((timeA * 0.4) + 1.2).toFixed(1);
+    
+    const timeB = Math.round(travelTime * 0.8);
+    const distB = ((timeB * 0.4) + 1.2).toFixed(1);
+
+    const winner = timeA < timeB ? "A" : "B";
+    const winnerTime = Math.min(timeA, timeB);
+    const loserTime = Math.max(timeA, timeB);
+    const diff = loserTime - winnerTime;
+    const winnerName = winner === "A" ? origin : (originB || "Origen B");
+    const loserName = winner === "A" ? (originB || "Origen B") : origin;
 
     return (
-      <Card variant="featured" className={cn("absolute bottom-6 left-6 md:left-[440px] w-80 shadow-2xl z-30 transition-all duration-300 pointer-events-auto", isMinimized && "w-auto")}>
+      <Card variant="featured" className={cn("absolute bottom-6 left-6 md:left-[440px] w-[340px] shadow-2xl z-30 transition-all duration-300 pointer-events-auto", isMinimized && "w-auto")}>
         {!isMinimized ? (
           <>
             <button onClick={() => setIsMinimized(true)} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
               <Minimize2 className="size-4" />
             </button>
-            <CardHeader className="pb-3 border-b border-border/50 mb-3">
+            <CardHeader className="pb-2">
                <div className="flex items-center gap-2">
-                 <Scale className="size-4 text-warning" />
+                 <Scale className="size-4 text-primary" />
                  <CardTitle className="text-xs text-foreground font-bold">Resumen de la comparación</CardTitle>
                </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col gap-2">
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                       <span className="size-2.5 rounded-full bg-primary shadow-xs shrink-0" />
-                       <span className="text-xs font-bold text-muted-foreground">Punto A → Destino</span>
-                    </div>
-                    <span className="text-sm font-black text-foreground">{timeA} min</span>
-                 </div>
-                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                       <span className="size-2.5 rounded-full bg-secondary shadow-xs shrink-0" />
-                       <span className="text-xs font-bold text-muted-foreground">Punto B → Destino</span>
-                    </div>
-                    <span className="text-sm font-black text-foreground">{timeB} min</span>
-                 </div>
-              </div>
               
-              <div className="bg-success/10 border border-success/20 rounded-xl p-3 flex flex-col gap-1">
-                 <span className="text-[10px] text-success font-bold uppercase tracking-wider">Mejor accesibilidad</span>
-                 <span className="text-sm font-black text-success truncate">{winnerName}</span>
-                 <span className="text-xs text-success/80">{diff} min más rápido</span>
+              <div className="space-y-3">
+                {/* Ruta A */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="size-2.5 rounded-full bg-primary shrink-0" />
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px]">{origin || "Punto A"}</span>
+                    <span className="text-xs text-muted-foreground/50">→</span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[80px]">Destino</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-bold text-primary">{timeA} min</span>
+                    <span className="text-[10px] text-muted-foreground">{distA} km</span>
+                  </div>
+                </div>
+
+                {/* Ruta B */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="size-2.5 rounded-full bg-purple-500 shrink-0" />
+                    <span className="text-xs text-muted-foreground truncate max-w-[120px]">{originB || "Punto B"}</span>
+                    <span className="text-xs text-muted-foreground/50">→</span>
+                    <span className="text-xs text-muted-foreground truncate max-w-[80px]">Destino</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-sm font-bold text-purple-500">{timeB} min</span>
+                    <span className="text-[10px] text-muted-foreground">{distB} km</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="pt-3 border-t border-border/50 text-xs">
-                 <div className="flex items-start gap-2 text-muted-foreground">
-                    <Sparkles className="size-3.5 text-info shrink-0 mt-0.5" />
-                    <p className="leading-snug">
-                      <strong>Insight:</strong> El {winner} ofrece mejor accesibilidad al destino, reduciendo el tiempo de viaje significativamente.
-                    </p>
-                 </div>
+              {/* Mejor Accesibilidad */}
+              <div className="pt-3 border-t border-border/50">
+                <div className="flex gap-2">
+                  <div className="mt-0.5">
+                    <span className="text-lg">🏆</span>
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-foreground">
+                      Mejor accesibilidad: <span className={winner === "A" ? "text-primary" : "text-purple-500"}>{winnerName}</span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      Ahorra {diff} minutos frente a {loserName}.
+                    </div>
+                  </div>
+                </div>
               </div>
+              
+              {/* Insight IA */}
+              <div className="bg-surface rounded-lg p-3 border border-border/60">
+                <div className="flex gap-1.5 items-center mb-1">
+                  <span className="text-sm">✨</span>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-foreground">Insight</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  El <strong>{winnerName}</strong> ofrece mejor accesibilidad al destino y reduce el tiempo de viaje en {diff} minutos usando {transportLabel.toLowerCase()}.
+                </p>
+              </div>
+
             </CardContent>
           </>
         ) : (
            <div className="px-4 py-3 flex items-center justify-between gap-4 cursor-pointer" onClick={() => setIsMinimized(false)}>
               <div className="flex items-center gap-2">
-                 <Scale className="size-4 text-warning" />
-                 <span className="text-sm font-bold">Ganador: {winner}</span>
+                 <Scale className="size-4 text-primary" />
+                 <span className="text-sm font-bold">Ganador: {winnerName}</span>
               </div>
               <Maximize2 className="size-3.5 text-muted-foreground" />
            </div>
@@ -225,5 +260,4 @@ export function VisorLegend({
     );
   }
 
-  return null;
 }

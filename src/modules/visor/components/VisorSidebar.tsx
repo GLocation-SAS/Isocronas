@@ -167,6 +167,8 @@ interface VisorSidebarProps {
   onTimeChange: (time: number) => void;
   origin: string;
   onOriginChange: (val: string) => void;
+  originB?: string;
+  onOriginBChange?: (val: string) => void;
   destination: string;
   onDestinationChange: (val: string) => void;
   onGenerate: () => void;
@@ -178,7 +180,7 @@ interface VisorSidebarProps {
   onLocateClick?: () => void;
   onOpenExport?: () => void;
   isOutdated?: boolean;
-  outdatedReason?: "location" | "transport" | "time" | null;
+  outdatedReason?: "location" | "transport" | "time" | "mode" | null;
   generatedTravelTime?: number;
   generatedTransportMode?: string;
 }
@@ -193,6 +195,8 @@ export function VisorSidebar({
   onTimeChange,
   origin,
   onOriginChange,
+  originB,
+  onOriginBChange,
   destination,
   onDestinationChange,
   onGenerate,
@@ -224,7 +228,7 @@ export function VisorSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showMainCard, setShowMainCard] = useState(true);
-  const [activeInput, setActiveInput] = useState<'A' | 'B'>('A');
+  const [activeInput, setActiveInput] = useState<'A' | 'B' | 'DEST'>('A');
   const [showAdvanced, setShowAdvanced] = useState(true);
   const [inputMethod, setInputMethod] = useState<"search" | "map" | "gps">("search");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -232,18 +236,7 @@ export function VisorSidebar({
   
   // Nuevo estado para la intención de análisis: explorar, ruta o comparar
 
-  // Sincronizar el modo de análisis con las variables globales del visor (por ejemplo, al activar presets)
-  useEffect(() => {
-    if (destination) {
-      if (profile === "tecnico" || profile === "ciudadano") {
-        onAnalysisModeChange("compare");
-      } else {
-        onAnalysisModeChange("route");
-      }
-    } else {
-      onAnalysisModeChange("explore");
-    }
-  }, [destination, profile]);
+  // Sincronizar el modo de análisis eliminado para evitar sobreescribir la selección manual del usuario
 
   // Cinco modos de transporte con colores diferentes según tokens semánticos globales
   const transportModes = [
@@ -443,7 +436,7 @@ export function VisorSidebar({
             <ActiveModeIcon className="size-4" />
           </div>
 
-          {analysisMode !== "route" && (
+          {analysisMode === "explore" && (
             <div 
               className="flex flex-col items-center justify-center px-1.5 py-1 rounded-xl bg-surface border border-border/60 text-[10px] font-bold text-foreground cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => setIsCollapsed(false)}
@@ -797,13 +790,15 @@ export function VisorSidebar({
           {inputMethod === "search" ? (
             <div className="relative w-full z-30">
               <Search
-                placeholder={activeInput === 'A' ? "Ej: Parque Central Simón Bolívar, Bogotá" : "Ej: Centro Comercial Gran Estación, Bogotá"}
-                value={activeInput === 'A' ? origin : destination}
+                placeholder={activeInput === 'A' ? "Ej: Parque Central Simón Bolívar" : activeInput === 'B' ? "Ej: Centro Comercial Gran Estación" : "Ej: Universidad Nacional"}
+                value={activeInput === 'A' ? origin : activeInput === 'B' ? (originB || "") : destination}
                 onFocus={() => setShowSuggestions(true)}
                 onChange={(e) => {
                   setShowSuggestions(true);
                   if (activeInput === 'A') {
                     onOriginChange(e.target.value);
+                  } else if (activeInput === 'B') {
+                    onOriginBChange?.(e.target.value);
                   } else {
                     onDestinationChange(e.target.value);
                   }
@@ -812,6 +807,8 @@ export function VisorSidebar({
                   setShowSuggestions(false);
                   if (activeInput === 'A') {
                     onOriginChange("");
+                  } else if (activeInput === 'B') {
+                    onOriginBChange?.("");
                   } else {
                     onDestinationChange("");
                   }
@@ -842,6 +839,8 @@ export function VisorSidebar({
                           onClick={() => {
                             if (activeInput === 'A') {
                               onOriginChange(item.title);
+                            } else if (activeInput === 'B') {
+                              onOriginBChange?.(item.title);
                             } else {
                               onDestinationChange(item.title);
                             }
@@ -1004,13 +1003,96 @@ export function VisorSidebar({
                 </div>
               </div>
 
-              {/* Ubicación B */}
+              
+              {/* Origen B (solo compare) */}
+              {analysisMode === "compare" && (
+                <div 
+                  onClick={() => setActiveInput(analysisMode === "compare" ? 'DEST' : 'B')}
+                  className={cn(
+                    "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
+                    activeInput === 'B' 
+                      ? "border-purple-500 bg-purple-500/5 shadow-xs ring-1 ring-purple-500/20" 
+                      : "border-border/60 bg-card hover:bg-surface/50"
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-col gap-0.5 opacity-30 cursor-grab shrink-0">
+                      <span className="size-1 rounded-full bg-foreground" />
+                      <span className="size-1 rounded-full bg-foreground" />
+                      <span className="size-1 rounded-full bg-foreground" />
+                    </div>
+
+                    <div className="flex items-center justify-center size-9 rounded-full bg-purple-500/10 text-purple-500 font-bold text-sm shrink-0">
+                      <MapPin className="size-4" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate max-w-[120px] md:max-w-[160px]">
+                        {originB || "Centro Comercial Gran Estación"}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[160px]">
+                        {originB ? "Bogotá, Colombia" : "Ac. 26 # 68B-50, Bogotá, Colombia"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="secondary" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none bg-purple-500/10 text-purple-500">
+                      ORIGEN B
+                    </Badge>
+
+                    {/* Botón Reemplazar / Editar */}
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button 
+                            type="button"
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-purple-500/10 hover:text-purple-500 hover:border-purple-500/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveInput('B');
+                              setInputMethod('search');
+                            }}
+                          >
+                            <Pencil className="size-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent variant="secondary" side="right" sideOffset={8} className="text-xs font-bold">
+                          Editar Origen B
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Botón Eliminar */}
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button 
+                            type="button"
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onOriginBChange) {
+                                onOriginBChange("");
+                              }
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
+                          Eliminar Origen B
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              )}
+
+              {/* Ubicación B (Destino) */}
               {analysisMode !== "explore" ? (
                 <div 
                   onClick={() => setActiveInput('B')}
                   className={cn(
                     "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
-                    activeInput === 'B' 
+                    (activeInput === 'B' && analysisMode !== 'compare') || activeInput === 'DEST'
                       ? "border-warning bg-warning/5 shadow-xs ring-1 ring-warning/20" 
                       : "border-border/60 bg-card hover:bg-surface/50"
                   )}
@@ -1094,8 +1176,9 @@ export function VisorSidebar({
                 <div 
                   onClick={() => {
                     onAnalysisModeChange("compare");
-                    onDestinationChange("Centro Comercial Gran Estación");
-                    setActiveInput('B');
+                    onOriginBChange?.("Centro Comercial Gran Estación");
+                    onDestinationChange("Universidad Nacional");
+                    setActiveInput('DEST');
                   }}
                   className="flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-border/80 bg-surface/10 hover:bg-surface/30 transition-all cursor-pointer group"
                 >

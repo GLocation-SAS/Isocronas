@@ -232,6 +232,8 @@ export function VisorView() {
               onTimeChange={setTravelTime}
               origin={origin}
               onOriginChange={setOrigin}
+          originB={originB}
+          onOriginBChange={setOriginB}
               destination={destination}
               onDestinationChange={setDestination}
               onGenerate={handleGenerate}
