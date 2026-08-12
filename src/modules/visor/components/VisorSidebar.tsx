@@ -113,7 +113,7 @@ const MOCK_ADDRESS_SUGGESTIONS = [
     info: "Transporte • Engativá",
     badgeVariant: "secondary" as const,
     icon: Compass,
-    color: "bg-purple-500/20 text-purple-400 border border-purple-500/30",
+    color: "bg-info/20 text-info-400 border border-info/30",
   },
 ];
 
@@ -140,7 +140,7 @@ const getLocationIcon = (addressName: string, fallbackLetter: string) => {
     return <Building2 className="size-4 text-info" />;
   }
   if (nameLower.includes("aeropuerto") || nameLower.includes("dorado") || nameLower.includes("terminal") || nameLower.includes("transporte")) {
-    return <Compass className="size-4 text-purple-400" />;
+    return <Compass className="size-4 text-info-400" />;
   }
   return <MapPin className="size-4 text-primary" />;
 };
@@ -730,10 +730,10 @@ export function VisorSidebar({
             <TooltipProvider delayDuration={100}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button type="button" className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer pt-0.5 shrink-0">
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer pt-0.5 shrink-0">
                     <HelpCircle className="size-3.5" />
                     <span>¿Cómo hacerlo?</span>
-                  </button>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent variant="info" side="right" sideOffset={8} className="max-w-xs text-left p-3 text-xs leading-normal">
                   Busca una dirección en el cuadro de búsqueda, haz clic directamente en cualquier punto del mapa, o usa tu GPS para detectar tu ubicación actual.
@@ -744,8 +744,7 @@ export function VisorSidebar({
 
           {/* Capsule Tab Selector (Buscar, Mapa, GPS) */}
           <div className="grid grid-cols-3 gap-1 bg-surface/40 border border-border/70 p-0.5 rounded-xl">
-            <button
-              type="button"
+            <div
               onClick={() => setInputMethod("search")}
               className={cn(
                 "flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-[9px] font-bold transition-all cursor-pointer",
@@ -758,10 +757,9 @@ export function VisorSidebar({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Buscar dirección
-            </button>
+            </div>
 
-            <button
-              type="button"
+            <div
               onClick={() => setInputMethod("map")}
               className={cn(
                 "flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-[9px] font-bold transition-all cursor-pointer",
@@ -772,10 +770,9 @@ export function VisorSidebar({
             >
               <MapPin className="size-3.5 mr-1" />
               Seleccionar mapa
-            </button>
+            </div>
 
-            <button
-              type="button"
+            <div
               onClick={() => {
                 onLocateClick?.();
                 setInputMethod("search");
@@ -784,7 +781,7 @@ export function VisorSidebar({
             >
               <Navigation className="size-3.5 rotate-45 mr-1" />
               Ubicación actual
-            </button>
+            </div>
           </div>
 
           {inputMethod === "search" ? (
@@ -821,13 +818,12 @@ export function VisorSidebar({
                 <div className="absolute top-full left-0 right-0 mt-1.5 z-50 rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden divide-y divide-border/40 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="flex items-center justify-between px-3.5 py-2 bg-surface/60 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     <span>Sugerencias (Bogotá, Colombia)</span>
-                    <button 
-                      type="button" 
+                    <div 
                       onClick={() => setShowSuggestions(false)} 
                       className="text-muted-foreground hover:text-foreground text-[10px] font-medium cursor-pointer"
                     >
                       Cerrar ✕
-                    </button>
+                    </div>
                   </div>
                   
                   <div className="max-h-64 overflow-y-auto">
@@ -879,8 +875,20 @@ export function VisorSidebar({
                       <AlertTriangle className="size-4 text-warning shrink-0" />
                       <div className="text-[11px] text-foreground space-y-1">
                         <strong className="text-warning font-bold block">Sin resultados</strong>
-                        <p>No encontramos servicios para algunas categorías activas dentro de tu zona de alcance actual.</p>
-                        <p className="text-muted-foreground">Prueba aumentando el tiempo de viaje o seleccionando otro punto de origen para encontrar más opciones.</p>
+                        <p>
+                          {analysisMode === "explore" && "No encontramos servicios de esta categoría dentro de tu área de alcance."}
+                          {analysisMode === "route" && "No encontramos servicios de esta categoría cerca de tu recorrido."}
+                          {analysisMode === "compare" && "No encontramos servicios de esta categoría cerca de las rutas comparadas."}
+                        </p>
+                        {analysisMode === "explore" && (
+                          <p className="text-muted-foreground">Prueba aumentando el tiempo de viaje o seleccionando otro punto de origen para encontrar más opciones.</p>
+                        )}
+                        {analysisMode === "route" && (
+                          <p className="text-muted-foreground">Prueba cambiando el medio de transporte o reubicando los puntos de origen o destino.</p>
+                        )}
+                        {analysisMode === "compare" && (
+                          <p className="text-muted-foreground">Prueba seleccionando otras ubicaciones o cambiando el medio de transporte.</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -909,8 +917,7 @@ export function VisorSidebar({
                 </span>
               </div>
               
-              <button
-                type="button"
+              <div
                 onClick={() => {
                   onReset();
                 }}
@@ -920,7 +927,7 @@ export function VisorSidebar({
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
                 <span>Borrar todo</span>
-              </button>
+              </div>
             </div>
 
             {/* Listado de Ubicaciones */}
@@ -965,8 +972,7 @@ export function VisorSidebar({
                   <TooltipProvider delayDuration={100}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button 
-                          type="button"
+                        <div 
                           className="rounded-lg border border-border/80 bg-surface/50 hover:bg-primary/10 hover:text-primary hover:border-primary/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -974,7 +980,7 @@ export function VisorSidebar({
                           }}
                         >
                           <Pencil className="size-3.5" />
-                        </button>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold">
                         Reemplazar esta ubicación
@@ -984,8 +990,7 @@ export function VisorSidebar({
                     {/* Botón Eliminar */}
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button 
-                          type="button"
+                        <div 
                           className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -993,7 +998,7 @@ export function VisorSidebar({
                           }}
                         >
                           <Trash2 className="size-3.5" />
-                        </button>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
                         Eliminar ubicación A
@@ -1011,7 +1016,7 @@ export function VisorSidebar({
                   className={cn(
                     "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
                     activeInput === 'B' 
-                      ? "border-purple-500 bg-purple-500/5 shadow-xs ring-1 ring-purple-500/20" 
+                      ? "border-info bg-info/5 shadow-xs ring-1 ring-info/20" 
                       : "border-border/60 bg-card hover:bg-surface/50"
                   )}
                 >
@@ -1022,7 +1027,7 @@ export function VisorSidebar({
                       <span className="size-1 rounded-full bg-foreground" />
                     </div>
 
-                    <div className="flex items-center justify-center size-9 rounded-full bg-purple-500/10 text-purple-500 font-bold text-sm shrink-0">
+                    <div className="flex items-center justify-center size-9 rounded-full bg-info/10 text-info font-bold text-sm shrink-0">
                       <MapPin className="size-4" />
                     </div>
                     <div className="text-left min-w-0">
@@ -1036,7 +1041,7 @@ export function VisorSidebar({
                   </div>
                   
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge variant="secondary" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none bg-purple-500/10 text-purple-500">
+                    <Badge variant="secondary" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none bg-info/10 text-info">
                       ORIGEN B
                     </Badge>
 
@@ -1044,9 +1049,8 @@ export function VisorSidebar({
                     <TooltipProvider delayDuration={100}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button 
-                            type="button"
-                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-purple-500/10 hover:text-purple-500 hover:border-purple-500/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                          <div 
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-info/10 hover:text-info hover:border-info/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               setActiveInput('B');
@@ -1054,7 +1058,7 @@ export function VisorSidebar({
                             }}
                           >
                             <Pencil className="size-3.5" />
-                          </button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent variant="secondary" side="right" sideOffset={8} className="text-xs font-bold">
                           Editar Origen B
@@ -1064,8 +1068,7 @@ export function VisorSidebar({
                       {/* Botón Eliminar */}
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button 
-                            type="button"
+                          <div 
                             className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1075,7 +1078,7 @@ export function VisorSidebar({
                             }}
                           >
                             <Trash2 className="size-3.5" />
-                          </button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
                           Eliminar Origen B
@@ -1134,8 +1137,7 @@ export function VisorSidebar({
                     <TooltipProvider delayDuration={100}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button 
-                            type="button"
+                          <div 
                             className="rounded-lg border border-border/80 bg-surface/50 hover:bg-warning/10 hover:text-warning hover:border-warning/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1143,7 +1145,7 @@ export function VisorSidebar({
                             }}
                           >
                             <Pencil className="size-3.5" />
-                          </button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent variant="warning" side="right" sideOffset={8} className="text-xs font-bold">
                           Reemplazar esta ubicación
@@ -1268,7 +1270,7 @@ export function VisorSidebar({
         </div>
 
         {/* Ocultar sección de tiempo en modo calcular ruta */}
-        {analysisMode !== "route" && (
+        {analysisMode === "explore" && (
           <>
             <Separator className="bg-border/50" />
 
@@ -1378,7 +1380,7 @@ export function VisorSidebar({
                 >
                   <div className="flex items-center gap-2">
                     <span className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">
-                      {analysisMode === "route" ? 3 : 4}
+                      {analysisMode === "explore" ? 4 : 3}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-foreground">
@@ -1404,13 +1406,20 @@ export function VisorSidebar({
               <div className="p-2.5 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-2.5 text-left text-[11px] text-muted-foreground">
                 <Info className="size-4 text-primary shrink-0 mt-0.5" />
                 <p className="leading-snug">
-                  <strong className="text-primary font-bold">Paso Opcional:</strong> Puedes activar o ajustar estas capas de servicios en cualquier momento, <strong>antes o después</strong> de generar tu análisis.
+                  <strong className="text-primary font-bold">Paso Opcional: </strong>
+                  {analysisMode === "explore" && "Activa las categorías que quieras visualizar dentro del área a la que puedes llegar en el tiempo seleccionado."}
+                  {analysisMode === "route" && "Encuentra servicios cercanos durante tu recorrido."}
+                  {analysisMode === "compare" && "Compara los servicios disponibles cerca de cada recorrido."}
                 </p>
               </div>
               {/* Profile Specific Controls inside Advanced */}
               {profile === "ciudadano" && (
                 <div className="space-y-2 pt-1 animate-in fade-in duration-300">
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Servicios a tu alrededor</h4>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    {analysisMode === "explore" && "Servicios dentro de tu alcance"}
+                    {analysisMode === "route" && "Servicios cerca de tu recorrido"}
+                    {analysisMode === "compare" && "Servicios cerca de las rutas"}
+                  </h4>
                   <div className="grid grid-cols-2 gap-2">
                     <label className={cn("flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors", activeServices.includes("hospitals") ? "border-danger/50 bg-danger/5" : "border-border/50 bg-background/50 hover:bg-surface/50")}>
                       <div className="flex items-center gap-2">
@@ -1618,9 +1627,9 @@ export function VisorSidebar({
                           <TooltipProvider delayDuration={100}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button type="button" className="text-muted-foreground hover:text-info cursor-pointer">
-                                  <Info className="size-3.5" />
-                                </button>
+                                <Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-info" >
+                                  <Trash2 className="size-3" />
+                                </Button>
                               </TooltipTrigger>
                               <TooltipContent variant="info" side="top" sideOffset={6} className="text-xs font-medium max-w-xs leading-relaxed">
                                 Distancia tope en metros que delimita la cobertura máxima del análisis desde el punto de origen.
@@ -1646,9 +1655,9 @@ export function VisorSidebar({
                           <TooltipProvider delayDuration={100}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button type="button" className="text-muted-foreground hover:text-info cursor-pointer">
-                                  <Info className="size-3.5" />
-                                </button>
+                                <Button variant="ghost" size="icon-xs" className="text-muted-foreground hover:text-info" >
+                                  <Trash2 className="size-3" />
+                                </Button>
                               </TooltipTrigger>
                               <TooltipContent variant="info" side="top" sideOffset={6} className="text-xs font-medium max-w-xs leading-relaxed">
                                 Precisión de los vértices del polígono en metros. Valores más bajos aumentan el detalle topológico.

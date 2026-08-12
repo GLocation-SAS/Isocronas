@@ -121,10 +121,10 @@ const buttonVariants = cva(
           "bg-transparent",
 
           // Radial
-          "[--radial-bg:hsl(var(--foreground)/0.10)]",
+          "[--radial-bg:color-mix(in srgb, var(--foreground) 10%, transparent)]",
 
           // Glow
-          "[--glow:hsl(var(--foreground)/0.20)]",
+          "[--glow:color-mix(in srgb, var(--foreground) 20%, transparent)]",
 
           // Hover
           "hover:text-foreground",
@@ -139,16 +139,16 @@ const buttonVariants = cva(
           "text-muted-foreground",
 
           // Radial
-          "[--radial-bg:hsl(var(--muted-foreground)/0.25)]",
+          "[--radial-bg:color-mix(in srgb, var(--muted-foreground) 25%, transparent)]",
 
           // Glow
-          "[--glow:hsl(var(--muted-foreground)/0.20)]",
+          "[--glow:color-mix(in srgb, var(--muted-foreground) 20%, transparent)]",
 
           // Hover
           "hover:border-foreground",
           "hover:bg-foreground",
-          "hover:text-white",
-          "hover:shadow-[0_0_20px_-10px_hsl(var(--foreground)/0.25)]",
+          "hover:text-background dark:hover:text-background",
+          "hover:shadow-[0_0_20px_-10px_color-mix(in srgb, var(--foreground) 25%, transparent)]",
         ].join(" "),
       },
 

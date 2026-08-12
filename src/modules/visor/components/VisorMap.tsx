@@ -73,6 +73,71 @@ const MotorcycleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 </svg>
 );
 
+const isPoiNearSegment = (
+  poi: { dx: number; dy: number },
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  threshold: number = 65
+) => {
+  const px = poi.dx;
+  const py = poi.dy;
+  const ax = start.x;
+  const ay = start.y;
+  const bx = end.x;
+  const by = end.y;
+  
+  const abx = bx - ax;
+  const aby = by - ay;
+  const apx = px - ax;
+  const apy = py - ay;
+  
+  const abLen2 = abx * abx + aby * aby;
+  if (abLen2 === 0) return Math.sqrt(apx * apx + apy * apy) <= threshold;
+  
+  let t = (apx * abx + apy * aby) / abLen2;
+  t = Math.max(0, Math.min(1, t));
+  
+  const projx = ax + t * abx;
+  const projy = ay + t * aby;
+  
+  const dx = px - projx;
+  const dy = py - projy;
+  return Math.sqrt(dx * dx + dy * dy) <= threshold;
+};
+
+const isochroneColorClasses: Record<string, { fill: string; fillSub: string; stroke: string; strokeSub: string }> = {
+  "isochrone-5min": {
+    fill: "fill-isochrone-5min",
+    fillSub: "fill-isochrone-5min/40",
+    stroke: "stroke-isochrone-5min",
+    strokeSub: "stroke-white/20"
+  },
+  "isochrone-10min": {
+    fill: "fill-isochrone-10min",
+    fillSub: "fill-isochrone-10min/40",
+    stroke: "stroke-isochrone-10min",
+    strokeSub: "stroke-white/20"
+  },
+  "isochrone-15min": {
+    fill: "fill-isochrone-15min",
+    fillSub: "fill-isochrone-15min/40",
+    stroke: "stroke-isochrone-15min",
+    strokeSub: "stroke-white/20"
+  },
+  "isochrone-30min": {
+    fill: "fill-isochrone-30min",
+    fillSub: "fill-isochrone-30min/40",
+    stroke: "stroke-isochrone-30min",
+    strokeSub: "stroke-white/20"
+  },
+  "isochrone-maxmin": {
+    fill: "fill-isochrone-maxmin",
+    fillSub: "fill-isochrone-maxmin/40",
+    stroke: "stroke-isochrone-maxmin",
+    strokeSub: "stroke-white/20"
+  }
+};
+
 export function VisorMap({ 
   transportMode, 
   travelTime, 
@@ -345,6 +410,7 @@ export function VisorMap({
 
   const [hoveredPoi, setHoveredPoi] = useState<string | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<string | null>(null);
+  const [hoveredRing, setHoveredRing] = useState<number | null>(null);
 
   return (
     <div 
@@ -379,7 +445,7 @@ export function VisorMap({
         />
 
         {/* Capa de Polígonos e Isócronas por encima de Leaflet (solo tras generar) */}
-        {hasGenerated && showIsochroneLayer && (
+        {hasGenerated && showIsochroneLayer && analysisMode === "explore" && (
           <div className="absolute inset-0 pointer-events-none z-10">
             <div 
               className="absolute top-1/2 left-1/2 flex items-center justify-center transition-all duration-300 ease-out"
@@ -391,59 +457,89 @@ export function VisorMap({
             >
               <svg viewBox="0 0 1000 1000" className="w-full h-full drop-shadow-2xl pointer-events-none" fillRule="evenodd">
                 
-                {analysisMode !== "route" && (
-                  <>
-{/* Isócronas Acumulativas */}
-                {analysisMode !== "compare" && (() => {
+                {(() => {
                   const T = travelTime;
                   
                   // Helper function to render a ring
                   const renderRing = (timeLimit: number, pathData: string, ringClassBase: string) => {
                     const isPrincipal = timeLimit === T;
-                    const ringClass = isPrincipal ? `fill-${ringClassBase}` : `fill-${ringClassBase}/40`;
-                    const strokeClass = isPrincipal ? `stroke-${ringClassBase}` : "stroke-white/20";
-                    const opacity = isPrincipal ? 0.6 : 0.2;
-                    const strokeWidth = isPrincipal ? 3 : 1;
+                    const isHovered = hoveredRing === timeLimit;
+                    const isAnyRingHovered = hoveredRing !== null;
+
+                    const colorData = isochroneColorClasses[ringClassBase] || {
+                      fill: `fill-${ringClassBase}`,
+                      fillSub: `fill-${ringClassBase}/40`,
+                      stroke: `stroke-${ringClassBase}`,
+                      strokeSub: "stroke-white/20"
+                    };
+
+                    let ringClass = isPrincipal ? colorData.fill : colorData.fillSub;
+                    let strokeClass = isPrincipal ? colorData.stroke : colorData.strokeSub;
+                    let opacity = isPrincipal ? 0.45 : 0.25;
+                    let strokeWidth = isPrincipal ? 2 : 1;
+                    let strokeDash = isPrincipal ? "none" : "4 4";
                     
+                    if (isAnyRingHovered) {
+                      if (isHovered) {
+                        opacity = 0.7;
+                        strokeWidth = 3.5;
+                        strokeClass = colorData.stroke; // pure color
+                        strokeDash = "none";
+                      } else {
+                        opacity = 0.1;
+                        strokeWidth = 0.5;
+                        strokeDash = "2 2";
+                      }
+                    }
+
                     return (
                       <TooltipProvider delayDuration={50} key={timeLimit}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <path 
                               d={pathData} 
-                              className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200 hover:fill-opacity-60`} 
+                              className={`${ringClass} pointer-events-auto cursor-pointer transition-all duration-200`} 
                               fillOpacity={opacity} 
+                              onMouseEnter={() => setHoveredRing(timeLimit)}
+                              onMouseLeave={() => setHoveredRing(null)}
                             />
                           </TooltipTrigger>
-                          <TooltipContent variant="neutral" className="text-xs font-bold p-2">
-                            Área de alcance: ${timeLimit} min ${isPrincipal ? "(Actual)" : ""}
+                          <TooltipContent variant="neutral" className="text-xs font-bold p-2 z-50">
+                            {timeLimit} minutos
                           </TooltipContent>
                         </Tooltip>
                         <path 
                           d={pathData} 
                           fill="none" 
-                          className={`${strokeClass} pointer-events-none`} 
+                          className={`${strokeClass} pointer-events-none transition-all duration-200`} 
                           strokeWidth={strokeWidth}
-                          strokeDasharray={isPrincipal ? "none" : "4 4"} 
+                          strokeDasharray={strokeDash} 
                         />
                       </TooltipProvider>
                     );
                   };
 
-                  const rings = [];
-                  if (T >= 5) rings.push(renderRing(5, getRingPath(R1), "isochrone-5min"));
-                  if (T >= 10) rings.push(renderRing(10, getRingPath(R2), "isochrone-10min"));
-                  if (T >= 15) rings.push(renderRing(15, getRingPath(R3), "isochrone-15min"));
-                  if (T >= 30) rings.push(renderRing(30, getRingPath(R4), "isochrone-30min"));
-                  if (T > 30) rings.push(renderRing(T, getRingPath(R5), "isochrone-maxmin"));
+                  const ringConfigs = [];
+                  if (T >= 5) ringConfigs.push({ limit: 5, path: path1, color: "isochrone-5min" });
+                  if (T >= 10) ringConfigs.push({ limit: 10, path: path2, color: "isochrone-10min" });
+                  if (T >= 15) ringConfigs.push({ limit: 15, path: path3, color: "isochrone-15min" });
+                  if (T >= 30) ringConfigs.push({ limit: 30, path: path4, color: "isochrone-30min" });
+                  if (T > 30) ringConfigs.push({ limit: T, path: path5, color: "isochrone-maxmin" });
 
-                  // Ensure they render back-to-front (largest first)
-                  return rings.reverse();
+                  // Sort to bring hovered ring to DOM rendering end (on top visual layer)
+                  const sortedConfigs = [...ringConfigs];
+                  if (hoveredRing !== null) {
+                    sortedConfigs.sort((a, b) => {
+                      if (a.limit === hoveredRing) return 1;
+                      if (b.limit === hoveredRing) return -1;
+                      return b.limit - a.limit; // largest first
+                    });
+                  } else {
+                    sortedConfigs.sort((a, b) => b.limit - a.limit); // largest first
+                  }
+
+                  return sortedConfigs.map(config => renderRing(config.limit, config.path, config.color));
                 })()}
-
-                  </>
-                )}
-
                 
 {/* Marcador circular central de origen removido del SVG */}
               
@@ -470,31 +566,30 @@ export function VisorMap({
         {/* Capa independiente para la Ruta (Solo modo Trayecto) */}
         {hasGenerated && analysisMode === "route" && destination && (
           <div 
-            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none overflow-visible"
             style={{
-              transform: `translate(${pinOffset.x}px, ${pinOffset.y}px) scale(${1 / zoom})`
+              width: 0,
+              height: 0
             }}
           >
-            <svg 
-              className="overflow-visible" 
-              style={{ position: 'absolute', top: 0, left: 0 }}
-            >
+            <svg className="overflow-visible absolute" style={{ top: 0, left: 0 }}>
               <defs>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <filter id="glow-route" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="4" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
+              {/* Línea principal que conecta exactamente A y B */}
               <path 
-                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
                 fill="none" 
-                className="stroke-primary stroke-[5] drop-shadow-2xl" 
+                className="stroke-primary stroke-[5] drop-shadow-2xl opacity-90" 
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
-                filter="url(#glow)"
+                filter="url(#glow-route)"
               />
               <path 
-                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
                 fill="none" 
                 stroke="white"
                 strokeWidth="2"
@@ -507,36 +602,33 @@ export function VisorMap({
           </div>
         )}
 
-        
-        {/* Capa independiente para Comparar (2 Rutas) */}
+        {/* Capas de Ruta para el Modo Comparación (2 Rutas) */}
         {hasGenerated && analysisMode === "compare" && destination && originB && (
           <div 
-            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
+            className="absolute top-1/2 left-1/2 z-15 pointer-events-none overflow-visible"
             style={{
-              transform: `translate(${pinOffset.x}px, ${pinOffset.y}px) scale(${1 / zoom})`
+              width: 0,
+              height: 0
             }}
           >
-            <svg 
-              className="overflow-visible" 
-              style={{ position: 'absolute', top: 0, left: 0 }}
-            >
+            <svg className="overflow-visible absolute" style={{ top: 0, left: 0 }}>
               <defs>
                 <filter id="glow-compare" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
-              {/* Ruta A (Azul) */}
+              {/* Ruta A (Azul: Origen A -> Destino) */}
               <path 
-                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
                 fill="none" 
-                className="stroke-primary stroke-[5] drop-shadow-2xl" 
+                className="stroke-primary stroke-[5] drop-shadow-2xl opacity-90" 
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
                 filter="url(#glow-compare)"
               />
               <path 
-                d={`M 0 0 L 0 ${-90 + destPinOffset.y - pinOffset.y} L ${160 + destPinOffset.x - pinOffset.x} ${-90 + destPinOffset.y - pinOffset.y}`}
+                d={`M ${pinOffset.x} ${pinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
                 fill="none" 
                 stroke="white"
                 strokeWidth="2"
@@ -545,33 +637,18 @@ export function VisorMap({
                 strokeLinecap="round" 
                 className="opacity-80 animate-[dash_1s_linear_infinite]"
               />
-            </svg>
-          </div>
-        )}
 
-        {/* Segundo SVG para Ruta B relativo a pin B */}
-        {hasGenerated && analysisMode === "compare" && destination && originB && (
-          <div 
-            className="absolute top-1/2 left-1/2 z-15 pointer-events-none"
-            style={{
-              transform: `translate(calc(-140px + ${originBPinOffset.x}px), calc(90px + ${originBPinOffset.y}px)) scale(${1 / zoom})`
-            }}
-          >
-            <svg 
-              className="overflow-visible" 
-              style={{ position: 'absolute', top: 0, left: 0 }}
-            >
-              {/* Ruta B (Morada) */}
+              {/* Ruta B (Morada: Origen B -> Destino) */}
               <path 
-                d={`M 0 0 L 0 ${-180 + destPinOffset.y - originBPinOffset.y} L ${300 + destPinOffset.x - originBPinOffset.x} ${-180 + destPinOffset.y - originBPinOffset.y}`}
+                d={`M ${-140 + originBPinOffset.x} ${90 + originBPinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
                 fill="none" 
-                className="stroke-purple-500 stroke-[5] drop-shadow-2xl" 
+                className="stroke-info stroke-[5] drop-shadow-2xl opacity-90" 
                 strokeLinejoin="round" 
                 strokeLinecap="round" 
                 filter="url(#glow-compare)"
               />
               <path 
-                d={`M 0 0 L 0 ${-180 + destPinOffset.y - originBPinOffset.y} L ${300 + destPinOffset.x - originBPinOffset.x} ${-180 + destPinOffset.y - originBPinOffset.y}`}
+                d={`M ${-140 + originBPinOffset.x} ${90 + originBPinOffset.y} L ${140 + destPinOffset.x} ${-90 + destPinOffset.y}`}
                 fill="none" 
                 stroke="white"
                 strokeWidth="2"
@@ -708,8 +785,16 @@ export function VisorMap({
             {MOCK_POIS.filter(poi => activeServices.includes(poi.type) || (poi.type === "stores" && activeServices.includes("shopping"))).map((poi) => {
               const PoiIcon = poi.icon;
               
-              // 1. Consulta espacial: Solo mostrar si está DENTRO de la isócrona actual
-              if (!isPoiInsideIsochrone(poi, travelTime, transportMode)) return null;
+              // 1. Consulta espacial según el modo de análisis
+              if (analysisMode === "explore") {
+                if (!isPoiInsideIsochrone(poi, travelTime, transportMode)) return null;
+              } else if (analysisMode === "route") {
+                if (!isPoiNearSegment(poi, { x: pinOffset.x, y: pinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y })) return null;
+              } else if (analysisMode === "compare") {
+                const nearA = isPoiNearSegment(poi, { x: pinOffset.x, y: pinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y });
+                const nearB = isPoiNearSegment(poi, { x: -140 + originBPinOffset.x, y: 90 + originBPinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y });
+                if (!nearA && !nearB) return null;
+              }
               
               // 2. Calcular el tiempo y la distancia personalizados
               const boundaryR = getRoadNetworkRadius(Math.atan2(poi.dy, poi.dx) * (180 / Math.PI) < 0 ? Math.atan2(poi.dy, poi.dx) * (180 / Math.PI) + 360 : Math.atan2(poi.dy, poi.dx) * (180 / Math.PI), 450);
@@ -776,7 +861,11 @@ export function VisorMap({
                 } else {
                   poiColorClass = "bg-isochrone-30min";
                 }
-                // Si el POI está hovered, podemos hacerlo resaltar aún más
+              } else if (analysisMode === "compare") {
+                const nearB = isPoiNearSegment(poi, { x: -140 + originBPinOffset.x, y: 90 + originBPinOffset.y }, { x: 140 + destPinOffset.x, y: -90 + destPinOffset.y });
+                if (nearB) {
+                  poiColorClass = "bg-info"; // Color de la Ruta B (Morado)
+                }
               }
   
               const { category, address } = getPoiDetails(poi);
@@ -786,8 +875,8 @@ export function VisorMap({
                   key={poi.id}
                   className="absolute flex items-center justify-center pointer-events-auto"
                   style={{
-                    left: `${markerPos.x + poi.dx}px`,
-                    top: `${markerPos.y + poi.dy}px`,
+                    left: `calc(50% + ${pinOffset.x + poi.dx}px)`,
+                    top: `calc(50% + ${pinOffset.y + poi.dy}px)`,
                     transform: `translate(-50%, -50%) scale(${1 / zoom})`,
                     zIndex: hoveredPoi === poi.id || selectedPoi === poi.id ? 40 : 20
                   }}
@@ -798,72 +887,83 @@ export function VisorMap({
                     setSelectedPoi(selectedPoi === poi.id ? null : poi.id);
                   }}
                 >
-                  <TooltipProvider delayDuration={100}>
-                    <Tooltip open={false}> {/* Desactivar el tooltip nativo ya que usamos la card flotante */}
-                      <TooltipTrigger asChild>
-                        <div className={cn("p-2 rounded-xl shadow-lg border border-white/20 transition-all duration-300 hover:scale-125 group hover:shadow-2xl cursor-pointer", poiColorClass, poiTextClass, hoveredPoi === poi.id || selectedPoi === poi.id ? "ring-2 ring-white scale-110 z-50" : "")}>
-                          <PoiIcon className="size-3.5 sm:size-4 text-white drop-shadow" />
-                        </div>
-                      </TooltipTrigger>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div className={cn("size-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-300 hover:scale-110", poiColorClass)}>
+                    <PoiIcon className={cn("size-4", poiTextClass)} />
+                  </div>
 
-                  {/* Card Flotante Premium (Hover / Click) */}
                   {(hoveredPoi === poi.id || selectedPoi === poi.id) && (
-                    <Card className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 p-3.5 bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl text-left pointer-events-auto z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                      <div className="flex items-start gap-2.5">
-                        <div className={cn("size-8 rounded-xl flex items-center justify-center shrink-0 border border-white/10 text-white shadow-sm", poi.color)}>
-                          <PoiIcon className="size-4.5" />
+                    <Card className="absolute bottom-full mb-3.5 left-1/2 -translate-x-1/2 w-80 p-4 bg-card/95 backdrop-blur-xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-3xl text-left pointer-events-auto z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 relative">
+                      {selectedPoi === poi.id && (
+                        <button 
+                          onClick={(e) => {
+                             e.stopPropagation();
+                             setSelectedPoi(null);
+                          }}
+                          className="absolute top-3.5 right-3.5 size-7 rounded-full border border-border/40 bg-surface/50 text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-all hover:scale-105"
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      )}
+                      
+                      <div className="flex gap-4">
+                        <div className={cn("size-14 rounded-full flex items-center justify-center shrink-0 text-white shadow-md bg-gradient-to-br from-white/10 to-transparent", poi.color)}>
+                          <PoiIcon className="size-6 text-white drop-shadow-md" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-1">
-                            <h4 className="text-xs font-bold text-foreground leading-tight truncate pr-2">{poi.name}</h4>
-                            {selectedPoi === poi.id && (
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedPoi(null);
-                                }}
-                                className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors p-0.5"
-                              >
-                                <X className="size-3.5" />
-                              </button>
-                            )}
-                          </div>
-                          <p className="text-[9px] text-primary font-bold mt-0.5 leading-none uppercase tracking-wider">{category}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1.5 truncate">📍 {address}</p>
-                          
-                          <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border/40 text-[10px] text-foreground font-bold">
-                            <span className="flex items-center gap-1.5">
-                              {transportMode === "walk" && <Footprints className="size-3.5 text-primary" />}
-                              {transportMode === "bike" && <Bike className="size-3.5 text-success" />}
-                              {transportMode === "transit" && <Train className="size-3.5 text-info" />}
-                              {transportMode === "car" && <Car className="size-3.5 text-foreground" />}
-                              {transportMode === "motorcycle" && <MotorcycleIcon className="size-3.5 text-warning" />}
-                              <span>{poiTime} min desde origen</span>
-                            </span>
-                            <span className="text-muted-foreground font-mono text-[9px] bg-surface px-1.5 py-0.5 rounded-md">
-                              {distanceKm.toFixed(1)} km
-                            </span>
-                          </div>
-                          
-                          {selectedPoi === poi.id && (
-                            <div className="mt-2.5 pt-2 border-t border-border/40 flex justify-end">
-                              <Button 
-                                size="sm" 
-                                variant="primary" 
-                                className="h-6 text-[9px] font-bold rounded-lg cursor-pointer px-3"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  alert(`Consultando detalle completo de ${poi.name}...`);
-                                }}
-                              >
-                                Ver detalle
-                              </Button>
-                            </div>
-                          )}
+                        <div className="flex-1 min-w-0 pr-6">
+                          <h4 className="text-[15px] font-extrabold text-foreground leading-tight tracking-tight truncate">{poi.name}</h4>
+                          <p className="text-[9px] font-bold text-primary tracking-wider uppercase mt-1 leading-none">{category}</p>
+                          <p className="text-[10.5px] text-muted-foreground mt-2 flex items-center gap-1.5 leading-none">
+                            <MapPin className="size-3.5 text-danger shrink-0" />
+                            <span className="truncate">{address}</span>
+                          </p>
                         </div>
                       </div>
+
+                      <div className="h-px bg-border/40 my-3" />
+
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {/* Métrica 1: Tiempo */}
+                        <div className="p-2.5 rounded-2xl border border-border/40 flex items-center gap-2.5 bg-surface/30">
+                          <div className="text-primary shrink-0">
+                            {transportMode === "walk" && <Footprints className="size-5" />}
+                            {transportMode === "bike" && <Bike className="size-5" />}
+                            {transportMode === "transit" && <Train className="size-5" />}
+                            {transportMode === "car" && <Car className="size-5" />}
+                            {transportMode === "motorcycle" && <MotorcycleIcon className="size-5" />}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[13px] font-black text-foreground leading-none">{poiTime} min</span>
+                            <span className="text-[9px] text-muted-foreground font-medium mt-0.5 leading-none">desde origen</span>
+                          </div>
+                        </div>
+
+                        {/* Métrica 2: Distancia */}
+                        <div className="p-2.5 rounded-2xl border border-border/40 flex items-center gap-2.5 bg-surface/30">
+                          <div className="text-success shrink-0">
+                            <MapPin className="size-5" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[13px] font-black text-foreground leading-none">{distanceKm.toFixed(1)} km</span>
+                            <span className="text-[9px] text-muted-foreground font-medium mt-0.5 leading-none">de distancia</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {selectedPoi === poi.id && (
+                        <div className="mt-3 flex justify-end">
+                          <Button 
+                            size="sm" 
+                            variant="primary" 
+                            className="h-6 text-[9.5px] font-bold rounded-lg cursor-pointer px-3"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              alert(`Consultando detalle completo de ${poi.name}...`);
+                            }}
+                          >
+                            Ver detalle
+                          </Button>
+                        </div>
+                      )}
                     </Card>
                   )}
                 </div>

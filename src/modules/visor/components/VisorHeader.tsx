@@ -56,6 +56,7 @@ export function VisorHeader({ onOpenGuide, profile, onProfileChange }: VisorHead
   };
 
   const currentProfile = PROFILES.find((p) => p.id === profile) ?? PROFILES[0];
+  const ProfileIcon = currentProfile.icon;
 
   const handleSelectProfile = (id: string) => {
     if (id === profile) return;
@@ -102,7 +103,7 @@ export function VisorHeader({ onOpenGuide, profile, onProfileChange }: VisorHead
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
                 <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-surface/50 hover:bg-muted/60 transition-colors cursor-pointer outline-none">
-                  <currentProfile.icon className="size-3.5 text-primary" />
+                  <ProfileIcon className="size-3.5 text-primary" />
                   <span className="text-xs font-semibold text-foreground">{currentProfile.label}</span>
                   <ChevronDown className={cn("size-3 text-muted-foreground transition-transform duration-200", dropdownOpen && "rotate-180")} />
                 </button>

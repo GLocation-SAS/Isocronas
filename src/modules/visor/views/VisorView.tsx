@@ -189,8 +189,10 @@ export function VisorView() {
             onLocateClick={() => setShowLocationModal(true)}
             hasGenerated={lastQueryTime !== null}
             isOutdated={isOutdated}
-            onMapClick={(address) => {
-              setOrigin(address);
+            onMapClick={(address, pinType = 'origin') => {
+              if (pinType === 'origin') setOrigin(address);
+              else if (pinType === 'originB') setOriginB(address);
+              else if (pinType === 'destination') setDestination(address);
               showToast(`Chincheta movida: ${address}`, "success");
             }}
           />
@@ -211,9 +213,11 @@ export function VisorView() {
           
           <VisorLegend 
             origin={lastQueryTime !== null ? generatedParams.origin : origin}
+            originB={lastQueryTime !== null ? generatedParams.originB : originB}
             destination={lastQueryTime !== null ? generatedParams.destination : destination}
             travelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
             transportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
+            analysisMode={lastQueryTime !== null ? generatedParams.analysisMode : analysisMode}
             hasGenerated={lastQueryTime !== null}
             onOpenExport={() => setShowExportModal(true)}
           />

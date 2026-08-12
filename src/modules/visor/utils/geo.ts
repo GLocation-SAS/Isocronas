@@ -94,7 +94,8 @@ export const isPoiInsideIsochrone = (
   const poiAngle = Math.atan2(poi.dy, poi.dx) * (180 / Math.PI);
   const angleDeg = poiAngle < 0 ? poiAngle + 360 : poiAngle;
   
-  const boundaryR = getRoadNetworkRadius(angleDeg, 450) * (maxSize / 1000);
+  const baseR = travelTime <= 5 ? 75 : travelTime <= 10 ? 150 : travelTime <= 15 ? 225 : travelTime <= 30 ? 300 : 450;
+  const boundaryR = getRoadNetworkRadius(angleDeg, baseR) * (maxSize / 1000);
   const D = Math.sqrt(poi.dx * poi.dx + poi.dy * poi.dy);
   
   return D <= boundaryR;

@@ -67,18 +67,17 @@ export function VisorQuickStepsCard({
           icon: Target,
           question: "¿Hasta dónde puedo llegar desde este punto?",
           mainData: null,
-          text: "Selecciona un punto, cómo te mueves y cuánto tiempo tienes.",
-          tip: "Tip: Amplía el tiempo para explorar una zona mayor."
+          text: "Selecciona un punto, cómo te mueves y cuánto tiempo tienes para visualizar tu área de alcance.",
+          tip: "Tip: Aumenta el tiempo para ampliar tu área de alcance."
         };
       } else {
         return {
           header: "Explorar",
           icon: Target,
           question: "¿Hasta dónde puedo llegar desde este punto?",
-          mainData: null,
-          text: `La zona coloreada muestra únicamente el área que puedes alcanzar dentro de ${travelTime} min en ${transportLabel}.`,
-          context: activeServicesCount > 0 ? `${activeServicesCount} servicios dentro de tu alcance.` : "No encontramos servicios de esta categoría dentro de tu zona actual.",
-          tip: "Tip: Amplía el tiempo para explorar una zona mayor."
+          mainData: `${travelTime} min · ${transportLabel}`,
+          text: "Esta zona muestra hasta dónde puedes llegar dentro del tiempo seleccionado.",
+          tip: "Tip: Aumenta el tiempo para ampliar tu área de alcance."
         };
       }
     }
@@ -88,21 +87,20 @@ export function VisorQuickStepsCard({
         return {
           header: "Trayecto",
           icon: Route,
-          question: "¿Cuánto me toma llegar de A hasta B?",
+          question: "¿Cuánto me toma llegar de un punto a otro?",
           mainData: null,
-          text: "Selecciona un origen y un destino para calcular el recorrido.",
-          tip: "Tip: Cambia el medio de transporte para comparar cuánto varía el tiempo."
+          text: "Selecciona un origen, un destino y cómo te mueves. El sistema calculará el tiempo y la distancia del recorrido.",
+          tip: "Tip: Cambia el medio de transporte para comparar el tiempo del trayecto."
         };
       } else {
         const simulatedDist = ((travelTime * 0.4) + 1.2).toFixed(1);
         return {
           header: "Trayecto",
           icon: Route,
-          question: "¿Cuánto me toma llegar de A hasta B?",
-          mainData: `${travelTime} min`,
-          text: "La línea del mapa representa el recorrido entre el origen y el destino seleccionados.",
-          context: `Este trayecto conecta ${origin || "A"} con ${destination || "B"}.`,
-          tip: "Tip: Cambia el medio de transporte para comparar cuánto varía el tiempo."
+          question: "¿Cuánto me toma llegar de un punto a otro?",
+          mainData: `${travelTime} min · ${simulatedDist} km`,
+          text: "La línea del mapa representa el recorrido entre tu origen y destino.",
+          tip: "Tip: Cambia el medio de transporte para comparar el tiempo del trayecto."
         };
       }
     }
@@ -110,27 +108,36 @@ export function VisorQuickStepsCard({
     if (analysisMode === "compare") {
       if (!hasGenerated) {
         return {
-          header: "Comparación",
+          header: "Comparar",
           icon: Scale,
-          question: "¿Desde cuál ubicación llego más rápido?",
+          question: "¿Desde cuál ubicación llego más rápido al destino?",
           mainData: null,
-          text: "Selecciona dos ubicaciones y un destino común para comparar su accesibilidad.",
-          tip: "Tip: Cambia uno de los puntos para evaluar otra alternativa."
+          text: "Selecciona dos puntos de origen y un destino común para comparar el tiempo de viaje desde cada ubicación.",
+          tip: "Tip: Cambia uno de los orígenes para evaluar otra alternativa."
         };
       } else {
         const timeA = travelTime;
         const timeB = Math.max(5, travelTime - 9);
         const diff = Math.abs(timeA - timeB);
-        const winner = timeA <= timeB ? (origin || "A") : (originB || "B");
-
         return {
-          header: "Comparación",
+          header: "Comparar",
           icon: Scale,
-          question: "¿Desde cuál ubicación llego más rápido?",
-          mainData: `🏆 ${winner} es mejor`,
-          text: `Comparamos el tiempo necesario para llegar desde el Punto A y el Punto B hacia un mismo destino.`,
-          context: `Ahorras ${diff} minutos frente a la otra opción.`,
-          tip: "Tip: Cambia uno de los puntos para evaluar otra alternativa."
+          question: "¿Desde cuál ubicación llego más rápido al destino?",
+          mainData: `Origen B es ${diff} min más rápido.`,
+          text: "Comparamos las dos rutas hacia el mismo destino para identificar cuál ofrece mejor accesibilidad.",
+          context: (
+            <div className="space-y-1 font-semibold text-[11px]">
+              <div className="flex items-center gap-1.5 text-primary">
+                <span className="size-2 rounded-full bg-primary" />
+                <span>Origen A · {timeA} min</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-info">
+                <span className="size-2 rounded-full bg-info" />
+                <span>Origen B · {timeB} min</span>
+              </div>
+            </div>
+          ),
+          tip: "Tip: Cambia uno de los orígenes para evaluar otra alternativa."
         };
       }
     }
@@ -201,7 +208,7 @@ export function VisorQuickStepsCard({
           {currentStep === 0 ? (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-2">
               {content.mainData && (
-                 <div className="text-2xl font-black text-primary tracking-tighter">
+                 <div className="text-xl font-black text-primary tracking-tighter">
                    {content.mainData}
                  </div>
               )}
@@ -209,15 +216,15 @@ export function VisorQuickStepsCard({
                 {content.text}
               </p>
               {content.context && (
-                <p className="text-[11px] font-medium text-foreground bg-surface/50 p-1.5 rounded-md inline-block">
+                <div className="bg-surface/50 p-2 border border-border/40 rounded-xl mt-1">
                   {content.context}
-                </p>
+                </div>
               )}
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 flex items-start gap-2 bg-primary/10 border border-primary/20 rounded-lg p-2.5 mt-1">
               <span className="text-lg">💡</span>
-              <p className="text-[11px] text-primary-foreground font-medium leading-relaxed">
+              <p className="text-[11px] text-foreground font-semibold leading-relaxed">
                 {content.tip}
               </p>
             </div>
@@ -226,7 +233,7 @@ export function VisorQuickStepsCard({
 
         <div className="flex items-center justify-between z-10 pt-2 border-t border-border/40 mt-1">
           <button className="text-[10px] font-bold text-primary hover:underline cursor-pointer">
-            {analysisMode === "explore" ? "Ver cómo interpretar el área" : analysisMode === "route" ? "Ver detalles del trayecto" : "Ver comparación completa"}
+            {analysisMode === "explore" ? "Ver cómo interpretar el área" : analysisMode === "route" ? "Ver cómo interpretar el recorrido" : "Ver cómo interpretar la comparación"}
           </button>
           <div className="flex items-center gap-1">
             <button
