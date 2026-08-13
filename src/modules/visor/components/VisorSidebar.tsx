@@ -536,7 +536,7 @@ export function VisorSidebar({
               <Button variant="ghost" size="icon-xs" onClick={() => setShowInfoPopover(false)} leftIcon={<X className="size-3.5 text-muted-foreground" />} />
             </div>
 
-            <Card variant="featured" glow={cardContent.glow} className="p-3 space-y-1.5 text-xs border-white/5">
+            <Card variant="featured" glow={cardContent.glow} className="p-3 space-y-1.5 text-xs border-border/50">
               <CardBadge className={cardContent.badgeClass}>
                 {cardContent.badge}
               </CardBadge>
@@ -641,7 +641,7 @@ export function VisorSidebar({
           <Card 
             variant="featured" 
             glow={cardContent.glow} 
-            className="border-white/5 relative"
+            className="border-border/50 relative"
           >
             <Button 
               variant="ghost" 
@@ -778,8 +778,6 @@ export function VisorSidebar({
                   1
                 </span>
                 <span className="text-sm font-bold text-foreground group-hover:underline">
-                  {analysisMode === "explore" && "¿Desde dónde quieres analizar?"}
-                  {analysisMode === "route" && "¿Desde dónde sales?"}
                   {analysisMode === "compare" && "¿Cuáles ubicaciones comparas?"}
                 </span>
               </div>
@@ -1034,6 +1032,8 @@ export function VisorSidebar({
               </p>
             </div>
           )}
+        </div>
+      )}
 
           {/* Ubicaciones Seleccionadas Container */}
           <div className="space-y-3 border border-border/80 bg-surface/20 rounded-2xl p-4">
@@ -1132,10 +1132,18 @@ export function VisorSidebar({
                           }}
                         >
                           <Trash2 className="size-3.5" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
+                        Eliminar ubicación
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      )}
-    </div>
 
         <Separator className="bg-border/50" />
 
@@ -1303,7 +1311,7 @@ export function VisorSidebar({
                             <button
                               key={m}
                               onClick={() => {
-                                if (setTechnicalIntervals) {
+                                if (setTechnicalIntervals && technicalIntervals) {
                                   if (isActive) {
                                     if (technicalIntervals.length > 1) {
                                       setTechnicalIntervals(technicalIntervals.filter(i => i !== m));

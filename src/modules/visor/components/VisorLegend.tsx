@@ -6,7 +6,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface VisorLegendProps {
-  analysisMode?: "explore" | "route" | "compare";
+  analysisMode?: "explore" | "route" | "compare" | "multiple";
   origin?: string;
   originB?: string;
   destination?: string;

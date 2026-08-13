@@ -163,7 +163,7 @@ export function VisorQuickStepsCard({
     >
       <Card 
         variant="featured" 
-        className="relative p-3.5 sm:p-4 shadow-[0_16px_36px_rgba(0,0,0,0.4)] border border-white/15 bg-card/75 backdrop-blur-2xl supports-[backdrop-filter]:bg-card/60 rounded-2xl overflow-hidden flex flex-col gap-2.5 text-left"
+        className="relative p-3.5 sm:p-4 shadow-[0_16px_36px_rgba(0,0,0,0.4)] border border-border/50 bg-card/75 backdrop-blur-2xl supports-[backdrop-filter]:bg-card/60 rounded-2xl overflow-hidden flex flex-col gap-2.5 text-left"
       >
         <WatermarkIcon className="absolute right-[-14px] bottom-[-14px] size-32 text-muted-foreground/10 pointer-events-none -rotate-12 select-none" />
 

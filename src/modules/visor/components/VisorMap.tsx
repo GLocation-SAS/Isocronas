@@ -62,6 +62,7 @@ interface VisorMapProps {
   inputMethod?: "search" | "map" | "gps";
   layers?: any[];
   mapBase?: "dark" | "light" | "satellite";
+  profile?: string;
 }
 
 import { MOCK_POIS, getTransportFactor, getTransportSpeed, getRoadNetworkRadius, isPoiInsideIsochrone } from "@/modules/visor/utils/geo";
@@ -155,7 +156,8 @@ export function VisorMap({
   analysisMode = "explore",
   onMapClick,
   activeInput,
-  inputMethod
+  inputMethod,
+  profile = "ciudadano"
 }: VisorMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -745,7 +747,7 @@ export function VisorMap({
                   className={cn(
                     "p-2 rounded-full shadow-2xl border-none transition-all duration-300 hover:scale-125 group active:scale-95",
                     isDraggingPin && "ring-4 ring-primary/50 scale-125",
-                    isEmergency ? "bg-danger text-white" : `bg-primary text-primary-foreground`
+                    isEmergency ? "bg-danger text-danger-foreground" : `bg-primary text-primary-foreground`
                   )}
                 >
                   <MapPin className="size-4 animate-bounce" />
@@ -771,7 +773,7 @@ export function VisorMap({
             <Badge 
               variant="secondary" 
               appearance="default"
-              className="mb-1.5 shadow-2xl bg-purple-500 text-white text-[11px] font-bold py-1 px-3 flex items-center gap-1.5 pointer-events-none animate-in fade-in zoom-in duration-300 border-none"
+              className="mb-1.5 shadow-2xl bg-primary text-primary-foreground text-[11px] font-bold py-1 px-3 flex items-center gap-1.5 pointer-events-none animate-in fade-in zoom-in duration-300 border-none"
             >
               <MapPin className="size-3.5 shrink-0" />
               <span>Origen (B): {originB.replace(" (Reubicado)", "")}</span>
@@ -782,7 +784,7 @@ export function VisorMap({
                 <TooltipTrigger asChild>
                   <div 
                     className={cn(
-                      "p-2 rounded-full shadow-2xl border-none transition-all duration-300 hover:scale-125 bg-purple-500 text-white group active:scale-95",
+                      "p-2 rounded-full shadow-2xl border-none transition-all duration-300 hover:scale-125 bg-primary text-primary-foreground group active:scale-95",
                       isDraggingOriginBPin && "ring-4 ring-purple-500/50 scale-125"
                     )}
                   >
@@ -990,45 +992,45 @@ export function VisorMap({
                     setSelectedPoi(selectedPoi === poi.id ? null : poi.id);
                   }}
                 >
-                  <div className={cn("size-8 rounded-full flex items-center justify-center shadow-lg border-2 border-white cursor-pointer transition-all duration-300 hover:scale-110", poiColorClass)}>
+                  <div className={cn("size-8 rounded-full flex items-center justify-center shadow-lg border-2 border-background cursor-pointer transition-all duration-300 hover:scale-110", poiColorClass)}>
                     <PoiIcon className={cn("size-4", poiTextClass)} />
                   </div>
 
                   {(hoveredPoi === poi.id || selectedPoi === poi.id) && (
                     <div className="absolute bottom-full mb-6 left-1/2 -translate-x-1/2 w-[310px] z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                      <Card className="w-full p-4 bg-slate-900/90 backdrop-blur-md border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl text-left pointer-events-auto relative">
+                      <Card className="w-full p-4 bg-card/95 backdrop-blur-md border border-border shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-2xl text-left pointer-events-auto relative">
                         {selectedPoi === poi.id && (
                           <button 
                             onClick={(e) => {
                                e.stopPropagation();
                                setSelectedPoi(null);
                             }}
-                            className="absolute top-3 right-3 size-6 rounded-full border border-white/10 bg-white/5 text-white/60 hover:text-white flex items-center justify-center cursor-pointer transition-all hover:bg-white/10"
+                            className="absolute top-3 right-3 size-6 rounded-full border border-border bg-surface/50 text-muted-foreground hover:text-foreground flex items-center justify-center cursor-pointer transition-all hover:bg-surface"
                           >
                             <X className="size-3.5" />
                           </button>
                         )}
                         
                         <div className="flex gap-3.5 items-start">
-                          <div className={cn("size-12 rounded-full flex items-center justify-center shrink-0 text-white shadow-md bg-gradient-to-br from-white/10 to-transparent", poi.color)}>
+                          <div className={cn("size-12 rounded-full flex items-center justify-center shrink-0 text-white shadow-md bg-gradient-to-br from-black/10 to-transparent", poi.color)}>
                             <PoiIcon className="size-6 text-white drop-shadow-md" />
                           </div>
                           <div className="flex-1 min-w-0 flex flex-col items-start text-left pt-0.5">
-                            <h4 className="text-[15px] font-bold text-white leading-tight tracking-tight truncate w-full text-left">{poi.name}</h4>
-                            <p className="text-[10px] font-semibold text-blue-400 tracking-wider uppercase mt-1 leading-none w-full text-left truncate">{category}</p>
-                            <p className="text-[11px] text-white/60 mt-2 flex items-center gap-1.5 leading-none w-full text-left truncate">
+                            <h4 className="text-[15px] font-bold text-foreground leading-tight tracking-tight truncate w-full text-left">{poi.name}</h4>
+                            <p className="text-[10px] font-semibold text-info tracking-wider uppercase mt-1 leading-none w-full text-left truncate">{category}</p>
+                            <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1.5 leading-none w-full text-left truncate">
                               <MapPin className="size-3.5 text-danger shrink-0" />
                               <span className="truncate">{address}</span>
                             </p>
                           </div>
                         </div>
 
-                        <div className="h-px bg-white/10 my-4" />
+                        <div className="h-px bg-border/50 my-4" />
 
                         <div className="grid grid-cols-2 gap-3">
                           {/* Métrica 1: Tiempo */}
-                          <div className="px-3 py-2.5 rounded-2xl border border-white/10 flex items-center gap-3 bg-white/5 overflow-hidden">
-                            <div className="text-teal-400 shrink-0">
+                          <div className="px-3 py-2.5 rounded-2xl border border-border/50 flex items-center gap-3 bg-surface/50 overflow-hidden">
+                            <div className="text-teal-500 shrink-0">
                               {transportMode === "walk" && <Footprints className="size-5" />}
                               {transportMode === "bike" && <Bike className="size-5" />}
                               {transportMode === "transit" && <Train className="size-5" />}
@@ -1036,22 +1038,58 @@ export function VisorMap({
                               {transportMode === "motorcycle" && <MotorcycleIcon className="size-5" />}
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-[13px] font-bold text-white leading-tight whitespace-nowrap">{poiTime} min</span>
-                              <span className="text-[9px] text-white/60 font-medium whitespace-nowrap mt-0.5">desde origen</span>
+                              <span className="text-[13px] font-bold text-foreground leading-tight whitespace-nowrap">{poiTime} min</span>
+                              <span className="text-[9px] text-muted-foreground font-medium whitespace-nowrap mt-0.5">desde origen</span>
                             </div>
                           </div>
 
                           {/* Métrica 2: Distancia */}
-                          <div className="px-3 py-2.5 rounded-2xl border border-white/10 flex items-center gap-3 bg-white/5 overflow-hidden">
-                            <div className="text-teal-400 shrink-0">
+                          <div className="px-3 py-2.5 rounded-2xl border border-border/50 flex items-center gap-3 bg-surface/50 overflow-hidden">
+                            <div className="text-teal-500 shrink-0">
                               <MapPin className="size-5" />
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-[13px] font-bold text-white leading-tight whitespace-nowrap">{distanceKm.toFixed(1)} km</span>
-                              <span className="text-[9px] text-white/60 font-medium whitespace-nowrap mt-0.5">de distancia</span>
+                              <span className="text-[13px] font-bold text-foreground leading-tight whitespace-nowrap">{distanceKm.toFixed(1)} km</span>
+                              <span className="text-[9px] text-muted-foreground font-medium whitespace-nowrap mt-0.5">de distancia</span>
                             </div>
                           </div>
                         </div>
+
+                        {profile === "tecnico" && selectedPoi === poi.id && (
+                          <div className="mt-4 pt-4 border-t border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                              <Layers className="size-3.5" /> Ficha Técnica
+                            </h5>
+                            <div className="space-y-2">
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-muted-foreground">ID Nodo:</span>
+                                <span className="font-mono text-info">#{Math.floor(Math.random() * 90000) + 10000}</span>
+                              </div>
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-muted-foreground">Área Aprox:</span>
+                                <span className="font-mono text-foreground">{Math.floor(Math.random() * 500) + 100} m²</span>
+                              </div>
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-muted-foreground">Capacidad/Flujo:</span>
+                                <span className="font-mono text-foreground">Alta</span>
+                              </div>
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-muted-foreground">Coordenadas:</span>
+                                <span className="font-mono text-foreground text-[9px] opacity-80">
+                                  {`${(4.6097 + (poi.dy * 0.0001)).toFixed(5)}, ${(-74.0817 + (poi.dx * 0.0001)).toFixed(5)}`}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-4 grid grid-cols-2 gap-2">
+                              <Button variant="neutral" size="sm" className="w-full bg-surface border-border text-foreground hover:bg-surface/80 text-[10px]">
+                                Histórico
+                              </Button>
+                              <Button variant="primary" size="sm" className="w-full text-[10px]">
+                                Reporte POI
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </Card>
                       
                       {/* Caret pointing down */}
@@ -1204,21 +1242,21 @@ export function VisorMap({
                 name: "Modo Oscuro",
                 desc: "CartoDB Dark Matter (Alto contraste)",
                 icon: Moon,
-                bgClass: "bg-slate-900 border-slate-700 text-white"
+                bgClass: "bg-surface border-border text-foreground"
               },
               {
                 id: "light" as const,
                 name: "Modo Claro",
                 desc: "CartoDB Positron (Alta legibilidad)",
                 icon: Sun,
-                bgClass: "bg-slate-100 border-slate-300 text-slate-900"
+                bgClass: "bg-background border-border text-foreground"
               },
               {
                 id: "satellite" as const,
                 name: "Vista Satelital",
                 desc: "Esri World Imagery (Imágenes aéreas)",
                 icon: Globe,
-                bgClass: "bg-emerald-950 border-emerald-800 text-emerald-100"
+                bgClass: "bg-success/20 border-success/30 text-success-foreground"
               }
             ].map((mode) => {
               const isSelected = mapMode === mode.id;

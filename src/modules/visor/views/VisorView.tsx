@@ -14,7 +14,8 @@ import {
   VisorExportModal
 } from "../components";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Info, AlertTriangle, Terminal as TerminalIcon, MapPin, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Info, AlertTriangle, Terminal as TerminalIcon, MapPin, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface LayerState {
@@ -44,6 +45,7 @@ export function VisorView() {
   const [layers, setLayers] = useState<LayerState[]>([]);
   const [multipleOrigins, setMultipleOrigins] = useState<{ id: string, address: string, lat: number, lng: number }[]>([]);
   const [technicalIntervals, setTechnicalIntervals] = useState<number[]>([5, 15, 30]);
+  const [showAttributeTable, setShowAttributeTable] = useState(false);
   const [mapBase, setMapBase] = useState<"dark" | "light" | "satellite">("dark");
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastQueryTime, setLastQueryTime] = useState<number | null>(null);
@@ -213,6 +215,7 @@ export function VisorView() {
         {/* Área de Mapa (Canvas Completo de Fondo) */}
         <section className="absolute inset-0 z-0 overflow-hidden">
           <VisorMap 
+            profile={profile}
             transportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
             travelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
             origin={lastQueryTime !== null ? generatedParams.origin : origin}
@@ -258,6 +261,50 @@ export function VisorView() {
             hasGenerated={lastQueryTime !== null}
             onOpenExport={() => setShowExportModal(true)}
           />
+
+          {/* Tabla de Atributos (Solo Técnico) */}
+          {profile === "tecnico" && showAttributeTable && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl z-30 bg-card/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl animate-in slide-in-from-bottom-4 duration-300 flex flex-col max-h-[300px]">
+              <div className="flex items-center justify-between p-3 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <TerminalIcon className="size-4 text-primary" />
+                  <span className="text-sm font-bold">Tabla de Atributos: POIs y Capas</span>
+                  <Badge variant="primary" appearance="soft" className="text-[10px] ml-2">42 Registros</Badge>
+                </div>
+                <Button variant="ghost" size="icon-xs" onClick={() => setShowAttributeTable(false)} className="size-6 text-muted-foreground hover:text-foreground">
+                  <X className="size-4" />
+                </Button>
+              </div>
+              <div className="overflow-auto p-0 flex-1">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-surface sticky top-0 z-10 text-muted-foreground text-[10px] uppercase">
+                    <tr>
+                      <th className="p-2 border-b border-border font-semibold">ID Nodo</th>
+                      <th className="p-2 border-b border-border font-semibold">Tipo</th>
+                      <th className="p-2 border-b border-border font-semibold">Nombre</th>
+                      <th className="p-2 border-b border-border font-semibold">Latitud</th>
+                      <th className="p-2 border-b border-border font-semibold">Longitud</th>
+                      <th className="p-2 border-b border-border font-semibold text-right">Tiempo (min)</th>
+                      <th className="p-2 border-b border-border font-semibold text-right">Dist (km)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {[...Array(15)].map((_, i) => (
+                      <tr key={i} className="hover:bg-surface/50 transition-colors">
+                        <td className="p-2 font-mono text-info">#{(10000 + i * 13).toString()}</td>
+                        <td className="p-2 capitalize">{["hospital", "colegio", "tienda", "parque"][i % 4]}</td>
+                        <td className="p-2 font-medium">POI de Interés {i + 1}</td>
+                        <td className="p-2 font-mono opacity-80">4.60{i}</td>
+                        <td className="p-2 font-mono opacity-80">-74.08{i}</td>
+                        <td className="p-2 text-right font-medium text-warning">{5 + (i % 5)}</td>
+                        <td className="p-2 text-right font-medium">{ (1.2 + (i % 3) * 0.4).toFixed(1) }</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Panel de Control Flotante Izquierdo sobre el mapa */}
@@ -302,6 +349,21 @@ export function VisorView() {
               generatedTravelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
               generatedTransportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}
             />
+
+            {/* Toggle Tabla de Atributos */}
+            {profile === "tecnico" && !showAttributeTable && (
+              <div className="mt-2 w-full">
+                <Button 
+                  variant="neutral" 
+                  size="sm" 
+                  className="w-full bg-card/95 backdrop-blur-xl border-border shadow-lg font-bold text-xs"
+                  onClick={() => setShowAttributeTable(true)}
+                  leftIcon={<TerminalIcon className="size-3.5 text-primary" />}
+                >
+                  Abrir Tabla de Atributos
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </main>

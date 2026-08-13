@@ -12,13 +12,14 @@ export function VisorTechnicalConsole({ logs = [], onCopy }: VisorTechnicalConso
     <Card 
       className="absolute bottom-6 left-6 md:left-[440px] z-30 w-[calc(100%-2rem)] max-w-[500px] shadow-2xl border-border/80 bg-surface-foreground/95 text-muted-foreground font-mono animate-in fade-in slide-in-from-bottom-4 duration-500 pointer-events-auto"
     >
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-white/5">
-        <div className="flex items-center gap-2">
-          <TerminalIcon className="size-3 text-info" />
-          <span className="text-[10px] font-bold uppercase tracking-widest text-foreground">Terminal API Logs</span>
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-surface/50">
+        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+          <TerminalIcon className="size-3.5 text-primary" />
+          Consola Técnica
         </div>
-        <Button variant="ghost" size="sm" onClick={onCopy} className="h-6 px-2 text-[9px] gap-1.5 hover:bg-white/10 hover:text-white text-muted-foreground">
-          <Copy className="size-3" /> Copiar GeoJSON
+        <Button variant="ghost" size="sm" onClick={onCopy} className="h-6 px-2 text-[9px] gap-1.5 hover:bg-surface hover:text-foreground text-muted-foreground">
+          <Copy className="size-3" />
+          Copiar GeoJSON
         </Button>
       </div>
       
