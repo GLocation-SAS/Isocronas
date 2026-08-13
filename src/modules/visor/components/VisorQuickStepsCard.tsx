@@ -157,7 +157,7 @@ export function VisorQuickStepsCard({
 
   return (
     <div 
-      className="fixed bottom-6 right-6 z-40 w-72 sm:w-80 max-w-[calc(100vw-2rem)] animate-in slide-in-from-bottom-5 duration-300 pointer-events-auto font-sans"
+      className="fixed top-4 left-4 right-4 mx-auto md:top-auto md:left-auto md:mx-0 md:bottom-6 md:right-6 z-40 w-auto md:w-80 animate-in slide-in-from-top-5 md:slide-in-from-bottom-5 duration-300 pointer-events-auto font-sans"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >

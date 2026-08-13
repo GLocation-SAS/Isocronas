@@ -308,8 +308,8 @@ export function VisorView() {
         </section>
 
         {/* Panel de Control Flotante Izquierdo sobre el mapa */}
-        <div className="absolute top-4 left-4 bottom-4 z-20 w-[calc(100%-2rem)] max-w-[420px] pointer-events-none flex flex-col">
-          <div className="pointer-events-auto h-full flex flex-col overflow-hidden">
+        <div className="absolute top-auto bottom-0 left-0 right-0 w-full h-[85vh] md:h-auto md:top-4 md:left-4 md:bottom-4 md:w-[calc(100%-2rem)] md:max-w-[420px] z-20 pointer-events-none flex flex-col md:translate-y-0 translate-y-0 transition-transform duration-300">
+          <div className="pointer-events-auto h-full flex flex-col overflow-hidden w-full">
             <VisorSidebar 
               profile={profile}
               analysisMode={analysisMode}

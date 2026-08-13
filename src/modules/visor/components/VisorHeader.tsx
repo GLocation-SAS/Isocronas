@@ -102,9 +102,9 @@ export function VisorHeader({ onOpenGuide, profile, onProfileChange }: VisorHead
             {/* Selector de perfil */}
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/80 bg-surface/50 hover:bg-muted/60 transition-colors cursor-pointer outline-none">
+                <button className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 rounded-full border border-border/80 bg-surface/50 hover:bg-muted/60 transition-colors cursor-pointer outline-none">
                   <ProfileIcon className="size-3.5 text-primary" />
-                  <span className="text-xs font-semibold text-foreground">{currentProfile.label}</span>
+                  <span className="hidden md:block text-xs font-semibold text-foreground">{currentProfile.label}</span>
                   <ChevronDown className={cn("size-3 text-muted-foreground transition-transform duration-200", dropdownOpen && "rotate-180")} />
                 </button>
               </DropdownMenuTrigger>
@@ -145,19 +145,18 @@ export function VisorHeader({ onOpenGuide, profile, onProfileChange }: VisorHead
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Botón Guía de uso */}
             <Button 
               variant="neutral" 
               size="sm" 
               onClick={onOpenGuide}
-              className="h-8 text-xs px-3"
+              className="size-7 md:h-8 md:w-auto text-xs px-0 md:px-3 rounded-full md:rounded-lg"
               leftIcon={
-                <svg className="size-3.5 text-muted-foreground group-hover:text-white transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <svg className="size-3.5 md:mr-1 text-muted-foreground group-hover:text-white transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               }
             >
-              Guía de uso
+              <span className="hidden md:block">Guía de uso</span>
             </Button>
 
             {/* Toggle Modo Claro / Oscuro */}

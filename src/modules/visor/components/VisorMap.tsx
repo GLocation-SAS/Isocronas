@@ -1105,7 +1105,7 @@ export function VisorMap({
 
       {/* Herramientas Flotantes del Mapa en la parte superior derecha (Controles UI Kit de alta visibilidad) */}
       <TooltipProvider delayDuration={100}>
-        <div className="absolute right-6 top-6 flex flex-col gap-2.5 pointer-events-auto z-20">
+        <div className="absolute right-4 top-4 md:right-6 md:top-6 flex flex-col gap-2 md:gap-2.5 pointer-events-auto z-20">
           <div className="flex flex-col p-1 rounded-2xl bg-card/95 backdrop-blur-xl border border-border shadow-2xl space-y-1">
             {/* Zoom In */}
             <Tooltip>
@@ -1209,9 +1209,8 @@ export function VisorMap({
         </div>
       </TooltipProvider>
 
-      {/* Popover Galería de Mapas (3 modos: Claro, Oscuro, Satelital de CartoDB y Esri) */}
       {showMapGallery && (
-        <div className="absolute right-20 top-6 z-50 w-80 p-4 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl space-y-3 animate-in fade-in slide-in-from-right-2 duration-200 pointer-events-auto text-left">
+        <div className="absolute right-16 top-4 md:right-20 md:top-6 z-50 w-[calc(100vw-5rem)] max-w-xs md:w-80 p-4 rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl space-y-3 animate-in fade-in slide-in-from-right-2 duration-200 pointer-events-auto text-left">
           <div className="flex items-center justify-between border-b border-border/40 pb-2.5">
             <div className="flex items-center gap-2 text-xs font-bold text-foreground">
               <Layers className="size-4 text-primary" />

@@ -448,16 +448,17 @@ export function VisorSidebar({
     const ActiveModeIcon = activeModeObj.icon;
 
     return (
-      <div className="relative font-sans">
-        <aside className="flex flex-col items-center py-4 px-2 gap-3 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl transition-all duration-300 w-14 md:w-16 h-auto">
-          <Button
-            variant="primary"
+      <div className="relative font-sans pointer-events-auto w-full md:w-auto">
+        <aside className="flex md:flex-col flex-row items-center md:py-4 md:px-2 py-3 px-4 gap-3 md:rounded-2xl rounded-t-3xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl transition-all duration-300 md:w-16 w-full h-auto justify-between md:justify-start">
+          <div className="flex md:flex-col flex-row items-center gap-3">
+            <Button
+              variant="primary"
             size="icon"
             className="shrink-0 hover:scale-105 transition-transform"
             onClick={() => setIsCollapsed(false)}
             title="Abrir / Descolapsar menú"
             aria-label="Abrir menú"
-            leftIcon={<PanelLeft className="size-5" />}
+            leftIcon={<PanelLeft className="size-5 md:rotate-0 rotate-90" />}
           />
 
           <Button
@@ -473,7 +474,7 @@ export function VisorSidebar({
             leftIcon={<Info className="size-4" />}
           />
 
-          <Separator className="w-8 bg-border/60 my-0.5" />
+          <Separator className="md:w-8 w-[1px] md:h-[1px] h-6 bg-border/60 my-0.5 md:my-0.5 mx-1 md:mx-0" />
 
           <div 
             className="flex flex-col items-center justify-center size-9 rounded-xl bg-surface border border-border/60 text-primary cursor-pointer hover:border-primary/50 transition-colors"
@@ -494,8 +495,10 @@ export function VisorSidebar({
             </div>
           )}
 
-          <Separator className="w-8 bg-border/60 my-0.5" />
+          <Separator className="md:w-8 w-[1px] md:h-[1px] h-6 bg-border/60 my-0.5 md:my-0.5 mx-1 md:mx-0" />
+          </div>
 
+          <div className="flex md:flex-col flex-row items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -524,10 +527,11 @@ export function VisorSidebar({
             title="Reiniciar parámetros"
             leftIcon={<RotateCcw className="size-3.5" />}
           />
+          </div>
         </aside>
 
         {showInfoPopover && (
-          <div className="absolute top-0 left-16 md:left-20 z-50 w-72 p-4 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-left-2 duration-200 space-y-3">
+          <div className="absolute bottom-full mb-4 md:mb-0 md:top-0 md:bottom-auto left-4 right-4 md:left-20 md:right-auto z-50 md:w-72 p-4 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-left-2 duration-200 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
                 <Info className="size-4 text-info" />
@@ -592,8 +596,12 @@ export function VisorSidebar({
   }
 
   return (
-    <aside className="flex flex-col h-full max-h-full overflow-y-auto rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl transition-all duration-300">
-      <div className="p-6 space-y-6 font-sans">
+    <aside className="flex flex-col h-full max-h-full overflow-y-auto rounded-t-3xl md:rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl transition-all duration-300 w-full pointer-events-auto">
+      {/* Mobile Handle */}
+      <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0 w-full cursor-pointer hover:bg-surface/50 transition-colors" onClick={() => setIsCollapsed(true)}>
+        <div className="w-12 h-1.5 bg-border rounded-full" />
+      </div>
+      <div className="p-4 md:p-6 space-y-6 font-sans">
         {/* Header con botón de información y colapsar */}
         <div className="flex items-center justify-between border-b border-border/40 pb-4">
           <div className="flex items-center gap-2">
@@ -609,7 +617,17 @@ export function VisorSidebar({
               onClick={() => setIsCollapsed(true)}
               title="Colapsar menú"
               aria-label="Colapsar menú"
+              className="md:flex hidden"
               leftIcon={<ChevronLeft className="size-4" />}
+            />
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => setIsCollapsed(true)}
+              title="Colapsar menú"
+              aria-label="Colapsar menú"
+              className="md:hidden flex"
+              leftIcon={<ChevronDown className="size-4" />}
             />
           </div>
         </div>
@@ -673,7 +691,7 @@ export function VisorSidebar({
             ¿Qué quieres analizar?
           </label>
           <TooltipProvider delayDuration={100}>
-            <div className={cn("grid gap-2", profile === "tecnico" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3")}>
+            <div className={cn("flex md:grid gap-2 overflow-x-auto snap-x snap-mandatory pb-2 md:pb-0 hide-scrollbar", profile === "tecnico" ? "md:grid-cols-4" : "md:grid-cols-3")}>
               {[
                 {
                   id: "explore" as const,
@@ -726,7 +744,7 @@ export function VisorSidebar({
                           }
                         }}
                         className={cn(
-                          "flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer select-none gap-2 h-auto min-h-[140px]",
+                          "flex flex-col items-center text-center p-3 rounded-xl border transition-all cursor-pointer select-none gap-2 h-auto min-h-[140px] min-w-[140px] md:min-w-0 snap-start shrink-0",
                           isActive
                             ? [
                                 mode.color === "success" && "border-success bg-success/5 text-success shadow-xs ring-1 ring-success/15",
@@ -813,11 +831,11 @@ export function VisorSidebar({
           {openSections.includes("ubicacion") && (
             <div className="space-y-4 pt-1 animate-in slide-in-from-top-2 duration-200">
           {/* Capsule Tab Selector (Buscar, Mapa, GPS, Coordenadas) */}
-          <div className={cn("grid gap-1 bg-surface/40 border border-border/70 p-0.5 rounded-xl", profile === "tecnico" ? "grid-cols-4" : "grid-cols-3")}>
+          <div className={cn("flex md:grid gap-1 bg-surface/40 border border-border/70 p-0.5 rounded-xl overflow-x-auto snap-x hide-scrollbar", profile === "tecnico" ? "md:grid-cols-4" : "md:grid-cols-3")}>
             <div
               onClick={() => setInputMethod("search")}
               className={cn(
-                "flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-[9px] font-bold transition-all cursor-pointer",
+                "flex items-center justify-center gap-1 py-2 px-3 md:px-1 rounded-lg text-[9px] font-bold transition-all cursor-pointer snap-start shrink-0 min-w-max",
                 inputMethod === "search"
                   ? "bg-primary/10 text-primary border border-primary/20 shadow-xs"
                   : "text-muted-foreground hover:text-foreground border border-transparent"
@@ -1141,6 +1159,152 @@ export function VisorSidebar({
                   </TooltipProvider>
                 </div>
               </div>
+
+              {/* Ubicación B (Solo en Compare) */}
+              {analysisMode === "compare" && (
+                <div 
+                  onClick={() => setActiveInput('B')}
+                  className={cn(
+                    "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative",
+                    activeInput === 'B' 
+                      ? "border-info bg-info/5 shadow-xs ring-1 ring-info/20" 
+                      : "border-border/60 bg-card hover:bg-surface/50"
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-col gap-0.5 opacity-30 cursor-grab shrink-0">
+                      <span className="size-1 rounded-full bg-foreground" />
+                      <span className="size-1 rounded-full bg-foreground" />
+                      <span className="size-1 rounded-full bg-foreground" />
+                    </div>
+                    <div className="flex items-center justify-center size-9 rounded-full bg-info/10 text-info font-bold text-sm shrink-0">
+                      {getLocationIcon(originB || "Seleccione origen B", "B")}
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate max-w-[120px] md:max-w-[160px]">
+                        {originB || "Seleccione origen B"}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[160px]">
+                        {originB ? "Bogotá, Colombia" : "Ubicación de comparación"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="info" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none">
+                      ORIGEN B
+                    </Badge>
+                    
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div 
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-info/10 hover:text-info hover:border-info/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmAction({ type: "replace", target: "B" });
+                            }}
+                          >
+                            <Pencil className="size-3.5" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent variant="info" side="right" sideOffset={8} className="text-xs font-bold">
+                          Reemplazar esta ubicación
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div 
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmAction({ type: "delete", target: "B" });
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
+                          Eliminar ubicación
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              )}
+
+              {/* Destino (Route y Compare) */}
+              {(analysisMode === "route" || analysisMode === "compare") && (
+                <div 
+                  onClick={() => setActiveInput('DEST')}
+                  className={cn(
+                    "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative",
+                    activeInput === 'DEST' 
+                      ? "border-success bg-success/5 shadow-xs ring-1 ring-success/20" 
+                      : "border-border/60 bg-card hover:bg-surface/50"
+                  )}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex flex-col gap-0.5 opacity-30 cursor-grab shrink-0">
+                      <span className="size-1 rounded-full bg-foreground" />
+                      <span className="size-1 rounded-full bg-foreground" />
+                      <span className="size-1 rounded-full bg-foreground" />
+                    </div>
+                    <div className="flex items-center justify-center size-9 rounded-full bg-success/10 text-success font-bold text-sm shrink-0">
+                      <MapPin className="size-4.5" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="text-xs font-bold text-foreground truncate max-w-[120px] md:max-w-[160px]">
+                        {destination || "Seleccione destino"}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[160px]">
+                        {destination ? "Bogotá, Colombia" : "Punto de llegada"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Badge variant="success" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none">
+                      DESTINO
+                    </Badge>
+                    
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div 
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-success/10 hover:text-success hover:border-success/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmAction({ type: "replace", target: "DEST" });
+                            }}
+                          >
+                            <Pencil className="size-3.5" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent variant="success" side="right" sideOffset={8} className="text-xs font-bold">
+                          Reemplazar esta ubicación
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div 
+                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConfirmAction({ type: "delete", target: "DEST" });
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
+                          Eliminar ubicación
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1187,7 +1351,7 @@ export function VisorSidebar({
           {openSections.includes("movilidad") && (
             <div className="space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
               <TooltipProvider delayDuration={100}>
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="flex md:grid md:grid-cols-5 gap-1.5 overflow-x-auto snap-x hide-scrollbar pb-2 md:pb-0">
               {transportModes.map((mode) => {
                 const Icon = mode.icon;
                 const isActive = transportMode === mode.id;
@@ -1197,7 +1361,7 @@ export function VisorSidebar({
                       <button
                         onClick={() => onTransportChange(mode.id)}
                         className={cn(
-                          "flex flex-col items-center justify-center py-3 px-1 rounded-xl border text-center transition-all cursor-pointer h-20 gap-1.5 min-w-0",
+                          "flex flex-col items-center justify-center py-3 px-1 rounded-xl border text-center transition-all cursor-pointer h-20 min-w-[72px] md:min-w-0 gap-1.5 snap-start shrink-0",
                           isActive 
                             ? mode.colorClass 
                             : "border-border/60 bg-background text-muted-foreground hover:bg-surface/50"
@@ -2006,7 +2170,7 @@ export function VisorSidebar({
 
         {/* Botones de acción respetando el UI Kit con Tooltips */}
         <TooltipProvider delayDuration={100}>
-          <div className="space-y-3 pt-1">
+          <div className="space-y-3 pt-2 sticky bottom-0 bg-background/95 backdrop-blur-xl z-20 pb-4 border-t md:border-none border-border/50">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
@@ -2022,7 +2186,7 @@ export function VisorSidebar({
                     !transportMode
                   }
                   className={cn(
-                    "w-full transition-all duration-300",
+                    "w-full transition-all duration-300 md:h-11 h-14",
                     (lastQueryTime !== null) && !isOutdated && "bg-success/10 text-success border-success/30 opacity-100 font-bold"
                   )}
                   leftIcon={
@@ -2053,7 +2217,7 @@ export function VisorSidebar({
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent variant={isOutdated ? "warning" : "primary"} side="right" sideOffset={8} className="text-xs font-bold">
+              <TooltipContent variant={isOutdated ? "warning" : "primary"} side="right" sideOffset={8} className="text-xs font-bold hidden md:block">
                 {isOutdated ? "Haz clic para actualizar la isócrona con los nuevos cambios" : ((lastQueryTime !== null) ? "El mapa muestra la versión más reciente" : "Calcular análisis de accesibilidad con los parámetros seleccionados")}
               </TooltipContent>
             </Tooltip>
@@ -2066,13 +2230,13 @@ export function VisorSidebar({
                     variant="neutral"
                     size="lg"
                     onClick={onOpenExport}
-                    className="w-full border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 shadow-md animate-in fade-in slide-in-from-bottom-2 duration-300 font-bold"
+                    className="w-full border-primary/40 text-primary bg-primary/5 hover:bg-primary/10 shadow-md animate-in fade-in slide-in-from-bottom-2 duration-300 font-bold md:h-11 h-14"
                     leftIcon={<Download className="size-4 text-primary" />}
                   >
                     Exportar reporte multiformato
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold">
+                <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold hidden md:block">
                   Descargar informe multiformato de la isócrona calculada
                 </TooltipContent>
               </Tooltip>
@@ -2086,6 +2250,7 @@ export function VisorSidebar({
                   onClick={() => {
                     onReset();
                   }}
+                  className="w-full md:h-11 h-14 hidden md:flex"
                   leftIcon={
                     <svg className="size-4 fill-none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -2095,7 +2260,7 @@ export function VisorSidebar({
                   Limpiar mapa
                 </Button>
               </TooltipTrigger>
-              <TooltipContent variant="neutral" side="right" sideOffset={8} className="text-xs font-bold">
+              <TooltipContent variant="neutral" side="right" sideOffset={8} className="text-xs font-bold hidden md:block">
                 Restablecer todos los parámetros y remover capas del mapa
               </TooltipContent>
             </Tooltip>
