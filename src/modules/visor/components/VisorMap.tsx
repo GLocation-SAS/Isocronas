@@ -60,6 +60,8 @@ interface VisorMapProps {
   isOutdated?: boolean;
   activeInput?: 'A' | 'B' | 'DEST';
   inputMethod?: "search" | "map" | "gps";
+  layers?: any[];
+  mapBase?: "dark" | "light" | "satellite";
 }
 
 import { MOCK_POIS, getTransportFactor, getTransportSpeed, getRoadNetworkRadius, isPoiInsideIsochrone } from "@/modules/visor/utils/geo";
@@ -464,7 +466,7 @@ export function VisorMap({
         />
 
         {/* Capa de Polígonos e Isócronas por encima de Leaflet (solo tras generar) */}
-        {hasGenerated && showIsochroneLayer && analysisMode === "explore" && (
+        {hasGenerated && showIsochroneLayer && analysisMode !== "route" && (
           <div className="absolute inset-0 pointer-events-none z-10">
             <div 
               className="absolute top-1/2 left-1/2 flex items-center justify-center transition-all duration-300 ease-out"

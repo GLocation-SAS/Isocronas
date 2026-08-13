@@ -17,6 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Info, AlertTriangle, Terminal as TerminalIcon, MapPin, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+export interface LayerState {
+  id: string;
+  name: string;
+  type: "isochrone" | "poi" | "route";
+  visible: boolean;
+  opacity: number;
+  order: number;
+  sublayers?: { id: string, name: string, visible: boolean, colorClass: string }[];
+}
+
 export function VisorView() {
   // --- ESTADO GLOBAL DEL PROTOTIPO ---
   const [profile, setProfile] = useState("ciudadano"); // ciudadano | profesional | tecnico
@@ -25,12 +35,16 @@ export function VisorView() {
   const [origin, setOrigin] = useState("Plaza de Bolívar");
   const [originB, setOriginB] = useState("");
   const [destination, setDestination] = useState("");
-  const [analysisMode, setAnalysisMode] = useState<"explore" | "route" | "compare">("explore");
+  const [analysisMode, setAnalysisMode] = useState<"explore" | "route" | "compare" | "multiple">("explore");
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showFloatingCard, setShowFloatingCard] = useState(true);
   const [showLocationModal, setShowLocationModal] = useState(true);
   const [showExportModal, setShowExportModal] = useState(false);
   const [activeServices, setActiveServices] = useState<string[]>([]);
+  const [layers, setLayers] = useState<LayerState[]>([]);
+  const [multipleOrigins, setMultipleOrigins] = useState<{ id: string, address: string, lat: number, lng: number }[]>([]);
+  const [technicalIntervals, setTechnicalIntervals] = useState<number[]>([5, 15, 30]);
+  const [mapBase, setMapBase] = useState<"dark" | "light" | "satellite">("dark");
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastQueryTime, setLastQueryTime] = useState<number | null>(null);
   const [generatedParams, setGeneratedParams] = useState({
@@ -39,7 +53,7 @@ export function VisorView() {
     destination: "",
     transportMode: "",
     travelTime: 0,
-    analysisMode: "explore" as "explore" | "route" | "compare"
+    analysisMode: "explore" as "explore" | "route" | "compare" | "multiple"
   });
   const [activeInput, setActiveInput] = useState<'A' | 'B' | 'DEST'>('A');
   const [inputMethod, setInputMethod] = useState<"search" | "map" | "gps">("search");
@@ -136,7 +150,16 @@ export function VisorView() {
     setOriginB("");
     setDestination("");
     setActiveServices([]);
+    setLayers([]);
     setLastQueryTime(null);
+    setGeneratedParams({
+      origin: "",
+      originB: "",
+      destination: "",
+      transportMode: "",
+      travelTime: 0,
+      analysisMode: "explore"
+    });
     showToast("Mapa limpiado", "info");
   };
 
@@ -197,6 +220,8 @@ export function VisorView() {
             destination={lastQueryTime !== null ? generatedParams.destination : destination}
             analysisMode={lastQueryTime !== null ? generatedParams.analysisMode : analysisMode}
             activeServices={activeServices}
+            layers={layers}
+            mapBase={mapBase}
             isEmergency={profile === "profesional" && transportMode === "car" && destination !== ""}
             onLocateClick={() => setShowLocationModal(true)}
             hasGenerated={lastQueryTime !== null}
@@ -264,6 +289,15 @@ export function VisorView() {
               setActiveInput={setActiveInput}
               inputMethod={inputMethod}
               setInputMethod={setInputMethod}
+              layers={layers}
+              setLayers={setLayers}
+              mapBase={mapBase}
+              setMapBase={setMapBase}
+              multipleOrigins={multipleOrigins}
+              setMultipleOrigins={setMultipleOrigins}
+              technicalIntervals={technicalIntervals}
+              setTechnicalIntervals={setTechnicalIntervals}
+              hasGenerated={lastQueryTime !== null}
               outdatedReason={getOutdatedReason()}
               generatedTravelTime={lastQueryTime !== null ? generatedParams.travelTime : travelTime}
               generatedTransportMode={lastQueryTime !== null ? generatedParams.transportMode : transportMode}

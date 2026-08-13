@@ -58,9 +58,12 @@ import {
   Utensils,
   Compass,
   Download,
+  Share2,
   Pencil,
   Trash2,
   ArrowUpDown,
+  Layers,
+  Settings2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -159,8 +162,8 @@ const MotorcycleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 interface VisorSidebarProps {
   profile: string;
-  analysisMode: "explore" | "route" | "compare";
-  onAnalysisModeChange: (mode: "explore" | "route" | "compare") => void;
+  analysisMode: "explore" | "route" | "compare" | "multiple";
+  onAnalysisModeChange: (mode: "explore" | "route" | "compare" | "multiple") => void;
   transportMode: string;
   onTransportChange: (mode: string) => void;
   travelTime: number;
@@ -187,6 +190,15 @@ interface VisorSidebarProps {
   setActiveInput: (val: 'A' | 'B' | 'DEST') => void;
   inputMethod: "search" | "map" | "gps";
   setInputMethod: (val: "search" | "map" | "gps") => void;
+  layers: any[];
+  setLayers: (layers: any[]) => void;
+  mapBase: "dark" | "light" | "satellite";
+  setMapBase: (base: "dark" | "light" | "satellite") => void;
+  hasGenerated: boolean;
+  multipleOrigins?: { id: string, address: string, lat: number, lng: number }[];
+  setMultipleOrigins?: (origins: { id: string, address: string, lat: number, lng: number }[]) => void;
+  technicalIntervals?: number[];
+  setTechnicalIntervals?: (intervals: number[]) => void;
 }
 
 export function VisorSidebar({
@@ -218,7 +230,16 @@ export function VisorSidebar({
   activeInput,
   setActiveInput,
   inputMethod,
-  setInputMethod
+  setInputMethod,
+  layers,
+  setLayers,
+  mapBase,
+  setMapBase,
+  hasGenerated,
+  multipleOrigins,
+  setMultipleOrigins,
+  technicalIntervals,
+  setTechnicalIntervals
 }: VisorSidebarProps) {
   const getPoiCount = (type: string | string[]) => {
     if (lastQueryTime === null || !generatedTravelTime || !generatedTransportMode) return null;
@@ -236,9 +257,29 @@ export function VisorSidebar({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showInfoPopover, setShowInfoPopover] = useState(false);
   const [showMainCard, setShowMainCard] = useState(true);
-  const [showAdvanced, setShowAdvanced] = useState(true);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ type: "replace" | "delete"; target: "A" | "B" | "DEST" } | null>(null);
+  const [customSpeed, setCustomSpeed] = useState<string | null>(null);
+
+  const [openSections, setOpenSections] = useState<string[]>(["ubicacion", "movilidad", "tiempo"]);
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => 
+      prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
+    );
+  };
+
+  useEffect(() => {
+    if (hasGenerated) {
+      setOpenSections(prev => {
+        const next = new Set(prev);
+        next.add("resultadosPanel");
+        next.add("capasVisibles");
+        return Array.from(next);
+      });
+    }
+  }, [hasGenerated]);
   
   // Nuevo estado para la intención de análisis: explorar, ruta o comparar
 
@@ -370,21 +411,21 @@ export function VisorSidebar({
       };
     }
     if (profile === "profesional") {
-      if (destination !== "") {
-        return {
-          badge: "MODO SERVICIOS",
-          title: "Analiza la cobertura de servicios",
-          desc: "Identifica qué zonas tienen acceso a hospitales, colegios y otros equipamientos dentro del tiempo seleccionado.",
-          icon: Hospital,
-          glow: "primary-info" as const,
-          badgeClass: "bg-info/15 text-info border-info/30 group-data-[variant=featured]/card:bg-info/15 group-data-[variant=featured]/card:text-info group-data-[variant=featured]/card:border-info/30"
-        };
-      }
       return {
-        badge: "MODO NEGOCIO",
-        title: "Evalúa la ubicación de tu negocio",
-        desc: "Analiza qué tan accesible es un local para clientes y colaboradores desde diferentes zonas de la ciudad.",
-        icon: Store,
+        badge: "MODO PROFESIONAL",
+        title: "Analiza y compara ubicaciones",
+        desc: "Evalúa accesibilidad, cobertura y servicios de diferentes ubicaciones utilizando tiempos de viaje, capas e indicadores.",
+        icon: Building2,
+        glow: "primary-info" as const,
+        badgeClass: "bg-info/15 text-info border-info/30 group-data-[variant=featured]/card:bg-info/15 group-data-[variant=featured]/card:text-info group-data-[variant=featured]/card:border-info/30"
+      };
+    }
+    if (profile === "tecnico") {
+      return {
+        badge: "MODO TÉCNICO",
+        title: "Configura y analiza con mayor detalle",
+        desc: "Controla parámetros avanzados, capas, rangos y datos geoespaciales para realizar análisis especializados de accesibilidad.",
+        icon: Target,
         glow: "primary-info" as const,
         badgeClass: "bg-primary/15 text-primary border-primary/30 group-data-[variant=featured]/card:bg-primary/15 group-data-[variant=featured]/card:text-primary group-data-[variant=featured]/card:border-primary/30"
       };
@@ -632,7 +673,7 @@ export function VisorSidebar({
             ¿Qué quieres analizar?
           </label>
           <TooltipProvider delayDuration={100}>
-            <div className="grid grid-cols-3 gap-2">
+            <div className={cn("grid gap-2", profile === "tecnico" ? "grid-cols-2 md:grid-cols-4" : "grid-cols-3")}>
               {[
                 {
                   id: "explore" as const,
@@ -657,7 +698,15 @@ export function VisorSidebar({
                   tooltip: "Comparar en simultáneo el tiempo de acceso de dos puntos diferentes.",
                   icon: Scale,
                   color: "warning"
-                }
+                },
+                ...(profile === "tecnico" ? [{
+                  id: "multiple" as const,
+                  title: "Análisis múltiple",
+                  desc: "Múltiples escenarios de accesibilidad.",
+                  tooltip: "Genera y superpone diferentes escenarios de accesibilidad para identificar coincidencias.",
+                  icon: Layers,
+                  color: "info"
+                }] : [])
               ].map((mode) => {
                 const isActive = analysisMode === mode.id;
                 const ModeIcon = mode.icon;
@@ -666,8 +715,8 @@ export function VisorSidebar({
                     <TooltipTrigger asChild>
                       <div
                         onClick={() => {
-                          onAnalysisModeChange(mode.id);
-                          if (mode.id === "explore") {
+                          onAnalysisModeChange(mode.id as any);
+                          if (mode.id === "explore" || mode.id === "multiple") {
                             onDestinationChange("");
                           } else if (!destination) {
                             onDestinationChange("Centro Comercial Gran Estación");
@@ -682,7 +731,8 @@ export function VisorSidebar({
                             ? [
                                 mode.color === "success" && "border-success bg-success/5 text-success shadow-xs ring-1 ring-success/15",
                                 mode.color === "primary" && "border-primary bg-primary/5 text-primary shadow-xs ring-1 ring-primary/15",
-                                mode.color === "warning" && "border-warning bg-warning/5 text-warning shadow-xs ring-1 ring-warning/15"
+                                mode.color === "warning" && "border-warning bg-warning/5 text-warning shadow-xs ring-1 ring-warning/15",
+                                mode.color === "info" && "border-info bg-info/5 text-info shadow-xs ring-1 ring-info/15"
                               ]
                             : "border-border/60 bg-card hover:bg-surface/50 text-muted-foreground hover:text-foreground"
                         )}
@@ -693,7 +743,8 @@ export function VisorSidebar({
                             ? [
                                 mode.color === "success" && "bg-success/10 text-success",
                                 mode.color === "primary" && "bg-primary/10 text-primary",
-                                mode.color === "warning" && "bg-warning/10 text-warning"
+                                mode.color === "warning" && "bg-warning/10 text-warning",
+                                mode.color === "info" && "bg-info/10 text-info"
                               ]
                             : "bg-surface text-muted-foreground"
                         )}>
@@ -703,7 +754,7 @@ export function VisorSidebar({
                         <span className="text-[8px] text-muted-foreground leading-normal mt-0.5">{mode.desc}</span>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent variant="info" side="right" sideOffset={8} className="text-xs font-medium max-w-xs text-center">
+                    <TooltipContent variant={mode.color as any} side="right" sideOffset={8} className="text-xs font-medium max-w-xs text-center">
                       {mode.tooltip}
                     </TooltipContent>
                   </Tooltip>
@@ -717,13 +768,16 @@ export function VisorSidebar({
 
         {/* Sección 1: Ubicaciones */}
         <div className="space-y-4">
-          <div className="flex items-start justify-between">
+          <div 
+            className="flex items-start justify-between cursor-pointer group"
+            onClick={() => toggleSection("ubicacion")}
+          >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">
                   1
                 </span>
-                <span className="text-sm font-bold text-foreground">
+                <span className="text-sm font-bold text-foreground group-hover:underline">
                   {analysisMode === "explore" && "¿Desde dónde quieres analizar?"}
                   {analysisMode === "route" && "¿Desde dónde sales?"}
                   {analysisMode === "compare" && "¿Cuáles ubicaciones comparas?"}
@@ -736,23 +790,32 @@ export function VisorSidebar({
               </p>
             </div>
 
-            <TooltipProvider delayDuration={100}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer pt-0.5 shrink-0">
-                    <HelpCircle className="size-3.5" />
-                    <span>¿Cómo hacerlo?</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent variant="info" side="right" sideOffset={8} className="max-w-xs text-left p-3 text-xs leading-normal">
-                  Busca una dirección en el cuadro de búsqueda, haz clic directamente en cualquier punto del mapa, o usa tu GPS para detectar tu ubicación actual.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center gap-2 pt-0.5">
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer shrink-0">
+                      <HelpCircle className="size-3.5" />
+                      <span>¿Cómo hacerlo?</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent variant="info" side="right" sideOffset={8} className="max-w-xs text-left p-3 text-xs leading-normal">
+                    Busca una dirección en el cuadro de búsqueda, haz clic directamente en cualquier punto del mapa, o usa tu GPS para detectar tu ubicación actual.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {openSections.includes("ubicacion") ? (
+                <ChevronUp className="size-4 text-muted-foreground mt-0.5" />
+              ) : (
+                <ChevronDown className="size-4 text-muted-foreground mt-0.5" />
+              )}
+            </div>
           </div>
 
-          {/* Capsule Tab Selector (Buscar, Mapa, GPS) */}
-          <div className="grid grid-cols-3 gap-1 bg-surface/40 border border-border/70 p-0.5 rounded-xl">
+          {openSections.includes("ubicacion") && (
+            <div className="space-y-4 pt-1 animate-in slide-in-from-top-2 duration-200">
+          {/* Capsule Tab Selector (Buscar, Mapa, GPS, Coordenadas) */}
+          <div className={cn("grid gap-1 bg-surface/40 border border-border/70 p-0.5 rounded-xl", profile === "tecnico" ? "grid-cols-4" : "grid-cols-3")}>
             <div
               onClick={() => setInputMethod("search")}
               className={cn(
@@ -762,7 +825,7 @@ export function VisorSidebar({
                   : "text-muted-foreground hover:text-foreground border border-transparent"
               )}
             >
-              <svg className="size-3.5 mr-1" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <svg className="size-3.5 mr-1 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Buscar dirección
@@ -777,7 +840,7 @@ export function VisorSidebar({
                   : "text-muted-foreground hover:text-foreground border border-transparent"
               )}
             >
-              <MapPin className="size-3.5 mr-1" />
+              <MapPin className="size-3.5 mr-1 shrink-0" />
               Seleccionar mapa
             </div>
 
@@ -791,6 +854,21 @@ export function VisorSidebar({
               <Navigation className="size-3.5 rotate-45 mr-1" />
               Ubicación actual
             </div>
+            
+            {profile === "tecnico" && (
+              <div
+                onClick={() => setInputMethod("gps")} // Using 'gps' state temporarily for Coordinates since it is unused otherwise, or we can use 'coords'. The interface says 'search'|'map'|'gps', I will use 'gps' for Coordenadas in técnico
+                className={cn(
+                  "flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-[9px] font-bold transition-all cursor-pointer",
+                  inputMethod === "gps"
+                    ? "bg-primary/10 text-primary border border-primary/20 shadow-xs"
+                    : "text-muted-foreground hover:text-foreground border border-transparent"
+                )}
+              >
+                <Compass className="size-3.5 mr-1 shrink-0" />
+                Coordenadas
+              </div>
+            )}
           </div>
 
           {inputMethod === "search" ? (
@@ -904,6 +982,50 @@ export function VisorSidebar({
                 </div>
               )}
             </div>
+          ) : inputMethod === "gps" && profile === "tecnico" ? (
+            <div className="flex items-center gap-2 w-full animate-in fade-in duration-200">
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-muted-foreground mb-1 block">Latitud</label>
+                <input 
+                  type="text" 
+                  placeholder="Ej: 4.5981" 
+                  className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all placeholder:font-sans placeholder:text-muted-foreground/50" 
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value;
+                      if (val) {
+                        const evt = { target: { value: `Lat: ${val}, Lng: ...` } } as any;
+                        if (activeInput === 'A') onOriginChange(evt.target.value);
+                        else if (activeInput === 'B') onOriginBChange?.(evt.target.value);
+                        else onDestinationChange(evt.target.value);
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-muted-foreground mb-1 block">Longitud</label>
+                <input 
+                  type="text" 
+                  placeholder="Ej: -74.0760" 
+                  className="w-full bg-background border border-border/80 rounded-lg px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all placeholder:font-sans placeholder:text-muted-foreground/50" 
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = (e.target as HTMLInputElement).value;
+                      if (val) {
+                        const evt = { target: { value: `Lat: ..., Lng: ${val}` } } as any;
+                        if (activeInput === 'A') onOriginChange(evt.target.value);
+                        else if (activeInput === 'B') onOriginBChange?.(evt.target.value);
+                        else onDestinationChange(evt.target.value);
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <Button size="sm" variant="primary" className="mt-4 h-9 px-3 shrink-0" onClick={() => {}}>
+                Ubicar
+              </Button>
+            </div>
           ) : (
             <div className="flex items-center gap-2.5 p-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 text-xs text-primary leading-normal animate-in fade-in duration-200">
               <MapPin className="size-4.5 animate-bounce shrink-0" />
@@ -1010,275 +1132,53 @@ export function VisorSidebar({
                           }}
                         >
                           <Trash2 className="size-3.5" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
-                        Eliminar ubicación A
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-
-              
-              {/* Origen B (solo compare) */}
-              {analysisMode === "compare" && originB && (
-                <div 
-                  onClick={() => setActiveInput('B')}
-                  className={cn(
-                    "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
-                    activeInput === 'B' 
-                      ? "border-info bg-info/5 shadow-xs ring-1 ring-info/20" 
-                      : "border-border/60 bg-card hover:bg-surface/50"
-                  )}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex flex-col gap-0.5 opacity-30 cursor-grab shrink-0">
-                      <span className="size-1 rounded-full bg-foreground" />
-                      <span className="size-1 rounded-full bg-foreground" />
-                      <span className="size-1 rounded-full bg-foreground" />
-                    </div>
-
-                    <div className="flex items-center justify-center size-9 rounded-full bg-info/10 text-info font-bold text-sm shrink-0">
-                      <MapPin className="size-4" />
-                    </div>
-                    <div className="text-left min-w-0">
-                      <div className="text-xs font-bold text-foreground truncate max-w-[120px] md:max-w-[160px]">
-                        {originB}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[160px]">
-                        Bogotá, Colombia
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge variant="secondary" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none bg-info/10 text-info">
-                      ORIGEN B
-                    </Badge>
-
-                    {/* Botón Reemplazar / Editar */}
-                    <TooltipProvider delayDuration={100}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div 
-                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-info/10 hover:text-info hover:border-info/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveInput('B');
-                              setInputMethod('search');
-                            }}
-                          >
-                            <Pencil className="size-3.5" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent variant="secondary" side="right" sideOffset={8} className="text-xs font-bold">
-                          Editar Origen B
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* Botón Eliminar */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div 
-                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (onOriginBChange) {
-                                onOriginBChange("");
-                              }
-                            }}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
-                          Eliminar Origen B
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-              )}
-              {analysisMode === "compare" && !originB && (
-                <div 
-                  onClick={() => {
-                    setActiveInput('B');
-                  }}
-                  className={cn(
-                    "flex items-center justify-center gap-3 p-3.5 rounded-xl border border-dashed transition-all cursor-pointer group",
-                    activeInput === 'B' 
-                      ? "border-info bg-info/5 ring-1 ring-info/20" 
-                      : "border-border/80 bg-surface/10 hover:bg-surface/30 text-muted-foreground"
-                  )}
-                >
-                  <Plus className="size-4" />
-                  <span className="text-xs font-bold">Agregar Origen B</span>
-                </div>
-              )}
-
-              {analysisMode === "compare" && !originB && (
-                <div 
-                  onClick={() => {
-                    setActiveInput('B');
-                  }}
-                  className={cn(
-                    "flex items-center justify-center gap-3 p-3.5 rounded-xl border border-dashed transition-all cursor-pointer group",
-                    activeInput === 'B' 
-                      ? "border-info bg-info/5 ring-1 ring-info/20" 
-                      : "border-border/80 bg-surface/10 hover:bg-surface/30 text-muted-foreground"
-                  )}
-                >
-                  <Plus className="size-4" />
-                  <span className="text-xs font-bold">Agregar Origen B</span>
-                </div>
-              )}
-
-              {/* Ubicación B (Destino) */}
-              {analysisMode !== "explore" ? (
-                <div 
-                  onClick={() => setActiveInput('DEST')}
-                  className={cn(
-                    "flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer relative animate-in fade-in duration-300",
-                    activeInput === 'DEST'
-                      ? "border-warning bg-warning/5 shadow-xs ring-1 ring-warning/20" 
-                      : "border-border/60 bg-card hover:bg-surface/50"
-                  )}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    {/* Drag Handler :: */}
-                    <div 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSwapLocations();
-                      }}
-                      className="flex flex-col gap-0.5 opacity-40 hover:opacity-100 transition-all cursor-pointer shrink-0 p-1 hover:bg-surface rounded group/handle"
-                      title="Intercambiar Origen y Destino"
-                    >
-                      <span className="size-1 rounded-full bg-foreground group-hover/handle:bg-warning transition-colors" />
-                      <span className="size-1 rounded-full bg-foreground group-hover/handle:bg-warning transition-colors" />
-                      <span className="size-1 rounded-full bg-foreground group-hover/handle:bg-warning transition-colors" />
-                    </div>
-
-                    <div className="flex items-center justify-center size-9 rounded-full bg-warning/10 text-warning font-bold text-sm shrink-0">
-                      {getLocationIcon(destination || "Centro Comercial Gran Estación", "B")}
-                    </div>
-                    <div className="text-left min-w-0">
-                      <div className="text-xs font-bold text-foreground truncate max-w-[120px] md:max-w-[160px]">
-                        {destination || "Centro Comercial Gran Estación"}
-                      </div>
-                      <div className="text-[10px] text-muted-foreground truncate max-w-[120px] md:max-w-[160px]">
-                        {destination ? "Bogotá, Colombia" : "Ac. 26 # 68B-50, Bogotá, Colombia"}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Badge variant="warning" appearance="soft" className="text-[8px] font-bold py-1 px-2 uppercase font-mono tracking-widest leading-none">
-                      DESTINO
-                    </Badge>
-
-                    {/* Botón Reemplazar / Editar */}
-                    <TooltipProvider delayDuration={100}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div 
-                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-warning/10 hover:text-warning hover:border-warning/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmAction({ type: "replace", target: "DEST" });
-                            }}
-                          >
-                            <Pencil className="size-3.5" />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent variant="warning" side="right" sideOffset={8} className="text-xs font-bold">
-                          Reemplazar esta ubicación
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* Botón Eliminar */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button 
-                            type="button"
-                            className="rounded-lg border border-border/80 bg-surface/50 hover:bg-danger/10 hover:text-danger hover:border-danger/40 size-7 flex items-center justify-center shrink-0 transition-colors cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setConfirmAction({ type: "delete", target: "DEST" });
-                            }}
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent variant="danger" side="right" sideOffset={8} className="text-xs font-bold">
-                          Eliminar Destino
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-              ) : (
-                /* Dotted Add Card */
-                <div 
-                  onClick={() => {
-                    onAnalysisModeChange("compare");
-                    onOriginBChange?.("Centro Comercial Gran Estación");
-                    onDestinationChange("Universidad Nacional");
-                    setActiveInput('DEST');
-                  }}
-                  className="flex items-center gap-3 p-3.5 rounded-xl border border-dashed border-border/80 bg-surface/10 hover:bg-surface/30 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-center size-9 rounded-full bg-muted text-muted-foreground font-bold text-sm shrink-0 group-hover:scale-105 transition-transform border border-border">
-                    <Plus className="size-4" />
-                  </div>
-                  <div className="text-left min-w-0">
-                    <div className="text-xs font-bold text-primary group-hover:underline">
-                      Agregar ubicación para comparar
-                    </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      Puedes comparar hasta 2 ubicaciones en el geovisor.
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
         </div>
+      )}
+    </div>
 
         <Separator className="bg-border/50" />
 
         {/* Sección 2: ¿Cómo te mueves? */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div 
+            className="flex items-center justify-between cursor-pointer group"
+            onClick={() => toggleSection("movilidad")}
+          >
             <div className="flex items-center gap-2">
               <span className="flex items-center justify-center size-6 rounded-full bg-info text-info-foreground font-bold text-xs">
                 2
               </span>
-              <span className="text-sm font-bold text-foreground">
+              <span className="text-sm font-bold text-foreground group-hover:underline">
                 ¿Cómo te mueves?
               </span>
             </div>
 
-            {/* Tooltip con explicación de importancia */}
-            <TooltipProvider delayDuration={100}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button type="button" className="flex items-center gap-1 text-info hover:underline text-[11px] font-bold cursor-pointer">
-                    <Info className="size-3.5" />
-                    <span>¿Por qué importa?</span>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent variant="info" side="left" sideOffset={8} className="text-xs font-medium max-w-xs leading-relaxed">
-                  El medio de transporte determina la velocidad y las vías accesibles (ciclorrutas, peatonales o vías vehiculares), cambiando drásticamente el área de cobertura.
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center gap-2">
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-info hover:underline text-[11px] font-bold cursor-pointer">
+                      <Info className="size-3.5" />
+                      <span>¿Por qué importa?</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent variant="info" side="left" sideOffset={8} className="text-xs font-medium max-w-xs leading-relaxed">
+                    El medio de transporte determina la velocidad y las vías accesibles (ciclorrutas, peatonales o vías vehiculares), cambiando drásticamente el área de cobertura.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              {openSections.includes("movilidad") ? (
+                <ChevronUp className="size-4 text-muted-foreground mt-0.5" />
+              ) : (
+                <ChevronDown className="size-4 text-muted-foreground mt-0.5" />
+              )}
+            </div>
           </div>
 
-
-
-          <TooltipProvider delayDuration={100}>
+          {openSections.includes("movilidad") && (
+            <div className="space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
+              <TooltipProvider delayDuration={100}>
             <div className="grid grid-cols-5 gap-1.5">
               {transportModes.map((mode) => {
                 const Icon = mode.icon;
@@ -1309,9 +1209,41 @@ export function VisorSidebar({
               })}
             </div>
           </TooltipProvider>
-          <p className="text-[10px] text-muted-foreground text-center italic">
-            Velocidad promedio: {transportModes.find(m => m.id === transportMode)?.speed}
-          </p>
+              
+              {profile === "tecnico" ? (
+                <div className="flex items-center gap-2 mt-2 bg-surface/30 p-2 rounded-lg border border-border/50 animate-in fade-in">
+                  <div className="flex-1">
+                    <label className="text-[10px] font-bold text-muted-foreground block mb-1">Velocidad de referencia (km/h)</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="number"
+                        value={customSpeed !== null ? customSpeed : transportModes.find(m => m.id === transportMode)?.speed.replace(" km/h", "")}
+                        onChange={(e) => setCustomSpeed(e.target.value)}
+                        className="w-full bg-background border border-border/80 rounded-md px-2 py-1.5 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
+                        min="1"
+                        max="120"
+                      />
+                      {customSpeed !== null && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="size-7 shrink-0 text-muted-foreground hover:text-danger" 
+                          onClick={() => setCustomSpeed(null)}
+                          title="Restablecer valor por defecto"
+                        >
+                          <RotateCcw className="size-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[10px] text-muted-foreground text-center italic">
+                  Velocidad promedio: {transportModes.find(m => m.id === transportMode)?.speed}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Ocultar sección de tiempo en modo calcular ruta */}
@@ -1321,131 +1253,193 @@ export function VisorSidebar({
 
             {/* Sección 3: ¿Cuánto tiempo tienes? */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div 
+                className="flex items-center justify-between cursor-pointer group"
+                onClick={() => toggleSection("tiempo")}
+              >
                 <div className="flex items-center gap-2">
                   <span className="flex items-center justify-center size-6 rounded-full bg-success text-success-foreground font-bold text-xs">
                     3
                   </span>
-                  <span className="text-sm font-bold text-foreground">
+                  <span className="text-sm font-bold text-foreground group-hover:underline">
                     ¿Cuánto tiempo tienes?
                   </span>
                 </div>
 
-                {/* Tooltip con explicación de importancia del tiempo */}
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button type="button" className="flex items-center gap-1 text-success hover:underline text-[11px] font-bold cursor-pointer">
-                        <Info className="size-3.5" />
-                        <span>¿Por qué importa?</span>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent variant="success" side="left" sideOffset={8} className="text-xs font-medium max-w-xs leading-relaxed">
-                      Define el límite máximo de desplazamiento en minutos. El geovisor traza la mancha concéntrica (isócrona) que delimita hasta dónde puedes llegar en ese intervalo.
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-
-              {/* Input Numérico para Tiempo Personalizado */}
-              <div className="flex items-center justify-center gap-2 py-1">
-                <input 
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={travelTime}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    if (!isNaN(val)) {
-                      onTimeChange(Math.max(1, Math.min(120, val)));
-                    }
-                  }}
-                  className={cn(
-                    "w-16 h-9 text-center font-bold text-lg bg-surface border rounded-lg text-foreground focus:outline-none focus:ring-2 transition-all",
-                    activeTimeTheme.ring
+                <div className="flex items-center gap-2">
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-success hover:underline text-[11px] font-bold cursor-pointer">
+                          <Info className="size-3.5" />
+                          <span>¿Por qué importa?</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent variant="success" side="left" sideOffset={8} className="text-xs font-medium max-w-xs leading-relaxed">
+                        Define el límite máximo de desplazamiento en minutos. El geovisor traza la mancha concéntrica (isócrona) que delimita hasta dónde puedes llegar en ese intervalo.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {openSections.includes("tiempo") ? (
+                    <ChevronUp className="size-4 text-muted-foreground mt-0.5" />
+                  ) : (
+                    <ChevronDown className="size-4 text-muted-foreground mt-0.5" />
                   )}
-                />
-                <span className="text-sm font-bold text-muted-foreground">minutos</span>
-              </div>
-
-              {/* Slider Deslizador de Tiempo */}
-              <div className="px-2 pt-2 pb-6 relative group cursor-pointer">
-                <input 
-                  type="range" 
-                  min="5" 
-                  max="60" 
-                  step="5" 
-                  value={travelTime <= 60 ? travelTime : 60} 
-                  onChange={(e) => onTimeChange(parseInt(e.target.value))}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                />
-                <div className="relative h-1.5 w-full bg-surface rounded-full z-10">
-                  <div 
-                    className={cn("absolute h-full rounded-full transition-all duration-300", activeTimeTheme.fillBg)}
-                    style={{ width: `${Math.min(100, Math.max(0, ((Math.min(60, travelTime) - 5) / 55) * 100))}%` }}
-                  />
-                  <div 
-                    className={cn("absolute top-1/2 -translate-x-1/2 -translate-y-1/2 size-4.5 bg-background border-2 rounded-full shadow-md transition-all duration-300 z-10", activeTimeTheme.border)}
-                    style={{ left: `${Math.min(100, Math.max(0, ((Math.min(60, travelTime) - 5) / 55) * 100))}%` }}
-                  />
-                  
-                  <div className="absolute top-4 w-full flex justify-between px-0">
-                    {[5, 15, 30, 45, 60].map(m => (
-                      <span 
-                        key={m} 
-                        className={cn(
-                          "text-[10px] font-bold transition-colors cursor-pointer", 
-                          travelTime === m 
-                            ? `${activeTimeTheme.text} font-black scale-105` 
-                            : "text-muted-foreground/60"
-                        )}
-                        onClick={() => onTimeChange(m)}
-                      >
-                        {m}
-                      </span>
-                    ))}
-                    <span className="text-[10px] font-bold text-muted-foreground/60">min</span>
-                  </div>
                 </div>
               </div>
+
+              {openSections.includes("tiempo") && (
+                <div className="space-y-3 animate-in slide-in-from-top-2 fade-in duration-200">
+                  {profile === "tecnico" ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Layers className="size-4 text-primary" />
+                        <span className="text-xs font-bold text-foreground">Intervalos isócronos (minutos)</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[5, 10, 15, 30, 45, 60].map(m => {
+                          const isActive = technicalIntervals?.includes(m);
+                          return (
+                            <button
+                              key={m}
+                              onClick={() => {
+                                if (setTechnicalIntervals) {
+                                  if (isActive) {
+                                    if (technicalIntervals.length > 1) {
+                                      setTechnicalIntervals(technicalIntervals.filter(i => i !== m));
+                                    }
+                                  } else {
+                                    if (technicalIntervals.length < 3) {
+                                      setTechnicalIntervals([...technicalIntervals, m].sort((a, b) => a - b));
+                                    } else {
+                                      // TODO: Toast maximum 3 intervals?
+                                    }
+                                  }
+                                }
+                              }}
+                              className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-bold transition-all border",
+                                isActive 
+                                  ? "bg-primary text-primary-foreground border-primary shadow-sm" 
+                                  : "bg-surface/50 border-border/80 text-muted-foreground hover:bg-surface hover:text-foreground"
+                              )}
+                            >
+                              {m} min
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground italic">Selecciona hasta 3 intervalos simultáneos para el análisis de cobertura.</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Input Numérico para Tiempo Personalizado */}
+                      <div className="flex items-center justify-center gap-2 py-1">
+                        <input 
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={travelTime}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (!isNaN(val)) {
+                              onTimeChange(Math.max(1, Math.min(120, val)));
+                            }
+                          }}
+                          className={cn(
+                            "w-16 h-9 text-center font-bold text-lg bg-surface border rounded-lg text-foreground focus:outline-none focus:ring-2 transition-all",
+                            activeTimeTheme.ring
+                          )}
+                        />
+                        <span className="text-sm font-bold text-muted-foreground">minutos</span>
+                      </div>
+
+                      {/* Slider Deslizador de Tiempo */}
+                      <div className="px-2 pt-2 pb-6 relative group cursor-pointer">
+                        <input 
+                          type="range" 
+                          min="5" 
+                          max="60" 
+                          step="5" 
+                          value={travelTime <= 60 ? travelTime : 60} 
+                          onChange={(e) => onTimeChange(parseInt(e.target.value))}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                        />
+                        <div className="relative h-1.5 w-full bg-surface rounded-full z-10">
+                          <div 
+                            className={cn("absolute h-full rounded-full transition-all duration-300", activeTimeTheme.fillBg)}
+                            style={{ width: `${Math.min(100, Math.max(0, ((Math.min(60, travelTime) - 5) / 55) * 100))}%` }}
+                          />
+                          <div 
+                            className={cn("absolute top-1/2 -translate-x-1/2 -translate-y-1/2 size-4.5 bg-background border-2 rounded-full shadow-md transition-all duration-300 z-10", activeTimeTheme.border)}
+                            style={{ left: `${Math.min(100, Math.max(0, ((Math.min(60, travelTime) - 5) / 55) * 100))}%` }}
+                          />
+                          
+                          <div className="absolute top-4 w-full flex justify-between px-0">
+                            {[5, 15, 30, 45, 60].map(m => (
+                              <span 
+                                key={m} 
+                                className={cn(
+                                  "text-[10px] font-bold transition-colors cursor-pointer", 
+                                  travelTime === m 
+                                    ? `${activeTimeTheme.text} font-black scale-105` 
+                                    : "text-muted-foreground/60"
+                                )}
+                                onClick={() => onTimeChange(m)}
+                              >
+                                {m}
+                              </span>
+                            ))}
+                            <span className="text-[10px] font-bold text-muted-foreground/60">min</span>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
 
-        <Separator className="bg-border/50" />
-
-        {/* Sección 4: Opciones avanzadas */}
-        <div className="space-y-3">
+        {/* Sección 4: Capas y análisis */}
+        <div className="space-y-4 pt-4 border-t">
           <TooltipProvider delayDuration={100}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button 
-                  onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center justify-between w-full text-left cursor-pointer group"
+                <div 
+                  className="flex items-center justify-between cursor-pointer group"
+                  onClick={() => toggleSection("capas")}
                 >
                   <div className="flex items-center gap-2">
                     <span className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">
                       {analysisMode === "explore" ? 4 : 3}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-foreground">
-                        Opciones avanzadas
+                      <span className="text-sm font-bold text-foreground group-hover:underline">
+                        Capas y análisis
                       </span>
                       <Badge variant="neutral" appearance="outline" className="text-[9px] font-mono uppercase px-2 py-0.5 border-primary/30 text-primary bg-primary/5 font-bold">
                         Opcional
                       </Badge>
                     </div>
                   </div>
-                  {showAdvanced ? <ChevronUp className="size-4 text-muted-foreground group-hover:text-primary transition-colors" /> : <ChevronDown className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />}
-                </button>
+                  <div className="flex items-center gap-2">
+                    {openSections.includes("capas") ? (
+                      <ChevronUp className="size-4 text-muted-foreground mt-0.5" />
+                    ) : (
+                      <ChevronDown className="size-4 text-muted-foreground mt-0.5" />
+                    )}
+                  </div>
+                </div>
               </TooltipTrigger>
               <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold">
-                {showAdvanced ? "Colapsar opciones avanzadas" : "Desplegar opciones avanzadas"}
+                {openSections.includes("capas") ? "Colapsar capas y análisis" : "Desplegar capas y análisis"}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          {showAdvanced && (
+          {openSections.includes("capas") && (
             <div className="space-y-4 pt-1 animate-in slide-in-from-top-2 duration-200">
               {/* Banner informativo: Paso Opcional */}
               <div className="p-2.5 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-2.5 text-left text-[11px] text-muted-foreground">
@@ -1458,10 +1452,9 @@ export function VisorSidebar({
                 </p>
               </div>
               {/* Profile Specific Controls inside Advanced */}
-              {profile === "ciudadano" && (
-                <div className="space-y-2 pt-1 animate-in fade-in duration-300">
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    {analysisMode === "explore" && "Servicios dentro de tu alcance"}
+              <div className="space-y-2 pt-1 animate-in fade-in duration-300">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {analysisMode === "explore" && "Puntos de interés (POIs)"}
                     {analysisMode === "route" && "Servicios cerca de tu recorrido"}
                     {analysisMode === "compare" && "Servicios cerca de las rutas"}
                   </h4>
@@ -1630,8 +1623,6 @@ export function VisorSidebar({
                     </label>
                   </div>
                 </div>
-              )}
-
               {profile === "profesional" && (
                 <div className="space-y-2 pt-1 animate-in fade-in duration-300">
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Capas de Negocio</h4>
@@ -1747,6 +1738,262 @@ export function VisorSidebar({
               </p>
             </div>
           </div>
+        )}
+
+        {/* Secciones Adicionales (Profesional y Técnico) */}
+        {(profile === "profesional" || profile === "tecnico") && hasGenerated && (
+          <>
+            <Separator className="bg-border/50" />
+            
+            {/* Sección 5: Administrador de Capas */}
+            <div className="space-y-4">
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className="flex items-center justify-between cursor-pointer group"
+                      onClick={() => toggleSection("capasVisibles")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">
+                          5
+                        </span>
+                        <span className="text-sm font-bold text-foreground group-hover:underline">
+                          {profile === "tecnico" ? "Gestor avanzado de capas" : "Capas visibles"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {openSections.includes("capasVisibles") ? (
+                          <ChevronUp className="size-4 text-muted-foreground mt-0.5" />
+                        ) : (
+                          <ChevronDown className="size-4 text-muted-foreground mt-0.5" />
+                        )}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold">
+                    {openSections.includes("capasVisibles") ? "Ocultar capas" : "Mostrar capas"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {openSections.includes("capasVisibles") && (
+                <div className="space-y-3 pt-1 animate-in slide-in-from-top-2 duration-200">
+                  {profile === "tecnico" ? (
+                    <div className="p-3 rounded-xl bg-surface/50 border border-border text-sm space-y-3 divide-y divide-border/50">
+                      {/* Advanced Layers List */}
+                      <div className="space-y-2">
+                        <span className="font-bold text-xs text-primary mb-2 block">Polígonos Isócronos</span>
+                        {/* Layer Item 1 */}
+                        <div className="flex flex-col gap-2 p-2 rounded-lg bg-background border border-border/80 group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="flex flex-col gap-0.5 cursor-grab opacity-40 hover:opacity-100 p-1">
+                                <span className="size-1 rounded-full bg-foreground" />
+                                <span className="size-1 rounded-full bg-foreground" />
+                                <span className="size-1 rounded-full bg-foreground" />
+                              </div>
+                              <span className="text-xs font-bold">Isócrona {travelTime} min</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="size-3.5 rounded-sm bg-primary border border-primary/50 cursor-pointer" title="Cambiar color" />
+                              <Switch defaultChecked className="scale-75" />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 pl-6">
+                            <span className="text-[9px] text-muted-foreground">Opacidad:</span>
+                            <input type="range" min="0" max="100" defaultValue="80" className="flex-1 h-1 bg-border rounded-lg appearance-none cursor-pointer" />
+                            <span className="text-[9px] font-mono w-6 text-right text-muted-foreground">80%</span>
+                          </div>
+                        </div>
+
+                        {/* Layer Item 2 (if multiple intervals) */}
+                        {technicalIntervals && technicalIntervals.map((interval, idx) => (
+                          <div key={idx} className="flex flex-col gap-2 p-2 rounded-lg bg-background border border-border/80 group mt-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-0.5 cursor-grab opacity-40 hover:opacity-100 p-1">
+                                  <span className="size-1 rounded-full bg-foreground" />
+                                  <span className="size-1 rounded-full bg-foreground" />
+                                  <span className="size-1 rounded-full bg-foreground" />
+                                </div>
+                                <span className="text-xs font-bold">Isócrona {interval} min</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className={cn("size-3.5 rounded-sm border cursor-pointer", idx === 0 ? "bg-success border-success/50" : idx === 1 ? "bg-warning border-warning/50" : "bg-danger border-danger/50")} title="Cambiar color" />
+                                <Switch defaultChecked className="scale-75" />
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 pl-6">
+                              <span className="text-[9px] text-muted-foreground">Opacidad:</span>
+                              <input type="range" min="0" max="100" defaultValue="60" className="flex-1 h-1 bg-border rounded-lg appearance-none cursor-pointer" />
+                              <span className="text-[9px] font-mono w-6 text-right text-muted-foreground">60%</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {activeServices.length > 0 && (
+                        <div className="space-y-2 pt-3">
+                          <span className="font-bold text-xs text-primary mb-2 block">Capas de Puntos (POIs)</span>
+                          {activeServices.map(s => (
+                            <div key={s} className="flex flex-col gap-1 p-2 rounded-lg bg-background border border-border/80">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex flex-col gap-0.5 cursor-grab opacity-40 hover:opacity-100 p-1">
+                                    <span className="size-1 rounded-full bg-foreground" />
+                                    <span className="size-1 rounded-full bg-foreground" />
+                                    <span className="size-1 rounded-full bg-foreground" />
+                                  </div>
+                                  <span className="text-[11px] font-bold capitalize">
+                                    {s === "hospitals" ? "Salud" : 
+                                     s === "schools" ? "Educación" : 
+                                     s === "stores" ? "Comercio" : s}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Switch defaultChecked className="scale-75" />
+                                </div>
+                              </div>
+                              {/* Subcategorías mock para perfil técnico */}
+                              {(s === "hospitals" || s === "schools" || s === "stores") && (
+                                <div className="pl-6 pr-2 py-1 space-y-1.5 border-l-2 border-border/30 ml-2 mt-1">
+                                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                    <span>{s === "hospitals" ? "Hospitales Nivel III" : s === "schools" ? "Colegios Públicos" : "Centros Comerciales"}</span>
+                                    <Checkbox defaultChecked className="size-3" />
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                    <span>{s === "hospitals" ? "Clínicas" : s === "schools" ? "Colegios Privados" : "Supermercados"}</span>
+                                    <Checkbox defaultChecked className="size-3" />
+                                  </div>
+                                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                    <span>{s === "hospitals" ? "Centros de Salud" : s === "schools" ? "Universidades" : "Tiendas de Barrio"}</span>
+                                    <Checkbox defaultChecked className="size-3" />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-xl bg-surface/50 border border-border text-sm space-y-3">
+                      {/* Isocronas */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs">Capa: Isócrona ({travelTime} min)</span>
+                          <Switch defaultChecked />
+                        </div>
+                        <div className="pl-4 space-y-2 border-l-2 border-border/50">
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            <span>0 - 5 min (Alta)</span>
+                            <Switch defaultChecked className="scale-75" />
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            <span>5 - 15 min (Media)</span>
+                            <Switch defaultChecked className="scale-75" />
+                          </div>
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                            <span>15 - 30 min (Baja)</span>
+                            <Switch defaultChecked className="scale-75" />
+                          </div>
+                        </div>
+                      </div>
+                      {/* POIs */}
+                      {activeServices.length > 0 && (
+                        <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
+                          <span className="font-bold text-xs">Puntos de Interés</span>
+                          {activeServices.map(s => (
+                            <div key={s} className="flex items-center justify-between pl-4 text-[11px] text-muted-foreground">
+                              <span>{s}</span>
+                              <Switch defaultChecked className="scale-75" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {/* Slider Opacidad */}
+                      <div className="pt-2 border-t border-border/50">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-bold">Opacidad general</span>
+                          <span className="text-[10px] text-muted-foreground">80%</span>
+                        </div>
+                        <input type="range" min="0" max="100" defaultValue="80" className="w-full h-1 bg-border rounded-lg appearance-none cursor-pointer" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Separator className="bg-border/50" />
+            
+            {/* Sección 6: Resultados */}
+            <div className="space-y-4">
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div 
+                      className="flex items-center justify-between cursor-pointer group"
+                      onClick={() => toggleSection("resultadosPanel")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center justify-center size-6 rounded-full bg-primary text-primary-foreground font-bold text-xs">
+                          6
+                        </span>
+                        <span className="text-sm font-bold text-foreground group-hover:underline">
+                          Resultados y Análisis
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {openSections.includes("resultadosPanel") ? (
+                          <ChevronUp className="size-4 text-muted-foreground mt-0.5" />
+                        ) : (
+                          <ChevronDown className="size-4 text-muted-foreground mt-0.5" />
+                        )}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent variant="primary" side="right" sideOffset={8} className="text-xs font-bold">
+                    {openSections.includes("resultadosPanel") ? "Ocultar resultados" : "Ver resultados"}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {openSections.includes("resultadosPanel") && (
+                <div className="space-y-3 pt-1 animate-in slide-in-from-top-2 duration-200">
+                  {analysisMode === "compare" ? (
+                    <div className="p-3 rounded-xl bg-info/10 border border-info/30 space-y-2">
+                      <h4 className="text-xs font-bold text-info flex items-center gap-2">
+                        <Scale className="size-4" /> Comparación Profesional
+                      </h4>
+                      <div className="text-[11px] text-foreground space-y-1">
+                        <p><strong>Ubicación A:</strong> 15,200 personas, 45 POIs.</p>
+                        <p><strong>Ubicación B:</strong> 12,500 personas, 38 POIs.</p>
+                        <div className="pt-2 border-t border-info/20 mt-2">
+                          <p className="font-bold">Ganador: Ubicación A</p>
+                          <p className="text-muted-foreground text-[10px]">Mayor cobertura demográfica en el mismo tiempo.</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-xl bg-success/10 border border-success/30 space-y-2">
+                      <h4 className="text-xs font-bold text-success flex items-center gap-2">
+                        <Activity className="size-4" /> Métricas del Área
+                      </h4>
+                      <div className="text-[11px] text-foreground space-y-1">
+                        <p><strong>Área cubierta:</strong> 3.4 km²</p>
+                        <p><strong>Población estimada:</strong> 15,200 hab.</p>
+                        <p><strong>Tiempo promedio:</strong> {Math.round(travelTime * 0.8)} min a POIs cercanos.</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <Separator className="bg-border/50" />
+          </>
         )}
 
         {/* Botones de acción respetando el UI Kit con Tooltips */}
